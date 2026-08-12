@@ -21,7 +21,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
-DATA_DIR = BASE_DIR / "data"
+DATA_DIR = Path(os.environ.get("DATA_DIR") or BASE_DIR / "data")
 USERS_FILE = DATA_DIR / "users.json"
 USERS_BACKUP = DATA_DIR / "users.json.bak"
 PORT = int(os.environ.get("PORT", 8080))
