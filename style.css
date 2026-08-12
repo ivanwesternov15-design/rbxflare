@@ -433,7 +433,7 @@
   .tab-indicator{
     position:absolute;
     top:4px; bottom:4px; left:4px;
-    width:calc(50% - 3px);
+    width:calc(33.333% - 5.33px);
     background:linear-gradient(135deg, var(--accent-2), var(--accent-1), var(--accent-2));
     background-size:220% 220%;
     animation:tabGlow 3.5s ease-in-out infinite;

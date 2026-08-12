@@ -74,7 +74,7 @@ const STORAGE_KEY = 'uxintace-gallery-v1';
 
 const state = (() => {
   const base = {
-    tab: 'fons',
+    tab: 'avatars',
     selected: {
       avatars: LIBRARY.avatars[0],
       fons: LIBRARY.fons[0],
@@ -86,7 +86,7 @@ const state = (() => {
     if(raw){
       const parsed = JSON.parse(raw);
       if(parsed && typeof parsed === 'object'){
-        if(parsed.tab && ['fons', 'podfons'].includes(parsed.tab)) base.tab = parsed.tab;
+        if(parsed.tab && LIBRARY[parsed.tab]) base.tab = parsed.tab;
         if(parsed.selected && typeof parsed.selected === 'object'){
           Object.keys(base.selected).forEach(k => {
             if(typeof parsed.selected[k] === 'string' && parsed.selected[k]){
@@ -294,7 +294,7 @@ function selectImage(tab, src, cellEl){
 function switchTab(tab){
   state.tab = tab;
   [...tabsWrap.querySelectorAll('.tab-btn')].forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const idx = ['fons', 'podfons'].indexOf(tab);
+  const idx = Object.keys(LIBRARY).indexOf(tab);
   tabIndicator.style.transform = `translateX(${idx * 100}%)`;
   renderGrid(tab);
   saveState();
