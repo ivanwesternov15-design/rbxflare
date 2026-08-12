@@ -8,7 +8,7 @@
 const FOLDER = 'tgminiapprbx';
 const LIBRARY = (typeof GALLERY === 'object' && GALLERY) || {
   avatars: ['tgminiapprbx/avatars/violet_dream.jpg'],
-  fons: ['tgminiapprbx/fons/purple_forest.jpg'],
+  fons: ['tgminiapprbx/fons/flaze.jpg'],
   podfons: ['tgminiapprbx/podfons/night_violet.jpg'],
 };
 

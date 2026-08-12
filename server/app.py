@@ -12,12 +12,15 @@
 import hashlib
 import hmac
 import json
+import logging
 import os
 import time
 import urllib.parse
 from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
+
+logging.getLogger("werkzeug").setLevel(logging.WARNING)  # не спамим каждый запрос
 
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
@@ -33,6 +36,7 @@ with open(BASE_DIR / "config.json", encoding="utf-8") as fh:
     BOT_TOKEN = json.load(fh)["botToken"]
 
 app = Flask(__name__, static_url_path="", static_folder=str(ROOT_DIR))
+app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 300
 
 
 # ---------- хранилище ----------
