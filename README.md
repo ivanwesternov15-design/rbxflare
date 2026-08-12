@@ -11,6 +11,7 @@ script.js           — логика: Telegram SDK, авто-сканирова�
 manifest.js         — фолбэк-список картинок (генерируется update-gallery.bat)
 tgminiapprbx/       — картинки: avatars/ fons/ podfons/
 server/             — бэкенд (Python 3.11 + Flask)
+server/main.py         — гл. файл для BotHost: Flask + бот (ответ на /start, Menu Button)
 server/app.py       — API: /api/init, /api/user + раздача фронтенда
 server/requirements.txt — зависимости (flask)
 server/data/        — данные пользователей (users.json), в git НЕ идёт
@@ -37,6 +38,6 @@ cd server && pip install -r requirements.txt && python app.py
 
 ## Деплой на BotHost
 1. Репозиторий подключён к BotHost (автодеплой с GitHub)
-2. Start command: `python app.py` (рабочая папка: server/)
-3. В @BotFather: Menu Button → домен приложения от BotHost
-4. Готово — данные юзеров копятся в server/data/users.json на сервере
+2. Start command: `python main.py` (рабочая папка: server/)
+3. В @BotFather: Domain → `senku.bothost.tech` и Menu Button → `https://senku.bothost.tech/`
+4. Готово — бот отвечает на `/start`, данные юзеров копятся в server/data/users.json

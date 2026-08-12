@@ -1,3 +1,5 @@
 {
-  "botToken": "8973833824:AAG0FTaqjwh8wiGgl6VriD0Ht57G3u102os"
+  "botToken": "8973833824:AAG0FTaqjwh8wiGgl6VriD0Ht57G3u102os",
+  "webAppUrl": "https://senku.bothost.tech/",
+  "port": 8080
 }
