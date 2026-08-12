@@ -18,6 +18,7 @@ import time
 import urllib.parse
 from pathlib import Path
 
+import requests
 from flask import Flask, jsonify, request, send_from_directory
 
 logging.getLogger("werkzeug").setLevel(logging.WARNING)  # не спамим каждый запрос
@@ -148,6 +149,34 @@ def public_user(u):
     }
 
 
+# ---------- фото профиля из Telegram (если в initData не пришло) ----------
+def fetch_telegram_photo(user_id):
+    """Достаёт главное фото профиля через Bot API и возвращает прямую ссылку."""
+    try:
+        resp = requests.get(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/getUserProfilePhotos",
+            params={"user_id": user_id, "limit": 1},
+            timeout=10,
+        ).json()
+        photos = (resp.get("result") or {}).get("photos") or []
+        if not photos:
+            return ""
+        best = max(photos[0], key=lambda s: s.get("width", 0) * s.get("height", 0))
+        file_id = best["file_id"]
+        fdata = requests.get(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/getFile",
+            params={"file_id": file_id},
+            timeout=10,
+        ).json()
+        file_path = (fdata.get("result") or {}).get("file_path")
+        if not file_path:
+            return ""
+        return f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+    except Exception as exc:
+        logging.getLogger("bot").warning("fetch photo: %s", exc)
+        return ""
+
+
 # ---------- маршруты ----------
 @app.get("/api/health")
 def health():
@@ -181,7 +210,19 @@ def api_init():
         if changed:
             save_users(users)
 
-    return jsonify(ok=True, user=public_user(users[uid]))
+    # если аватарка не пришла в initData — вытаскиваем через Bot API
+    if not users[uid].get("photo_url"):
+        photo = fetch_telegram_photo(verified["user"]["id"])
+        if photo:
+            users[uid]["photo_url"] = photo
+            save_users(users)
+            logging.getLogger("bot").info("аватар подтянут из Telegram: %s", uid)
+
+    res_user = public_user(users[uid])
+    if res_user.get("photo_url"):
+        res_user["photo_url"] += res_user["photo_url"].split("?", 1)[0]
+
+    return jsonify(ok=True, user=res_user)
 
 
 @app.get("/api/user")

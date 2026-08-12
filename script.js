@@ -53,6 +53,13 @@ async function refreshLibrary(){
       if(!same){ LIBRARY[k] = results[i]; changed = true; }
     }
   });
+  // фото профиля из Telegram — первой плиткой в "Аватар"
+  if(PROFILE && PROFILE.photo_url){
+    if(!LIBRARY.avatars.includes(PROFILE.photo_url)){
+      LIBRARY.avatars.unshift(PROFILE.photo_url);
+      changed = true;
+    }
+  }
   if(changed){
     keys.forEach(k => { if(!LIBRARY[k].includes(state.selected[k])) state.selected[k] = LIBRARY[k][0]; });
     saveState();
