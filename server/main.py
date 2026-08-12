@@ -88,10 +88,6 @@ async def setup_menu_button():
         )
 
 
-def run_bot():
-    asyncio.run(main_async())
-
-
 async def main_async():
     try:
         await setup_menu_button()
@@ -100,11 +96,18 @@ async def main_async():
         await dp.start_polling(bot)
 
 
-if __name__ == "__main__":
-    if WEB_APP_URL:
-        threading.Thread(target=run_bot, daemon=True).start()
-    else:
-        log.warning("WEB_APP_URL пуст — бот не запущен")
-
+def run_flask():
     log.info("flask on :%s", PORT)
     flask_app.run(host="0.0.0.0", port=PORT)
+
+
+if __name__ == "__main__":
+    if WEB_APP_URL:
+        threading.Thread(target=run_flask, daemon=True).start()
+        try:
+            asyncio.run(main_async())
+        except KeyboardInterrupt:
+            pass
+    else:
+        log.warning("WEB_APP_URL пуст — бот не запущен")
+        run_flask()
