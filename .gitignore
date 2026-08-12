@@ -1,0 +1,7 @@
+# данные пользователей — живут только на сервере, в git не попадают
+server/data/*
+!server/data/.gitkeep
+
+# зависимости
+node_modules/
+server/node_modules/
