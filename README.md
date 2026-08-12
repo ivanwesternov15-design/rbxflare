@@ -10,8 +10,9 @@ style.css           — стили (тёмное стекло, анимации 
 script.js           — логика: Telegram SDK, авто-сканирование картинок
 manifest.js         — фолбэк-список картинок (генерируется update-gallery.bat)
 tgminiapprbx/       — картинки: avatars/ fons/ podfons/
-server/             — бэкенд (Node.js + Express)
-server/server.js    — API: /api/init, /api/user + раздача фронтенда
+server/             — бэкенд (Python 3.11 + Flask)
+server/app.py       — API: /api/init, /api/user + раздача фронтенда
+server/requirements.txt — зависимости (flask)
 server/data/        — данные пользователей (users.json), в git НЕ идёт
 server/config.json  — токен бота
 ```
@@ -30,12 +31,12 @@ server/config.json  — токен бота
 
 ## Запуск локально
 ```
-cd server && npm install && node server.js
+cd server && pip install -r requirements.txt && python app.py
 ```
 Открой http://localhost:8080
 
 ## Деплой на BotHost
 1. Репозиторий подключён к BotHost (автодеплой с GitHub)
-2. Start command: `node server/server.js`
+2. Start command: `python app.py` (рабочая папка: server/)
 3. В @BotFather: Menu Button → домен приложения от BotHost
 4. Готово — данные юзеров копятся в server/data/users.json на сервере
