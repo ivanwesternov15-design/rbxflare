@@ -96,16 +96,35 @@ async def cmd_start(message: Message):
         reply_markup=keyboard,
     )
 
-    # подтягиваем "О себе" из профиля Telegram
+    # подтягиваем "О себе" из профиля Telegram и создаём/обновляем запись
     try:
         chat = await bot.get_chat(message.chat.id)
-        bio = (getattr(chat, "bio", None) or "").strip()[:200]
-        users = load_users()
         uid = str(message.chat.id)
-        if uid in users and bio and users[uid].get("bio") != bio:
+        bio = (getattr(chat, "bio", None) or "").strip()[:200]
+
+        users = load_users()
+        if uid not in users:
+            users[uid] = {
+                "id": message.chat.id,
+                "first_name": message.from_user.first_name or "",
+                "last_name": message.from_user.last_name or "",
+                "username": message.from_user.username or "",
+                "photo_url": "",
+                "language_code": message.from_user.language_code or "",
+                "is_premium": bool(getattr(message.from_user, "is_premium", False)),
+                "created_at": int(time.time() * 1000),
+                "first_login": time.strftime("%Y-%m-%d"),
+                "bio": bio,
+                "birthday": "",
+            }
+            save_users(users)
+            log.info("юзёр создан при /start: %s (bio=%r)", uid, bio)
+        elif bio and users[uid].get("bio") != bio:
             users[uid]["bio"] = bio
             save_users(users)
-            log.info("bio подтянут для %s", uid)
+            log.info("bio обновлён для %s: %r", uid, bio)
+        else:
+            log.info("bio %s: уже актуально (users=%s)", uid, uid in users)
     except Exception as exc:
         log.warning("get_chat bio: %s", exc)
 
