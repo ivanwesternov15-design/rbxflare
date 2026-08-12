@@ -22,8 +22,11 @@ from flask import Flask, jsonify, request, send_from_directory
 BASE_DIR = Path(__file__).resolve().parent
 ROOT_DIR = BASE_DIR.parent
 DATA_DIR = Path(os.environ.get("DATA_DIR") or BASE_DIR / "data")
+UPLOADS_DIR = DATA_DIR / "uploads"
 USERS_FILE = DATA_DIR / "users.json"
 USERS_BACKUP = DATA_DIR / "users.json.bak"
+
+ALLOWED_KINDS = ("avatars", "fons", "podfons")
 PORT = int(os.environ.get("PORT", 8080))
 
 with open(BASE_DIR / "config.json", encoding="utf-8") as fh:
@@ -46,6 +49,35 @@ def save_users(users):
 
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ---------- список картинок и аплоады ----------
+@app.get("/api/files/<kind>")
+def api_files(kind):
+    """Имена картинок из папок галереи + аплоады бота (для авто-обновления в реальном времени)."""
+    if kind not in ALLOWED_KINDS:
+        return jsonify(ok=False, error="bad kind"), 400
+    files = []
+
+    src = ROOT_DIR / "tgminiapprbx" / kind
+    if src.is_dir():
+        for f in sorted(src.glob("*")):
+            if f.suffix.lower() in (".jpg", ".jpeg", ".png"):
+                files.append(f"/tgminiapprbx/{kind}/{f.name}")
+
+    up = UPLOADS_DIR / kind
+    if up.is_dir():
+        for f in sorted(up.glob("*")):
+            if f.suffix.lower() in (".jpg", ".jpeg", ".png"):
+                files.append(f"/uploads/{kind}/{f.name}")
+
+    return jsonify(ok=True, files=files)
+
+
+@app.get("/uploads/<path:path>")
+def uploads(path):
+    return send_from_directory(str(UPLOADS_DIR), path)
 
 
 # ---------- валидация initData ----------

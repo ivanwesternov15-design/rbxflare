@@ -22,6 +22,14 @@ const TARGET_EL = {
 };
 
 async function scanFolder(folder){
+  const kind = folder.split('/').pop();
+  try{
+    const res = await fetch('/api/files/' + kind + '?ts=' + Date.now());
+    if(res.ok){
+      const data = await res.json();
+      if(data.ok && Array.isArray(data.files) && data.files.length) return data.files;
+    }
+  }catch(e){ /* нет бэкенда — пробуем листинг папки */ }
   try{
     const res = await fetch(folder + '/?ts=' + Date.now());
     if(!res.ok) return null;
@@ -301,10 +309,14 @@ function openSheet(){
   sheet.classList.add('open');
   renderGrid(state.tab);
   refreshLibrary();
+  if(!window._scanTimer){
+    window._scanTimer = setInterval(refreshLibrary, 15000); // авто-обновление в реальном времени
+  }
 }
 function closeSheet(){
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
+  if(window._scanTimer){ clearInterval(window._scanTimer); window._scanTimer = null; }
 }
 
 menuBtn.addEventListener('click', openSheet);
