@@ -255,22 +255,46 @@ menuBtn.addEventListener('click', openSheet);
 sheetClose.addEventListener('click', closeSheet);
 backdrop.addEventListener('click', closeSheet);
 
-/* ---- нижняя навигация (пока работает только «Профиль») ---- */
+/* ---- нижняя навигация (пока работает только «Профиль»): плавное скольжение индикатора ---- */
 const navIndicator = document.getElementById('navIndicator');
 const navBtns = [...document.querySelectorAll('.nav-btn')];
+let navPos = 0;
 
-function moveNavIndicator(btn){
-  const idx = navBtns.indexOf(btn);
-  navIndicator.style.transform = `translateX(calc(${idx} * 100% + ${idx * 2}px))`;
+function setNavIndicatorX(x){
+  navIndicator.style.transform = `translateX(calc(${x} * 100% + ${x * 2}px))`;
 }
 
-moveNavIndicator(navBtns.find(b => b.classList.contains('active')) || navBtns[navBtns.length - 1]);
+function moveNavIndicator(idx, animate){
+  if(!animate){
+    navPos = idx;
+    setNavIndicatorX(navPos);
+    return;
+  }
+  const from = navPos;
+  const t0 = performance.now();
+  const dur = 520;
+  const easeOutBack = t => {
+    const c1 = 1.70158, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+  };
+  const frame = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    navPos = from + (idx - from) * easeOutBack(p);
+    setNavIndicatorX(navPos);
+    if(p < 1) requestAnimationFrame(frame);
+    else navPos = idx;
+  };
+  requestAnimationFrame(frame);
+}
 
-navBtns.forEach(btn => {
+const initialIdx = navBtns.findIndex(b => b.classList.contains('active'));
+moveNavIndicator(initialIdx >= 0 ? initialIdx : navBtns.length - 1, false);
+
+navBtns.forEach((btn, idx) => {
   btn.addEventListener('click', () => {
     navBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    moveNavIndicator(btn);
+    moveNavIndicator(idx, true);
     if(btn.dataset.view === 'profile'){
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
