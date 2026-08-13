@@ -109,7 +109,7 @@ function saveState(){
    день рождения (или дата первого входа — хранится на сервере)
    ========================================================= */
 const tg = (window.Telegram && Telegram.WebApp) ? Telegram.WebApp : null;
-const OWNER_IDS = []; // впиши свой TG id, чтобы показывался бейдж «ВЛАДЕЛЕЦ»
+const OWNER_IDS = [8414792453]; // показывается бейдж «ВЛАДЕЛЕЦ»
 
 let PROFILE = null;
 const $ = id => document.getElementById(id);
