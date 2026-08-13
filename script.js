@@ -165,76 +165,13 @@ function renderProfile(){
     AVATAR_EL.style.setProperty('--avatar-url', `url('${p.photo_url}')`);
   }
   $('bioValue').textContent = p.bio || '—';
-  if(p.birthday){
-    $('dateLabel').textContent = 'День рождения';
-    $('dateValue').textContent = fmtDate(p.birthday, true);
-  }else if(p.first_login){
-    $('dateLabel').textContent = 'Первый вход';
-    $('dateValue').textContent = fmtDate(p.first_login, true);
-  }
+  $('dateLabel').textContent = 'Первый вход';
+  $('dateValue').textContent = p.first_login ? fmtDate(p.first_login, true) : '—';
 }
 
-/* ---- inline-редактирование "О себе" и дня рождения ---- */
-let editMode = null;
-
-function endEdit(which){
-  editMode = null;
-  renderProfile();
-}
-
-function startEdit(which){
-  if(editMode || !PROFILE) return;
-  editMode = which;
-  const panel = which === 'bio' ? $('bioPanel') : $('datePanel');
-  const value = which === 'bio' ? $('bioValue') : $('dateValue');
-
-  const input = document.createElement('input');
-  input.className = 'edit-input';
-  input.maxLength = which === 'bio' ? 200 : 10;
-  if(which === 'birthday'){ input.type = 'date'; }
-  else { input.placeholder = 'Расскажи о себе…'; }
-  input.value = which === 'bio' ? (PROFILE.bio || '') : (PROFILE.birthday || '');
-
-  const saveBtn = document.createElement('button');
-  saveBtn.className = 'edit-btn save';
-  saveBtn.textContent = 'Сохранить';
-  const cancelBtn = document.createElement('button');
-  cancelBtn.className = 'edit-btn';
-  cancelBtn.textContent = 'Отмена';
-
-  const row = document.createElement('div');
-  row.className = 'edit-row';
-  row.append(input, saveBtn, cancelBtn);
-  value.replaceWith(row);
-  input.focus();
-
-  saveBtn.addEventListener('click', async () => {
-    const body = which === 'bio'
-      ? { bio: input.value }
-      : { birthday: input.value };
-    const id = tgInitData();
-    if(!id){ endEdit(which); return; }
-    try{
-      const res = await fetch('/api/user', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: id, ...body })
-      });
-      const data = await res.json();
-      if(data.ok && data.user){
-        PROFILE = data.user;
-        saveState();
-      }
-    }catch(e){
-      console.warn('[api] save error:', e);
-    }
-    endEdit(which);
-  });
-
-  cancelBtn.addEventListener('click', () => endEdit(which));
-}
-
-$('datePanel').addEventListener('click', () => startEdit('birthday'));
+$('datePanel').addEventListener('click', () => {
+  // дата не редактируется: первый вход фиксируется при открытии мини-аппа
+});
 
 /* ---- глобальные прокрутки и шторка ---- */
 const grid = document.getElementById('grid');

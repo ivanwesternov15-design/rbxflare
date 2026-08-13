@@ -264,9 +264,7 @@ def api_put_user():
     if not user:
         return jsonify(ok=False, error="User not found"), 404
 
-    # "О себе" обновляется только из Telegram (при /start) — редактирование запрещено
-    if "birthday" in data:
-        user["birthday"] = str(data.get("birthday") or "").strip()[:10]
+    # first_login фиксируется при первом входе и не меняется
     save_users(users)
 
     return jsonify(ok=True, user=public_user(user))
