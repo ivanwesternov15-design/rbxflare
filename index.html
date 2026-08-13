@@ -14,25 +14,27 @@
 
 <!-- ============ ЭКРАН ЗАГРУЗКИ ============ -->
 <div class="splash" id="splash">
-  <div class="splash-card">
+  <div class="splash-halo"></div>
+  <div class="splash-badge">
+    <svg class="splash-ring" viewBox="0 0 96 96" fill="none">
+      <defs>
+        <linearGradient id="lgSplash" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#5E7486"/><stop offset="1" stop-color="#B7C3CA"/>
+        </linearGradient>
+      </defs>
+      <circle cx="48" cy="48" r="44" stroke="rgba(94,116,134,.22)" stroke-width="5"/>
+      <path d="M92 48a44 44 0 0 0-44-44" stroke="url(#lgSplash)" stroke-width="5" stroke-linecap="round"/>
+    </svg>
     <div class="splash-logo">
       <svg viewBox="0 0 64 64" fill="none">
-        <defs>
-          <linearGradient id="lgSplash" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#5E7486"/><stop offset="1" stop-color="#B7C3CA"/>
-          </linearGradient>
-        </defs>
         <rect x="6" y="14" width="52" height="38" rx="10" stroke="url(#lgSplash)" stroke-width="3.5"/>
         <path d="M36 8l-8 14h7l-5 12 15-17h-8l6-9z" fill="url(#lgSplash)"/>
       </svg>
     </div>
-    <svg class="splash-ring" viewBox="0 0 48 48" fill="none">
-      <circle cx="24" cy="24" r="20" stroke="rgba(94,116,134,.35)" stroke-width="4"/>
-      <path d="M44 24a20 20 0 0 0-20-20" stroke="url(#lgSplash)" stroke-width="4" stroke-linecap="round"/>
-    </svg>
-    <div class="splash-name">Uxintace</div>
-    <div class="splash-text">Загрузка..</div>
   </div>
+  <div class="splash-name">UXINTACE</div>
+  <div class="splash-bar"><div class="splash-bar-fill"></div></div>
+  <div class="splash-text">Загрузка..</div>
 </div>
 
 <div id="app-wallpaper"></div>
@@ -91,19 +93,40 @@
 </main>
 
 <main class="view" id="viewMain">
-  <div class="cards-top">
-    <div class="cards-title">Главное</div>
-    <div class="balance-pill">
-      <svg class="bal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
-      <span class="bal-val" id="balanceValue">0</span>
-      <span class="bal-cur">Robux</span>
+  <div class="main-hero">
+    <div class="hero-titles">
+      <div class="hero-title">Главное</div>
+      <div class="hero-sub">Открой счастливую карточку</div>
+    </div>
+    <div class="balance-card">
+      <div class="bc-halo"></div>
+      <div class="bc-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <div class="bc-mid">
+        <div class="bc-label">Твой баланс</div>
+        <div class="bc-value">
+          <span class="bc-num" id="balanceValue">0</span>
+          <span class="bc-curr">Robux</span>
+        </div>
+      </div>
+      <div class="bc-note">заработай ещё</div>
     </div>
   </div>
 
   <div class="cards-section">
-    <div class="section-title">Ежедневные карточки</div>
+    <div class="section-head">
+      <div class="section-title">Ежедневные карточки</div>
+      <button class="reset-btn hidden" id="dailyResetBtn" aria-label="Сбросить ежедневные карточки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.4 16.6"/><path d="M20 5v6h-6"/></svg>
+      </button>
+    </div>
+    <div class="section-sub">Выбери карточку и сотри покрытие — редкость узнаешь только после скретча</div>
     <div class="daily-grid" id="dailyGrid"></div>
-    <div class="daily-done hidden" id="dailyDone">Приходи завтра за новой карточкой</div>
+    <div class="daily-done hidden" id="dailyDone">
+      <svg class="dd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 3v3h6V3"/><path d="M9 11h6M9 15h6"/></svg>
+      <span>Приходи завтра за новой карточкой</span>
+    </div>
     <button class="collect-btn hidden" id="collectBtn">
       <svg class="cb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M12 17v-9"/><path d="M8 12h8"/><path d="M12 8.5 9.5 5.5M12 3v2.5M14.5 5.5 12 8.5"/></svg>
       <span>Забрать карточку</span>
@@ -112,9 +135,28 @@
 
   <div class="cards-section">
     <div class="section-title">Как это работает</div>
-    <div class="how-card">
-      <svg class="how-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.9-5.4 2.9 1-6L3.3 9.4l6-.9z"/></svg>
-      <span>Выбери карточку, сотри покрытие наполовину — и узнай свою редкость</span>
+    <div class="how-grid">
+      <div class="how-step">
+        <div class="hs-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M9 3v3h6V3"/><path d="M9 11h6M9 15h4"/></svg>
+        </div>
+        <div class="hs-name">Выбери</div>
+        <div class="hs-text">одну из трёх карточек</div>
+      </div>
+      <div class="how-step">
+        <div class="hs-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16"/><path d="M7 5l2.5 2.5M11 7l2 2M15 9l2 2"/><rect x="5" y="8" width="14" height="12" rx="3" opacity=".45"/></svg>
+        </div>
+        <div class="hs-name">Сотри</div>
+        <div class="hs-text">покрытие наполовину</div>
+      </div>
+      <div class="how-step">
+        <div class="hs-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5" opacity=".5"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6"/></svg>
+        </div>
+        <div class="hs-name">Получи</div>
+        <div class="hs-text">карточку и стейкай её</div>
+      </div>
     </div>
   </div>
 </main>
@@ -130,9 +172,15 @@
   </div>
 
   <div class="cards-section">
-    <div class="section-title">Инвентарь</div>
+    <div class="section-head">
+      <div class="section-title">Инвентарь</div>
+      <span class="inv-count" id="invCount">0</span>
+    </div>
     <div class="inventory" id="inventoryList"></div>
-    <div class="inventory-empty" id="inventoryEmpty">Пока пусто — выбей карточку на «Главном»</div>
+    <div class="inventory-empty" id="inventoryEmpty">
+      <svg class="ie-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 3v3h6V3"/><path d="M9 11h6M9 15h6"/></svg>
+      <span>Пока пусто — выбей карточку на «Главном»</span>
+    </div>
   </div>
 </main>
 

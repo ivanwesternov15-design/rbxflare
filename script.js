@@ -611,12 +611,16 @@ function animateModal(modal, bd, open){
 function openModal(modal, bd){
   bd.classList.add('open');
   modal.classList.add('open');
+  bottomNav.classList.add('locked');
+  document.body.classList.add('modal-lock');
   animateModal(modal, bd, true);
 }
 
 function closeModal(modal, bd){
   bd.classList.remove('open');
   modal.classList.remove('open');
+  bottomNav.classList.remove('locked');
+  document.body.classList.remove('modal-lock');
   animateModal(modal, bd, false);
 }
 
@@ -702,13 +706,9 @@ function renderDaily(){
     return;
   }
   [0, 1, 2].forEach(id => {
-    const tier = TIER_ORDER[id % TIER_ORDER.length];
     const el = document.createElement('div');
     el.className = 'd-card pack';
     el.dataset.id = id;
-    el.style.setProperty('--t1', TIER_STYLE[tier].colors[0]);
-    el.style.setProperty('--t2', TIER_STYLE[tier].colors[1]);
-    el.style.setProperty('--t3', TIER_STYLE[tier].colors[2] || TIER_STYLE[tier].colors[1]);
     el.style.animationDelay = `${id * 130}ms`;
     el.innerHTML =
       `<div class="d-card-num">0${id + 1}</div>` +
@@ -738,7 +738,14 @@ function selectDailyCard(id){
 
 function dropHTML(rarity, reward){
   const v = tierVars(rarity);
+  const sparks = [0,1,2,3,4,5].map(i => {
+    const ang = i * 60 * Math.PI / 180;
+    const dst = 54 + (i % 3) * 16;
+    return `<i style="--dx:${Math.round(Math.cos(ang) * dst)}px;--dy:${Math.round(Math.sin(ang) * dst)}px"></i>`;
+  }).join('');
   return `<div class="drop-wrap tier-shine" style="${v}">
+    <div class="drop-flash" style="${v}"></div>
+    <div class="drop-sparks" style="${v}">${sparks}</div>
     <div class="drop-halo tier-glow" style="${v}"></div>
     <div class="tier-chip tier-glow" style="${v}">
       <svg class="dc-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l4 6-9 12L3 9z"/></svg>${rarity}
@@ -915,40 +922,64 @@ function autoReveal(){
    ========================================================= */
 const inventoryListEl = document.getElementById('inventoryList');
 const inventoryEmptyEl = document.getElementById('inventoryEmpty');
+const invCountEl = document.getElementById('invCount');
+const dailyResetBtn = document.getElementById('dailyResetBtn');
 
 function fmtUntil(ts){
   return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
+function fmtLeft(ts){
+  let s = Math.max(0, Math.round((ts - Date.now()) / 1000));
+  if(s < 60) return 'менее минуты';
+  const d = Math.floor(s / 86400); s -= d * 86400;
+  const h = Math.floor(s / 3600); s -= h * 3600;
+  const m = Math.floor(s / 60);
+  if(d) return `${d}д ${h}ч`;
+  if(h) return `${h}ч ${m}м`;
+  return `${m} мин`;
+}
+
 function renderInventory(){
+  invCountEl.textContent = state.inventory.length;
+  const cards = state.inventory.slice().reverse();
   inventoryListEl.innerHTML = '';
-  inventoryEmptyEl.classList.toggle('hidden', state.inventory.length > 0);
-  state.inventory.forEach((card, i) => {
+  inventoryEmptyEl.classList.toggle('hidden', cards.length > 0);
+  cards.forEach((card, i) => {
     const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
     const el = document.createElement('div');
-    el.className = 'inv-card';
+    el.className = 'inv-card' + (card.status === 'used' ? ' used' : '');
     el.style.setProperty('--t1', st.colors[0]);
     el.style.setProperty('--t2', st.colors[1]);
     el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
-    const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
+    el.style.animationDelay = `${i * 60}ms`;
+    const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Стейтинг не активирован');
     el.innerHTML =
       `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
       `<div class="inv-title">${card.rarity}</div>` +
       `<div class="inv-meta">` +
         `<div class="inv-amount">+${card.reward} Robux</div>` +
         `<div class="inv-status ${card.status === 'staking' ? 'staking' : ''}">${statusText}</div>` +
-        (card.until ? `<div class="inv-until">до ${fmtUntil(card.until)}</div>` : '') +
+        (card.status === 'staking' ? `<div class="inv-until">осталось ${fmtLeft(card.until)}</div>` : '') +
       `</div>` +
       (card.status === 'available'
         ? `<button class="stake-btn" data-i="${i}">Стейкинг</button>`
         : card.status === 'staking'
-          ? `<button class="stake-btn off" data-i="${i}">Забрать из стейкинга</button>`
+          ? `<button class="stake-btn off" data-i="${i}">Забрать</button>`
           : '');
     const btn = el.querySelector('.stake-btn');
-    if(btn) btn.addEventListener('click', () => card.status === 'staking' ? withdrawStake(i) : openStake(i));
+    if(btn) btn.addEventListener('click', () => card.status === 'staking' ? withdrawStake(card) : openStake(card));
     inventoryListEl.appendChild(el);
   });
 }
+
+function resetDaily(){
+  state.daily = { date: todayKey(), selectedId: null, revealed: false, collected: false, rarity: null, reward: 0 };
+  saveState();
+  renderDaily();
+  showToast('Ежедневные карточки сброшены', true, 'refresh');
+}
+dailyResetBtn.addEventListener('click', resetDaily);
 
 /* --- окно стейкинга --- */
 const stakeSheet = document.getElementById('stakeSheet');
@@ -956,12 +987,11 @@ const stakeBackdrop = document.getElementById('stakeBackdrop');
 const stakeClose = document.getElementById('stakeClose');
 const stakePreview = document.getElementById('stakePreview');
 const stakeOptions = document.getElementById('stakeOptions');
-let stakeCardIdx = -1;
+let stakeCard = null;
 
-function openStake(i){
-  const card = state.inventory[i];
+function openStake(card){
   if(!card || card.status !== 'available') return;
-  stakeCardIdx = i;
+  stakeCard = card;
   const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
   stakePreview.innerHTML =
     `<img class="stake-png tier-shine" src="${card.img}" alt="${card.rarity}" style="${tierVars(card.rarity)}">` +
@@ -984,7 +1014,7 @@ function openStake(i){
 }
 
 function confirmStake(period){
-  const card = state.inventory[stakeCardIdx];
+  const card = stakeCard;
   if(!card) return;
   card.status = 'staking';
   card.period = period;
@@ -996,8 +1026,7 @@ function confirmStake(period){
   showToast('Карточка отправлена в стейкинг', true, 'win');
 }
 
-function withdrawStake(i){
-  const card = state.inventory[i];
+function withdrawStake(card){
   if(!card || card.status !== 'staking') return;
   if(card.until > Date.now()){
     showToast(`Стейкинг завершится ${fmtUntil(card.until)}`, false);
@@ -1223,6 +1252,7 @@ renderInventory();
 
 if(PROFILE && OWNER_IDS.includes(PROFILE.id)){
   adminBtn.classList.remove('hidden');
+  dailyResetBtn.classList.remove('hidden');
 }
 
 /* ---- экран загрузки: ждём все данные, затем красиво уходим ---- */
@@ -1235,7 +1265,10 @@ Promise.allSettled([
   loadConfig(),
   preloadPNGs(),
 ]).then(() => {
-  if(PROFILE && OWNER_IDS.includes(PROFILE.id)) adminBtn.classList.remove('hidden');
+  if(PROFILE && OWNER_IDS.includes(PROFILE.id)){
+    adminBtn.classList.remove('hidden');
+    dailyResetBtn.classList.remove('hidden');
+  }
   const wait = Math.max(0, 950 - (performance.now() - bootStart));
   setTimeout(() => splashEl.classList.add('done'), wait);
 });
