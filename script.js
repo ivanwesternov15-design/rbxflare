@@ -183,18 +183,30 @@ const sheet = document.getElementById('sheet');
 const sheetClose = document.getElementById('sheetClose');
 
 function renderGrid(tab){
-  grid.classList.remove('fade-pane');
-  void grid.offsetWidth; // restart animation
-  grid.classList.add('fade-pane');
-  grid.innerHTML = '';
-  LIBRARY[tab].forEach((src, i) => {
-    const cell = document.createElement('div');
-    cell.className = 'thumb cell-in' + (state.selected[tab] === src ? ' selected' : '');
-    cell.style.backgroundImage = `url('${src}')`;
-    cell.style.animationDelay = `${i * 45}ms`;
-    cell.innerHTML = `<span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>`;
-    cell.addEventListener('click', () => selectImage(tab, src, cell));
-    grid.appendChild(cell);
+  const list = LIBRARY[tab];
+  const existing = new Map();
+  grid.querySelectorAll('.thumb').forEach(c => {
+    if(c.dataset && c.dataset.src) existing.set(c.dataset.src, c);
+    else c.remove();
+  });
+
+  list.forEach((src, i) => {
+    let cell = existing.get(src);
+    if(!cell){
+      cell = document.createElement('div');
+      cell.className = 'thumb cell-in';
+      cell.dataset.src = src;
+      cell.style.backgroundImage = `url('${src}')`;
+      cell.innerHTML = `<span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>`;
+      cell.addEventListener('click', () => selectImage(tab, src, cell));
+      grid.appendChild(cell);
+    }
+    cell.style.animationDelay = `${Math.min(i, 5) * 45}ms`;
+    cell.classList.toggle('selected', state.selected[tab] === src);
+  });
+
+  existing.forEach((cell, src) => {
+    if(!list.includes(src)) cell.remove(); // убрать удалённые файлы
   });
 }
 

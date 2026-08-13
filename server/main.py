@@ -19,6 +19,7 @@ from pathlib import Path
 from aiogram import Bot, Dispatcher, F
 from aiogram.filters import Command, CommandStart
 from aiogram.types import (
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     MenuButtonWebApp,
@@ -70,7 +71,7 @@ log.info("BUILD COMMIT: %s", BUILD_COMMIT or "unknown")
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
-WAITING_PHOTO = set()  # chat_id, ждущие фото после /getphoto
+WAITING_PHOTO = {}  # chat_id -> категория (fons | podfons)
 
 
 # ---------- хранилище (общее с app.py) ----------
@@ -152,8 +153,32 @@ async def cmd_start(message: Message):
 
 @dp.message(Command("getphoto"))
 async def cmd_getphoto(message: Message):
-    WAITING_PHOTO.add(message.chat.id)
-    await message.answer("Пришли мне фото — сразу добавлю его в галерею аватарок мини-аппа \U0001F4F8")
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="\U0001F5BC\ufe0f Фон карточки", callback_data="ph_fons"),
+                InlineKeyboardButton(text="\U0001F30C Фон приложения", callback_data="ph_podfons"),
+            ]
+        ]
+    )
+    await message.answer(
+        "Куда добавить фото \U0001F4F8?",
+        reply_markup=keyboard,
+    )
+
+
+@dp.callback_query(F.data.startswith("ph_"))
+async def on_getphoto_kind(callback: CallbackQuery):
+    kind = callback.data.replace("ph_", "")
+    if kind not in ("fons", "podfons"):
+        await callback.answer("Не знаю такую категорию \U0001F937")
+        return
+    WAITING_PHOTO[callback.message.chat.id] = kind
+    await callback.answer()
+    label = "«Фон карточки»" if kind == "fons" else "«Фон приложения»"
+    await callback.message.answer(
+        f"Пришли фото — добавлю его в {label} мини-аппа \U0001F4F8"
+    )
 
 
 @dp.message(Command("clear"))
@@ -181,9 +206,9 @@ async def cmd_clear(message: Message):
 @dp.message(F.photo)
 async def on_photo(message: Message):
     chat_id = message.chat.id
-    if chat_id not in WAITING_PHOTO:
+    kind = WAITING_PHOTO.pop(chat_id, None)
+    if not kind:
         return
-    WAITING_PHOTO.discard(chat_id)
 
     photo = message.photo[-1]
     if photo.file_size > 10 * 1024 * 1024:
@@ -191,14 +216,15 @@ async def on_photo(message: Message):
         return
 
     name = f"user_{message.from_user.id}_{int(time.time())}.jpg"
-    dest = UPLOADS_DIR / "avatars" / name
+    dest = UPLOADS_DIR / kind / name
     try:
         dest.parent.mkdir(parents=True, exist_ok=True)
         await bot.download(photo.file_id, destination=dest)
-        log.info("фото сохранено: %s", name)
+        log.info("фото сохранено: %s/%s", kind, name)
+        label = "карточки" if kind == "fons" else "приложения"
         await message.answer(
             "Готово! \u2705 Фото добавлено в мини-апп.\n"
-            "Открой профиль \u2192 \u2764\ufe0f \u2192 галерея \u2192 вкладка «Аватар» и выбери его."
+            f"Открой профиль \u2192 \u2764\ufe0f \u2192 галерея \u2192 вкладка «Фон {label}» и выбери его."
         )
     except Exception as exc:
         log.error("download photo: %s", exc)
