@@ -351,7 +351,6 @@
     z-index:10;
     opacity:0;
     pointer-events:none;
-    transition:opacity .28s var(--ease);
   }
   .sheet-backdrop.open{ opacity:1; pointer-events:auto; }
 
@@ -373,7 +372,6 @@
     transform:translate(-50%,-50%) scale(.86) translateY(18px);
     filter:blur(10px);
     pointer-events:none;
-    transition:opacity .32s var(--ease), transform .55s cubic-bezier(.34,1.32,.4,1), filter .4s var(--ease);
     display:flex;
     flex-direction:column;
     visibility:hidden;

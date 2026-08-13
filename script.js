@@ -251,6 +251,7 @@ tabsWrap.querySelectorAll('.tab-btn').forEach(btn => {
 function openSheet(){
   backdrop.classList.add('open');
   sheet.classList.add('open');
+  animateSheet(true);
   renderGrid(state.tab);
   refreshLibrary();
   if(!window._scanTimer){
@@ -260,7 +261,40 @@ function openSheet(){
 function closeSheet(){
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
+  animateSheet(false);
   if(window._scanTimer){ clearInterval(window._scanTimer); window._scanTimer = null; }
+}
+
+/* ---- плавное появление/исчезание окна (rAF, не зависит от системных настроек) ---- */
+let sheetAnim = 0;
+function animateSheet(open){
+  const token = ++sheetAnim;
+  const t0 = performance.now();
+  const dur = open ? 480 : 300;
+  if(open) sheet.style.visibility = 'visible';
+  const ease = open
+    ? (t) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
+    : (t) => 1 - Math.pow(1 - t, 3);
+
+  const frame = now => {
+    if(token !== sheetAnim) return;
+    const p = Math.min(1, (now - t0) / dur);
+    const e = ease(p);
+    const rev = 1 - e;
+    backdrop.style.opacity = e;
+    sheet.style.opacity = e;
+    sheet.style.filter = `blur(${rev * 10}px)`;
+    sheet.style.transform = `translate(-50%, -50%) scale(${open ? 0.86 + 0.14 * e : 0.9 + 0.1 * rev}) translateY(${rev * (open ? 18 : 10)}px)`;
+    if(p < 1){ requestAnimationFrame(frame); }
+    else if(!open){
+      sheet.style.visibility = 'hidden';
+      sheet.style.opacity = 0;
+    }else{
+      sheet.style.filter = 'blur(0px)';
+      sheet.style.transform = 'translate(-50%, -50%) scale(1)';
+    }
+  };
+  requestAnimationFrame(frame);
 }
 
 menuBtn.addEventListener('click', openSheet);
@@ -270,8 +304,9 @@ backdrop.addEventListener('click', closeSheet);
 /* ---- нижняя навигация (пока работает только «Профиль»): плавное скольжение индикатора ---- */
 const navIndicator = document.getElementById('navIndicator');
 const navBtns = [...document.querySelectorAll('.nav-btn')];
-let navPos = 0;
-let navAnim = 0; // токен текущей анимации — отменяет предыдущие
+let navPos = 0;      // текущая визуальная позиция индикатора
+let navAnim = 0;     // токен текущей анимации
+let activeIdx = 0;   // выбранная категория
 
 function setNavIndicatorX(x, sx, sy){
   navIndicator.style.transform =
@@ -280,7 +315,7 @@ function setNavIndicatorX(x, sx, sy){
 
 function moveNavIndicator(idx, animate){
   const maxIdx = navBtns.length - 1;
-  navAnim++; // новая анимация отменяет старую
+  navAnim++; // новая анимация отменяет предыдущую
   if(!animate || idx === navPos){
     navPos = idx;
     setNavIndicatorX(idx, 1, 1);
@@ -298,11 +333,10 @@ function moveNavIndicator(idx, animate){
     if(token !== navAnim) return; // есть более новая анимация — старая умирает
     const p = Math.min(1, (now - t0) / dur);
     const raw = from + (idx - from) * easeOutBack(p);
-    const x = Math.min(Math.max(raw, 0), maxIdx); // не выходим за пределы панели
+    const x = Math.min(Math.max(raw, 0), maxIdx);
+    navPos = x; // обновляем позицию каждый кадр — новая анимация стартует отсюда
     const jelly = Math.sin(Math.PI * Math.min(1, Math.abs(raw - from) / Math.max(idx - from, 1e-6)));
-    const sx = 1 + 0.09 * jelly;
-    const sy = 1 - 0.07 * jelly;
-    setNavIndicatorX(x, sx, sy);
+    setNavIndicatorX(x, 1 + 0.09 * jelly, 1 - 0.07 * jelly);
     if(p < 1) requestAnimationFrame(frame);
     else { navPos = idx; setNavIndicatorX(idx, 1, 1); }
   };
@@ -310,12 +344,15 @@ function moveNavIndicator(idx, animate){
 }
 
 const initialIdx = navBtns.findIndex(b => b.classList.contains('active'));
-moveNavIndicator(initialIdx >= 0 ? initialIdx : navBtns.length - 1, false);
+activeIdx = initialIdx >= 0 ? initialIdx : navBtns.length - 1;
+navPos = activeIdx;
+setNavIndicatorX(activeIdx, 1, 1);
 
 navBtns.forEach((btn, idx) => {
   btn.addEventListener('click', () => {
-    navBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
+    if(activeIdx === idx) return; // уже в этой категории — повторные клики игнорируем
+    activeIdx = idx;
+    navBtns.forEach(b => b.classList.toggle('active', b === btn));
     moveNavIndicator(idx, true);
     if(btn.dataset.view === 'profile'){
       window.scrollTo({ top: 0, behavior: 'smooth' });
