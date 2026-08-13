@@ -365,10 +365,11 @@ function animateGrid(dir){
 
 const tabBtns = [...tabsWrap.querySelectorAll('.tab-btn')];
 let tabAnim = 0;
+let tabPosIdx = 0;
 
 function animateTabIndicator(toIdx){
   const token = ++tabAnim;
-  const from = parseFloat(getComputedStyle(tabIndicator).transform.split(',')[4]) * 100 || 0;
+  const from = tabPosIdx;
   const t0 = performance.now();
   const dur = 360;
   const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -376,8 +377,10 @@ function animateTabIndicator(toIdx){
     if(token !== tabAnim) return;
     const p = Math.min(1, (now - t0) / dur);
     const v = ease(p);
-    tabIndicator.style.transform = `translateX(${from + (toIdx - from) * v}%)`;
+    tabPosIdx = from + (toIdx - from) * v;
+    tabIndicator.style.transform = `translateX(${tabPosIdx * 100}%)`;
     if(p < 1) requestAnimationFrame(frame);
+    else tabPosIdx = toIdx;
   };
   requestAnimationFrame(frame);
 }
@@ -500,6 +503,8 @@ const initialIdx = navBtns.findIndex(b => b.classList.contains('active'));
 activeIdx = initialIdx >= 0 ? initialIdx : navBtns.length - 1;
 navPos = activeIdx;
 setNavIndicatorX(activeIdx, 1, 1);
+
+tabPosIdx = Math.max(0, tabBtns.findIndex(b => b.classList.contains('active')));
 
 navBtns.forEach((btn, idx) => {
   btn.addEventListener('click', () => {
