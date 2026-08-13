@@ -14,6 +14,7 @@ import hmac
 import json
 import logging
 import os
+import shutil
 import time
 import urllib.parse
 from pathlib import Path
@@ -56,6 +57,33 @@ def save_users(users):
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def seed_defaults():
+    """Переносим картинки галереи из репозитория (tgminiapprbx/) в персистентное
+    хранилище DATA_DIR/uploads/ — иначе удаление на BotHost не работает:
+    файлы лежат в образе контейнера и восстанавливаются при редеплое,
+    а удалять их оттуда нельзя (часто read-only). Пересев идемпотентен."""
+    for kind in ALLOWED_KINDS:
+        src = ROOT_DIR / "tgminiapprbx" / kind
+        if not src.is_dir():
+            continue
+        dest = UPLOADS_DIR / kind
+        dest.mkdir(parents=True, exist_ok=True)
+        for f in src.glob("*"):
+            if f.suffix.lower() not in (".jpg", ".jpeg", ".png"):
+                continue
+            target = dest / f.name
+            if target.exists():
+                continue
+            try:
+                shutil.copy2(f, target)
+                logging.getLogger("bot").info("seed: %s -> %s", f.name, target)
+            except OSError as exc:
+                logging.getLogger("bot").warning("seed %s: %s", f, exc)
+
+
+seed_defaults()
 
 SETTINGS_FILE = DATA_DIR / "settings.json"
 
@@ -131,23 +159,17 @@ def api_set_settings():
 # ---------- список картинок и аплоады ----------
 @app.get("/api/files/<kind>")
 def api_files(kind):
-    """Имена картинок из папок галереи + аплоады бота (для авто-обновления в реальном времени)."""
+    """Имена картинок из персистентного хранилища (uploads = DATA_DIR).
+    Дефолтные картинки репозитория пересеваются сюда при старте (seed_defaults),
+    поэтому все фоны удаляются по-настоящему и не возвращаются при редеплое."""
     if kind not in ALLOWED_KINDS:
         return jsonify(ok=False, error="bad kind"), 400
-    files = []
-
-    src = ROOT_DIR / "tgminiapprbx" / kind
-    if src.is_dir():
-        for f in sorted(src.glob("*")):
-            if f.suffix.lower() in (".jpg", ".jpeg", ".png"):
-                files.append(f"/tgminiapprbx/{kind}/{f.name}")
-
     up = UPLOADS_DIR / kind
+    files = []
     if up.is_dir():
         for f in sorted(up.glob("*")):
             if f.suffix.lower() in (".jpg", ".jpeg", ".png"):
                 files.append(f"/uploads/{kind}/{f.name}")
-
     return jsonify(ok=True, files=files)
 
 
@@ -172,6 +194,8 @@ def api_delete_files():
         return jsonify(ok=False, error="bad paths"), 400
 
     deleted = 0
+    s = load_settings()
+    settings_changed = False
     for raw in paths:
         target = gallery_path(raw)
         if not target:
@@ -181,8 +205,16 @@ def api_delete_files():
                 target.unlink()
                 deleted += 1
                 logging.getLogger("bot").info("удалено: %s", target)
+                if s.get("wallpaper") == raw:
+                    s.pop("wallpaper", None)
+                    settings_changed = True
+                if s.get("banner") == raw:
+                    s.pop("banner", None)
+                    settings_changed = True
         except OSError as exc:
             logging.getLogger("bot").warning("delete %s: %s", target, exc)
+    if settings_changed:
+        save_settings(s)
 
     return jsonify(ok=True, deleted=deleted)
 

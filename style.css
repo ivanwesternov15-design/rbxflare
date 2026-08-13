@@ -525,6 +525,7 @@
     50%{ filter:brightness(1.18); }
   }
   .thumb.cell-in{ animation:cellIn .45s var(--ease) both; }
+  .grid.tab-switching .thumb.cell-in{ animation:none; }
   @keyframes cellIn{
     from{ opacity:0; transform:translateY(14px) scale(.88); }
     to{ opacity:1; transform:translateY(0) scale(1); }
@@ -776,4 +777,254 @@
 
   @media (prefers-reduced-motion: reduce){
     *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+  }
+
+  /* =========================================================
+     ВЬЮХИ (экраны нижней навигации)
+     ========================================================= */
+  .view{ width:100%; max-width:460px; padding-bottom:calc(120px + env(safe-area-inset-bottom)); animation:viewIn .35s var(--ease) both; }
+  #viewProfile{ padding-bottom:0; }
+  .view.hidden{ display:none; }
+  @keyframes viewIn{
+    from{ opacity:0; transform:translateY(12px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .soon-box{
+    margin:40px 16px;
+    text-align:center;
+    color:var(--lilac-light);
+    font-weight:600;
+    font-size:14px;
+    padding:38px 16px;
+    border:1px dashed rgba(255,255,255,.14);
+    border-radius:18px;
+    background:rgba(17,33,45,.35);
+    backdrop-filter:blur(14px) saturate(1.4);
+    -webkit-backdrop-filter:blur(14px) saturate(1.4);
+  }
+
+  /* =========================================================
+     ЭКРАН «КАРТОЧКИ» — шапка и баланс
+     ========================================================= */
+  .cards-top{
+    display:flex; align-items:center; justify-content:space-between;
+    margin:20px 16px 4px;
+  }
+  .cards-title{
+    font-family:var(--font-body);
+    font-weight:800;
+    font-size:22px;
+    letter-spacing:.2px;
+    color:var(--lilac-white);
+  }
+  .balance-pill{
+    display:flex; align-items:center; gap:6px;
+    padding:8px 12px;
+    border-radius:14px;
+    background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.6) 100%);
+    border:1px solid rgba(255,255,255,.14);
+    backdrop-filter:blur(18px) saturate(1.6);
+    -webkit-backdrop-filter:blur(18px) saturate(1.6);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 8px 20px -10px rgba(0,0,0,.6);
+  }
+  .bal-ico{ width:15px; height:15px; color:var(--lilac); }
+  .bal-val{
+    color:var(--lilac-white);
+    font-weight:800;
+    font-size:14px;
+    font-variant-numeric:tabular-nums;
+  }
+  .bal-cur{ color:var(--lilac-light); font-size:11px; font-weight:600; }
+
+  .cards-section{ margin:16px 16px 0; }
+  .section-title{
+    color:var(--lilac-light);
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.9px;
+    text-transform:uppercase;
+    margin-bottom:11px;
+  }
+
+  /* =========================================================
+     ЕЖЕДНЕВНЫЕ КАРТОЧКИ (выбор 1 из 3 + скретч)
+     ========================================================= */
+  .daily-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
+  .daily-grid.solo{ display:flex; justify-content:center; }
+  .d-card{
+    position:relative;
+    aspect-ratio:3/4;
+    border-radius:18px;
+    overflow:hidden;
+    background-size:cover;
+    background-position:center;
+    border:1.5px solid rgba(255,255,255,.16);
+    box-shadow:0 12px 28px -12px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.14);
+    transition:transform .35s var(--ease), opacity .35s var(--ease), filter .35s var(--ease);
+    cursor:pointer;
+  }
+  .d-card::after{
+    content:"";
+    position:absolute; inset:0;
+    background:linear-gradient(180deg, rgba(6,20,27,0) 30%, rgba(6,20,27,.75) 100%);
+  }
+  .d-card-num{
+    position:absolute; top:8px; left:10px; z-index:2;
+    color:var(--lilac-white);
+    font-weight:800; font-size:12px; letter-spacing:1px;
+    text-shadow:0 1px 6px rgba(0,0,0,.6);
+  }
+  .d-card.selected{
+    border-color:var(--lilac);
+    box-shadow:0 0 0 3px rgba(94,116,134,.4), 0 16px 36px -12px rgba(0,0,0,.8);
+  }
+  .d-card.dim{
+    transform:scale(.94);
+    opacity:.6;
+    filter:saturate(.65) brightness(.85);
+    pointer-events:none;
+  }
+  .d-card.gone{
+    transform:scale(.82) translateY(18px);
+    opacity:0;
+    pointer-events:none;
+  }
+  .d-card.raised{
+    margin:14px auto 0;
+    animation:cardRaise .4s var(--ease) both;
+  }
+  @keyframes cardRaise{
+    from{ transform:scale(1); }
+    to{ transform:scale(1.08); }
+  }
+
+  .d-reward{
+    position:absolute; inset:0; z-index:1;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px;
+    background:linear-gradient(180deg, rgba(17,33,45,.74) 0%, rgba(6,20,27,.7) 100%);
+    opacity:0;
+    transform:scale(.8);
+    transition:opacity .28s var(--ease), transform .28s var(--ease);
+  }
+  .d-reward.shown{ opacity:1; transform:scale(1); }
+  .d-win{
+    width:26px; height:26px;
+    color:var(--lilac-pale);
+    filter:drop-shadow(0 0 10px rgba(94,116,134,.8));
+  }
+  .d-amount{
+    color:var(--lilac-white);
+    font-size:19px; font-weight:800;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 14px rgba(94,116,134,.7);
+  }
+  .d-robux{
+    color:var(--lilac-light);
+    font-size:9px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase;
+  }
+
+  .scratch-layer{
+    position:absolute; inset:0; z-index:3;
+    width:100%; height:100%;
+    border-radius:18px;
+    touch-action:none;
+    transition:opacity .42s var(--ease), transform .42s var(--ease);
+  }
+  .scratch-layer.reveal{
+    opacity:0;
+    transform:translateY(-12px) scale(1.06);
+    pointer-events:none;
+  }
+
+  .daily-done{
+    text-align:center;
+    color:var(--lilac-light);
+    font-size:13px; font-weight:600;
+    padding:8px 0 4px;
+  }
+
+  /* кнопка «Забрать карточку» */
+  .collect-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    margin:16px auto 4px;
+    width:calc(100% - 40px);
+    max-width:320px;
+    padding:13px 18px;
+    border:none; border-radius:16px; cursor:pointer;
+    font-family:var(--font-body);
+    font-weight:800; font-size:14px;
+    color:#fff;
+    background:linear-gradient(135deg, rgba(94,116,134,.9) 0%, rgba(46,67,85,.96) 100%);
+    border:1px solid rgba(255,255,255,.22);
+    backdrop-filter:blur(14px) saturate(1.5);
+    -webkit-backdrop-filter:blur(14px) saturate(1.5);
+    box-shadow:0 12px 28px -10px rgba(94,116,134,.6), inset 0 1px 0 rgba(255,255,255,.25);
+    animation:collectIn .35s var(--ease) both;
+    transition:transform .18s var(--ease), opacity .3s var(--ease);
+  }
+  .collect-btn:active{ transform:scale(.97); }
+  .collect-btn .cb-ico{ width:16px; height:16px; }
+  @keyframes collectIn{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* =========================================================
+     ИНВЕНТАРЬ КАРТОЧЕК
+     ========================================================= */
+  .inventory{ display:flex; flex-direction:column; gap:10px; }
+  .inv-card{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px;
+    border-radius:18px;
+    background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.62) 100%);
+    border:1px solid rgba(255,255,255,.14);
+    backdrop-filter:blur(20px) saturate(1.6);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 10px 26px -12px rgba(0,0,0,.65);
+    animation:collectIn .3s var(--ease) both;
+  }
+  .inv-thumb{
+    width:46px; height:60px;
+    border-radius:12px;
+    background-size:cover; background-position:center;
+    border:1px solid rgba(255,255,255,.18);
+    flex-shrink:0;
+  }
+  .inv-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:6px; }
+  .inv-title{ color:var(--lilac-white); font-size:13px; font-weight:700; }
+  .inv-meta{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .chip{
+    font-size:10px; font-weight:700; letter-spacing:.4px;
+    padding:3px 8px; border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(6,20,27,.35);
+    color:var(--lilac-pale);
+  }
+  .chip.reward{
+    color:var(--lilac-white);
+    border-color:rgba(94,116,134,.5);
+    background:rgba(94,116,134,.25);
+  }
+  .chip.staking{
+    color:var(--lilac-white);
+    border-color:rgba(255,255,255,.4);
+    background:rgba(74,92,106,.35);
+  }
+  .stake-btn{
+    border:none; cursor:pointer;
+    font-family:var(--font-body);
+    font-weight:700; font-size:12px;
+    padding:8px 12px; border-radius:12px;
+    color:#fff;
+    background:linear-gradient(135deg, rgba(94,116,134,.85) 0%, rgba(46,67,85,.95) 100%);
+    border:1px solid rgba(255,255,255,.18);
+    transition:transform .18s var(--ease);
+  }
+  .stake-btn:active{ transform:scale(.93); }
+  .inventory-empty{
+    text-align:center;
+    color:var(--lilac-light);
+    font-size:13px; font-weight:600;
+    padding:28px 0;
   }

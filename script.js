@@ -119,8 +119,12 @@ function toastSvg(icon, cls){
   const arrow =
     `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">` +
     `<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`;
+  const win =
+    `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M8 21h8M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a4 4 0 0 0 4 4M17 6h3v1a4 4 0 0 1-4 4"/></svg>`;
   if(icon === 'trash') return trash;
   if(icon === 'arrow') return arrow;
+  if(icon === 'win') return win;
   return refresh;
 }
 
@@ -175,7 +179,10 @@ const state = (() => {
     selected: {
       fons: LIBRARY.fons[0],
       podfons: LIBRARY.podfons[0],
-    }
+    },
+    balance: 0,
+    daily: null,
+    inventory: [],
   };
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -190,6 +197,9 @@ const state = (() => {
             }
           });
         }
+        if(typeof parsed.balance === 'number') base.balance = parsed.balance;
+        if(parsed.daily && typeof parsed.daily === 'object') base.daily = parsed.daily;
+        if(Array.isArray(parsed.inventory)) base.inventory = parsed.inventory;
       }
     }
   }catch(e){}
@@ -198,7 +208,13 @@ const state = (() => {
 
 function saveState(){
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ tab: state.tab, selected: state.selected }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      tab: state.tab,
+      selected: state.selected,
+      balance: state.balance,
+      daily: state.daily,
+      inventory: state.inventory,
+    }));
   }catch(e){}
 }
 
@@ -457,7 +473,7 @@ function animateGrid(dir){
       grid.style.transform = `translateX(${dir * 34 * v}px) scale(${1 - v * .03})`;
       grid.style.filter = `blur(${v * 4}px)`;
     }else{
-      if(!swapped){ swapped = true; renderGrid(state.tab); }
+      if(!swapped){ swapped = true; grid.classList.add('tab-switching'); renderGrid(state.tab); }
       const v = ease((p - .5) * 2);
       grid.style.opacity = .4 + v * .6;
       grid.style.transform = `translateX(${dir * 34 * (1 - v)}px) scale(${.97 + v * .03})`;
@@ -465,6 +481,7 @@ function animateGrid(dir){
     }
     if(p < 1){ requestAnimationFrame(frame); }
     else{
+      grid.classList.remove('tab-switching');
       grid.style.opacity = '';
       grid.style.transform = '';
       grid.style.filter = '';
@@ -495,6 +512,30 @@ function animateTabIndicator(toIdx){
   requestAnimationFrame(frame);
 }
 
+/* ---- предзагрузка картинок вкладки (чтобы анимация свапа не была рваной) ---- */
+const imgCache = new Set();
+function preloadTab(tab){
+  const srcs = LIBRARY[tab] || [];
+  return new Promise(resolve => {
+    if(!srcs.length){ resolve(); return; }
+    let done = 0;
+    let finished = false;
+    const finish = () => { if(!finished){ finished = true; resolve(); } };
+    const timer = setTimeout(finish, 900); // максимум ждём 0.9 с — потом анимируем как есть
+    srcs.forEach(s => {
+      if(imgCache.has(s)){ done++; if(done === srcs.length) finish(); return; }
+      const im = new Image();
+      im.onload = im.onerror = () => {
+        imgCache.add(s);
+        done++;
+        clearTimeout(timer);
+        if(done === srcs.length) finish();
+      };
+      im.src = s;
+    });
+  });
+}
+
 function switchTab(tab){
   const keys = Object.keys(LIBRARY);
   const prevIdx = keys.indexOf(state.tab);
@@ -503,7 +544,8 @@ function switchTab(tab){
   state.tab = tab;
   tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   animateTabIndicator(nextIdx);
-  animateGrid(dir);
+  const myTab = tab;
+  preloadTab(myTab).then(() => { if(state.tab === myTab) animateGrid(dir); });
   saveState();
 }
 
@@ -518,6 +560,7 @@ function openSheet(){
   animateSheet(true);
   renderGrid(state.tab);
   refreshLibrary();
+  Object.keys(LIBRARY).forEach(t => preloadTab(t));
   if(!window._scanTimer){
     window._scanTimer = setInterval(refreshLibrary, 15000); // авто-обновление в реальном времени
   }
@@ -568,6 +611,285 @@ function animateSheet(open){
 menuBtn.addEventListener('click', openSheet);
 sheetClose.addEventListener('click', closeSheet);
 backdrop.addEventListener('click', closeSheet);
+
+/* =========================================================
+   КАРТОЧКИ: ежедневные карточки + скретч + инвентарь
+   ========================================================= */
+const REWARD_POOL = [10, 25, 50, 100, 250, 500, 1000];
+const CARD_IMAGES = (typeof GALLERY === 'object' && GALLERY)
+  ? ['tgminiapprbx/fons/flaze.jpg', 'tgminiapprbx/fons/crystal.jpg', 'tgminiapprbx/fons/moon.jpg']
+  : ['tgminiapprbx/fons/flaze.jpg', 'tgminiapprbx/fons/crystal.jpg', 'tgminiapprbx/fons/moon.jpg'];
+const dailyGridEl = document.getElementById('dailyGrid');
+const dailyDoneEl = document.getElementById('dailyDone');
+const collectBtnEl = document.getElementById('collectBtn');
+const balanceValueEl = document.getElementById('balanceValue');
+
+function todayKey(){ return new Date().toISOString().slice(0, 10); }
+
+function ensureDaily(){
+  if(!state.daily || state.daily.date !== todayKey()){
+    const rewards = [0, 1, 2].reduce((acc, id) => {
+      acc[id] = REWARD_POOL[Math.floor(Math.random() * REWARD_POOL.length)];
+      return acc;
+    }, {});
+    state.daily = { date: todayKey(), rewards, selectedId: null, revealed: false, collected: false };
+    saveState();
+  }
+}
+
+function dailyCardImage(id){
+  const srcs = (LIBRARY.fons && LIBRARY.fons.length) ? LIBRARY.fons : CARD_IMAGES;
+  return srcs[id % srcs.length];
+}
+
+function renderDaily(){
+  ensureDaily();
+  scratchState = null;
+  const d = state.daily;
+  dailyGridEl.innerHTML = '';
+  dailyGridEl.classList.toggle('solo', d.revealed);
+  [0, 1, 2].forEach(id => {
+    const el = document.createElement('div');
+    el.className = 'd-card';
+    el.dataset.id = id;
+    el.style.backgroundImage = `url('${dailyCardImage(id)}')`;
+    el.innerHTML =
+      `<div class="d-card-num">0${id + 1}</div>` +
+      `<div class="d-reward">` +
+      toastSvg('win', 'd-win') +
+      `<div class="d-amount">+${d.rewards[id]}</div>` +
+      `<div class="d-robux">Robux</div>` +
+      `</div>`;
+    if(d.selectedId !== null){
+      if(id === d.selectedId) el.classList.add('selected');
+      else if(d.revealed) el.classList.add('gone', 'hidden');
+      else el.classList.add('dim');
+    }
+    if(d.revealed && id === d.selectedId){
+      el.classList.add('raised');
+      const reward = el.querySelector('.d-reward');
+      setTimeout(() => reward.classList.add('shown'), 60);
+    }
+    el.addEventListener('click', () => selectDailyCard(id));
+    dailyGridEl.appendChild(el);
+  });
+  collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
+  dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
+  if(d.revealed && d.collected) dailyGridEl.classList.add('hidden');
+}
+
+/* --- события стейта: select / reveal / collect --- */
+function selectDailyCard(id){
+  if(state.daily.revealed || state.daily.collected) return;
+  state.daily.selectedId = id;
+  saveState();
+  dailyGridEl.querySelectorAll('.d-card').forEach(el => {
+    el.classList.toggle('selected', el.dataset.id === String(id));
+    el.classList.toggle('dim', el.dataset.id !== String(id));
+  });
+  initScratch(dailyGridEl.querySelector(`.d-card[data-id="${id}"]`), id);
+}
+
+function revealDailyCard(id){
+  state.daily.revealed = true;
+  saveState();
+  const sel = dailyGridEl.querySelector(`.d-card[data-id="${id}"]`);
+  const canvas = sel && sel.querySelector('.scratch-layer');
+  if(canvas){
+    canvas.classList.add('reveal');
+    canvas.addEventListener('transitionend', () => canvas.remove(), { once: true });
+    setTimeout(() => canvas.remove(), 520);
+  }
+  const reward = sel && sel.querySelector('.d-reward');
+  if(reward) setTimeout(() => reward.classList.add('shown'), 80);
+  dailyGridEl.querySelectorAll('.d-card').forEach(el => {
+    if(el.dataset.id !== String(id)){
+      el.classList.add('gone');
+      setTimeout(() => el.classList.add('hidden'), 380);
+    }
+  });
+  setTimeout(() => {
+    dailyGridEl.classList.add('solo');
+    if(sel) sel.classList.add('raised');
+    collectBtnEl.classList.remove('hidden');
+  }, 400);
+  addBalance(state.daily.rewards[id]);
+}
+
+function collectDailyCard(){
+  if(state.daily.collected || !state.daily.selectedId) return;
+  const id = state.daily.selectedId;
+  state.inventory.push({
+    id: `daily-${state.daily.date}-${id}`,
+    type: 'daily',
+    level: 'Basic',
+    rewardRobux: state.daily.rewards[id],
+    status: 'available',
+    img: dailyCardImage(id),
+  });
+  state.daily.collected = true;
+  saveState();
+  collectBtnEl.classList.add('hidden');
+  dailyGridEl.classList.add('hidden');
+  dailyDoneEl.classList.remove('hidden');
+  renderInventory();
+  showToast('Ежедневная карта в инвентаре', true, 'win');
+}
+
+/* --- баланс --- */
+let balanceAnim = 0;
+function addBalance(delta){
+  if(!delta) return;
+  const target = state.balance + delta;
+  const from = state.balance;
+  state.balance = target;
+  saveState();
+  const token = ++balanceAnim;
+  const t0 = performance.now();
+  const dur = 600;
+  const frame = now => {
+    if(token !== balanceAnim) return;
+    const p = Math.min(1, (now - t0) / dur);
+    const v = Math.round(from + (target - from) * (1 - Math.pow(1 - p, 3)));
+    balanceValueEl.textContent = v;
+    if(p < 1) requestAnimationFrame(frame);
+    else balanceValueEl.textContent = target;
+  };
+  requestAnimationFrame(frame);
+}
+
+/* --- скретч (защитный слой поверх награды) --- */
+const SCRATCH_THRESHOLD = 0.30;
+let scratchState = null;
+
+function initScratch(cardEl, id){
+  if(scratchState) return;
+  const canvas = document.createElement('canvas');
+  canvas.className = 'scratch-layer';
+  cardEl.appendChild(canvas);
+  const rect = cardEl.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  const g = ctx.createLinearGradient(0, 0, rect.width, rect.height);
+  g.addColorStop(0, '#253745');
+  g.addColorStop(1, '#11212D');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, rect.width, rect.height);
+  ctx.save();
+  ctx.translate(rect.width / 2, rect.height / 2);
+  ctx.rotate(-Math.PI / 4);
+  ctx.fillStyle = 'rgba(94,116,134,.22)';
+  for(let i = -rect.height; i < rect.width * 1.6; i += 26){
+    ctx.fillRect(i, -60, 14, rect.height + 120);
+  }
+  ctx.restore();
+  ctx.fillStyle = 'rgba(248,250,252,.85)';
+  ctx.font = '700 15px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Потри карточку', rect.width / 2, rect.height / 2 - 6);
+  ctx.fillStyle = 'rgba(183,195,202,.7)';
+  ctx.font = '600 13px Inter, sans-serif';
+  ctx.fillText('✦ ✦ ✦', rect.width / 2, rect.height / 2 + 16);
+
+  const brush = Math.max(14, rect.width * .11);
+  const pos = e => {
+    const r = canvas.getBoundingClientRect();
+    return { x: e.clientX - r.left, y: e.clientY - r.top };
+  };
+  let active = false;
+  let last = null;
+  const erase = (p, dist) => {
+    ctx.globalCompositeOperation = 'destination-out';
+    if(last){
+      ctx.lineWidth = brush * 2;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(last.x, last.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }else{
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, brush, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    scratchState.erased += dist * brush * 1.6 + Math.PI * brush * brush * .3;
+    last = p;
+    if(scratchState.erased / (rect.width * rect.height) >= SCRATCH_THRESHOLD) autoReveal();
+  };
+
+  canvas.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    canvas.setPointerCapture(e.pointerId);
+    active = true;
+    last = null;
+    erase(pos(e), 0);
+  });
+  canvas.addEventListener('pointermove', e => {
+    if(!active) return;
+    const p = pos(e);
+    const dist = last ? Math.hypot(p.x - last.x, p.y - last.y) : 0;
+    erase(p, dist);
+  });
+  canvas.addEventListener('pointerup', () => { active = false; });
+  canvas.addEventListener('pointercancel', () => { active = false; });
+
+  scratchState = { id, erased: 0 };
+}
+
+function autoReveal(){
+  if(!scratchState || state.daily.revealed) return;
+  revealDailyCard(scratchState.id);
+  scratchState = null;
+}
+
+/* --- инвентарь --- */
+const inventoryListEl = document.getElementById('inventoryList');
+const inventoryEmptyEl = document.getElementById('inventoryEmpty');
+
+function renderInventory(){
+  inventoryListEl.innerHTML = '';
+  inventoryEmptyEl.classList.toggle('hidden', state.inventory.length > 0);
+  state.inventory.forEach((card, i) => {
+    const el = document.createElement('div');
+    el.className = 'inv-card';
+    const staking = card.status === 'staking';
+    el.innerHTML =
+      `<div class="inv-thumb" style="background-image:url('${card.img}')"></div>` +
+      `<div class="inv-info">` +
+        `<div class="inv-title">Ежедневная карта</div>` +
+        `<div class="inv-meta">` +
+          `<span class="chip">${card.level}</span>` +
+          `<span class="chip reward">+${card.rewardRobux} Robux</span>` +
+          `<span class="chip ${staking ? 'staking' : ''}">${staking ? 'В стейкинге' : 'Доступна'}</span>` +
+        `</div>` +
+      `</div>` +
+      `<button class="stake-btn ${staking ? 'off' : ''}" data-i="${i}">` +
+        (staking ? 'Забрать из стейкинга' : 'Отправить в стейкинг') +
+      `</button>`;
+    el.querySelector('.stake-btn').addEventListener('click', () => {
+      state.inventory[i].status = staking ? 'available' : 'staking';
+      saveState();
+      renderInventory();
+    });
+    inventoryListEl.appendChild(el);
+  });
+}
+
+/* ---- переключение экранов нижней навигации ---- */
+function switchView(view){
+  document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+  const map = { main: 'viewSoon', cards: 'viewCards', refs: 'viewSoon', tasks: 'viewSoon', profile: 'viewProfile' };
+  document.getElementById(map[view] || 'viewProfile').classList.remove('hidden');
+  if(view === 'cards'){
+    renderDaily();
+    renderInventory();
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
 /* ---- нижняя навигация (пока работает только «Профиль»): плавное скольжение индикатора ---- */
 const navIndicator = document.getElementById('navIndicator');
@@ -624,9 +946,7 @@ navBtns.forEach((btn, idx) => {
     activeIdx = idx;
     navBtns.forEach(b => b.classList.toggle('active', b === btn));
     moveNavIndicator(idx, true);
-    if(btn.dataset.view === 'profile'){
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    switchView(btn.dataset.view);
   });
 });
 
@@ -639,7 +959,12 @@ if(tg){
   tg.setBackgroundColor('#06141B');
 }
 
+collectBtnEl.addEventListener('click', collectDailyCard);
+
 applySelected();
 refreshLibrary();
 loadProfile();
 loadSettings();
+balanceValueEl.textContent = state.balance;
+renderDaily();
+renderInventory();

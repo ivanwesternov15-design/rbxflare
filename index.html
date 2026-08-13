@@ -14,6 +14,7 @@
 
 <div id="app-wallpaper"></div>
 
+<main class="view" id="viewProfile">
 <div class="page">
   <div class="card">
 
@@ -64,6 +65,38 @@
 
   </div>
 </div>
+</main>
+
+<main class="view hidden" id="viewCards">
+  <div class="cards-top">
+    <div class="cards-title">Карточки</div>
+    <div class="balance-pill">
+      <svg class="bal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <span class="bal-val" id="balanceValue">0</span>
+      <span class="bal-cur">Robux</span>
+    </div>
+  </div>
+
+  <div class="cards-section">
+    <div class="section-title">Ежедневные карточки</div>
+    <div class="daily-grid" id="dailyGrid"></div>
+    <div class="daily-done hidden" id="dailyDone">Приходи завтра за новой карточкой</div>
+    <button class="collect-btn hidden" id="collectBtn">
+      <svg class="cb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M12 17v-9"/><path d="M8 12h8"/><path d="M12 8.5 9.5 5.5M12 3v2.5M14.5 5.5 12 8.5"/></svg>
+      <span>Забрать карточку</span>
+    </button>
+  </div>
+
+  <div class="cards-section">
+    <div class="section-title">Инвентарь</div>
+    <div class="inventory" id="inventoryList"></div>
+    <div class="inventory-empty" id="inventoryEmpty">Пока пусто — забери ежедневную карточку</div>
+  </div>
+</main>
+
+<main class="view hidden" id="viewSoon">
+  <div class="soon-box">Раздел скоро появится</div>
+</main>
 
 <!-- ============ ШТОРКА НАСТРОЙКИ ВНЕШНЕГО ВИДА ============ -->
 <div class="sheet-backdrop" id="backdrop"></div>
