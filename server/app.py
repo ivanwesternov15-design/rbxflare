@@ -90,11 +90,11 @@ CONFIG_FILE = DATA_DIR / "config.json"
 
 DEFAULT_CONFIG = {
     "tiers": {
-        "Basic":    {"reward": 40,   "stake": {"12h": 0.5, "24h": 1,   "3d": 3,   "7d": 7}},
-        "Silver":   {"reward": 120,  "stake": {"12h": 0.75, "24h": 1.5, "3d": 4,  "7d": 9}},
-        "Gold":     {"reward": 300,  "stake": {"12h": 1,    "24h": 2,   "3d": 5,  "7d": 12}},
-        "Diamond":  {"reward": 800,  "stake": {"12h": 1.5,  "24h": 3,   "3d": 8,  "7d": 18}},
-        "Mythic":   {"reward": 2500, "stake": {"12h": 2,    "24h": 4,   "3d": 10, "7d": 25}},
+        "Basic":    {"reward": 40,   "chance": 42,  "stake": {"12h": 0.5, "24h": 1,   "3d": 3,   "7d": 7}},
+        "Silver":   {"reward": 120,  "chance": 27,  "stake": {"12h": 0.75, "24h": 1.5, "3d": 4,  "7d": 9}},
+        "Gold":     {"reward": 300,  "chance": 17,  "stake": {"12h": 1,    "24h": 2,   "3d": 5,  "7d": 12}},
+        "Diamond":  {"reward": 800,  "chance": 10,  "stake": {"12h": 1.5,  "24h": 3,   "3d": 8,  "7d": 18}},
+        "Mythic":   {"reward": 2500, "chance": 4,   "stake": {"12h": 2,    "24h": 4,   "3d": 10, "7d": 25}},
     }
 }
 VALID_TIERS = tuple(DEFAULT_CONFIG["tiers"])
@@ -113,6 +113,9 @@ def load_config():
             continue
         if isinstance(data.get("reward"), (int, float)) and data["reward"] > 0:
             merged["tiers"][tier]["reward"] = round(float(data["reward"]), 0)
+        chance = data.get("chance")
+        if isinstance(chance, (int, float)) and 0.1 <= chance <= 100:
+            merged["tiers"][tier]["chance"] = round(float(chance), 1)
         stake = data.get("stake")
         if isinstance(stake, dict):
             for period in STAKE_PERIODS:
@@ -153,13 +156,20 @@ def api_set_config():
         reward = spec.get("reward")
         if not isinstance(reward, (int, float)) or not (1 <= reward <= 100000):
             return jsonify(ok=False, error=f"bad reward for {tier}"), 400
+        chance = spec.get("chance")
+        if not isinstance(chance, (int, float)) or not (0.1 <= chance <= 100):
+            return jsonify(ok=False, error=f"bad chance for {tier}"), 400
         stake = {}
         for period in STAKE_PERIODS:
             val = spec.get("stake", {}).get(period)
             if not isinstance(val, (int, float)) or not (0 <= val <= 1000):
                 return jsonify(ok=False, error=f"bad stake {tier} {period}"), 400
             stake[period] = float(val)
-        cleaned[tier] = {"reward": round(float(reward), 0), "stake": stake}
+        cleaned[tier] = {
+            "reward": round(float(reward), 0),
+            "chance": round(float(chance), 1),
+            "stake": stake,
+        }
 
     if not cleaned:
         return jsonify(ok=False, error="bad config"), 400

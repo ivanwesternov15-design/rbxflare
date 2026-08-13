@@ -1696,3 +1696,23 @@
     opacity:.75;
     animation:packBreathe 2.6s ease-in-out infinite;
   }
+
+  /* =========================================================
+     ПОСЛЕ ЗАГРУЗКИ (сплэш скрыт): всё уже на своих местах,
+     каскадные анимации появления не перезапускаются при
+     переключении вкладок
+     ========================================================= */
+  .preloaded .view{ animation:none; }
+  .preloaded .card{
+    animation:none;
+    opacity:1;
+    transform:none;
+  }
+  .preloaded .banner,
+  .preloaded .avatar-wrap,
+  .preloaded .identity,
+  .preloaded .top-bar,
+  .preloaded .panel,
+  .preloaded .main-hero,
+  .preloaded .balance-card,
+  .preloaded .how-step{ animation:none; }

@@ -634,11 +634,11 @@ backdrop.addEventListener('click', closeSheet);
    ========================================================= */
 const DEFAULT_CONFIG = {
   tiers: {
-    Basic:    { reward: 40,   stake: { '12h': 0.5, '24h': 1,   '3d': 3,   '7d': 7 } },
-    Silver:   { reward: 120,  stake: { '12h': 0.75, '24h': 1.5, '3d': 4,  '7d': 9 } },
-    Gold:     { reward: 300,  stake: { '12h': 1,    '24h': 2,   '3d': 5,  '7d': 12 } },
-    Diamond:  { reward: 800,  stake: { '12h': 1.5,  '24h': 3,   '3d': 8,  '7d': 18 } },
-    Mythic:   { reward: 2500, stake: { '12h': 2,    '24h': 4,   '3d': 10, '7d': 25 } },
+    Basic:    { reward: 40,   chance: 42,   stake: { '12h': 0.5, '24h': 1,   '3d': 3,   '7d': 7 } },
+    Silver:   { reward: 120,  chance: 27,   stake: { '12h': 0.75, '24h': 1.5, '3d': 4,  '7d': 9 } },
+    Gold:     { reward: 300,  chance: 17,   stake: { '12h': 1,    '24h': 2,   '3d': 5,  '7d': 12 } },
+    Diamond:  { reward: 800,  chance: 10,   stake: { '12h': 1.5,  '24h': 3,   '3d': 8,  '7d': 18 } },
+    Mythic:   { reward: 2500, chance: 4,    stake: { '12h': 2,    '24h': 4,   '3d': 10, '7d': 25 } },
   }
 };
 const TIER_ORDER = ['Basic', 'Silver', 'Gold', 'Diamond', 'Mythic'];
@@ -649,24 +649,29 @@ const TIER_STYLE = {
   Diamond: { img: 'tgminiapprbx/Cards/Diamond.png', colors: ['#188cfe', '#01114c'] },
   Mythic:  { img: 'tgminiapprbx/Cards/Mythic.png',  colors: ['#bf3cde', '#c64dfa', '#300f47'] },
 };
-const DROP_WEIGHTS = { Basic: 42, Silver: 27, Gold: 17, Diamond: 10, Mythic: 4 };
 const STAKE_LABEL = { '12h': '12 часов', '24h': '24 часа', '3d': '3 дня', '7d': '7 дней' };
 const STAKE_MS = { '12h': 12 * 3600e3, '24h': 24 * 3600e3, '3d': 3 * 86400e3, '7d': 7 * 86400e3 };
 
 let APP_CONFIG = null;
-function tierCfg(name){ return ((APP_CONFIG || {}).tiers || {})[name] || DEFAULT_CONFIG.tiers[name]; }
+function tierCfg(name){
+  const base = DEFAULT_CONFIG.tiers[name];
+  const cfg = ((APP_CONFIG || {}).tiers || {})[name];
+  if(!cfg) return base;
+  return Object.assign({}, base, cfg, { stake: Object.assign({}, base.stake, cfg.stake || {}) });
+}
 function tierVars(name){
   const c = TIER_STYLE[name].colors;
   return `--t1:${c[0]};--t2:${c[1]};--t3:${c[2] || c[1]}`;
 }
 function rollRarity(){
-  const total = TIER_ORDER.reduce((s, t) => s + DROP_WEIGHTS[t], 0);
+  const entries = TIER_ORDER.map(t => ({ t, c: Math.max(0.1, Number(tierCfg(t).chance) || 0) }));
+  const total = entries.reduce((s, e) => s + e.c, 0);
   let r = Math.random() * total;
-  for(const t of TIER_ORDER){
-    r -= DROP_WEIGHTS[t];
-    if(r <= 0) return t;
+  for(const e of entries){
+    r -= e.c;
+    if(r <= 0) return e.t;
   }
-  return 'Basic';
+  return entries[entries.length - 1].t;
 }
 
 const dailyGridEl = document.getElementById('dailyGrid');
@@ -1071,6 +1076,8 @@ function renderAdminTiers(){
       `<div class="admin-tier-grid">` +
         `<div class="at-field"><label>Сумма выпадения, Robux</label>` +
           `<input class="at-input" type="number" min="1" max="100000" step="1" data-tier="${tier}" data-f="reward" value="${cfg.reward}"></div>` +
+        `<div class="at-field"><label>Шанс выпадения, %</label>` +
+          `<input class="at-input" type="number" min="0.1" max="100" step="0.1" data-tier="${tier}" data-f="chance" value="${cfg.chance}"></div>` +
         Object.keys(STAKE_LABEL).map(p =>
           `<div class="at-field"><label>Стейкинг ${STAKE_LABEL[p].toLowerCase()} +%</label>` +
           `<input class="at-input" type="number" min="0" max="1000" step="0.25" data-tier="${tier}" data-f="${p}" value="${cfg.stake[p]}"></div>`
@@ -1091,6 +1098,17 @@ function saveAdmin(){
   const init = tgInitData();
   if(!init){ showToast('Ошибка авторизации', false); return; }
   const tiers = {};
+  const initTier = name => {
+    if(!tiers[name]){
+      const base = tierCfg(name);
+      tiers[name] = {
+        reward: base.reward,
+        chance: base.chance,
+        stake: Object.assign({}, base.stake),
+      };
+    }
+    return tiers[name];
+  };
   for(const inp of adminForm){
     const val = parseFloat(inp.value);
     if(!isFinite(val) || val < 0){
@@ -1098,14 +1116,15 @@ function saveAdmin(){
       showToast('Проверь заполнение полей', false);
       return;
     }
-    const key = `${inp.dataset.tier}.${inp.dataset.f}`;
+    const name = inp.dataset.tier;
     if(inp.dataset.f === 'reward'){
       if(val < 1){ inp.classList.add('dirty'); showToast('Сумма не может быть меньше 1', false); return; }
-      tiers[inp.dataset.tier] = tiers[inp.dataset.tier] || { reward: val, stake: {} };
-      tiers[inp.dataset.tier].reward = val;
+      initTier(name).reward = val;
+    }else if(inp.dataset.f === 'chance'){
+      if(val < 0.1 || val > 100){ inp.classList.add('dirty'); showToast('Шанс — от 0.1 до 100%', false); return; }
+      initTier(name).chance = val;
     }else{
-      tiers[inp.dataset.tier] = tiers[inp.dataset.tier] || { reward: tierCfg(inp.dataset.tier).reward, stake: {} };
-      tiers[inp.dataset.tier].stake[inp.dataset.f] = val;
+      initTier(name).stake[inp.dataset.f] = val;
     }
   }
   adminSaveBtn.classList.add('saving');
@@ -1269,6 +1288,7 @@ Promise.allSettled([
     adminBtn.classList.remove('hidden');
     dailyResetBtn.classList.remove('hidden');
   }
+  document.body.classList.add('preloaded');
   const wait = Math.max(0, 950 - (performance.now() - bootStart));
   setTimeout(() => splashEl.classList.add('done'), wait);
 });
