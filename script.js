@@ -259,6 +259,7 @@ backdrop.addEventListener('click', closeSheet);
 const navIndicator = document.getElementById('navIndicator');
 const navBtns = [...document.querySelectorAll('.nav-btn')];
 let navPos = 0;
+let navAnim = 0; // токен текущей анимации — отменяет предыдущие
 
 function setNavIndicatorX(x, sx, sy){
   navIndicator.style.transform =
@@ -267,12 +268,14 @@ function setNavIndicatorX(x, sx, sy){
 
 function moveNavIndicator(idx, animate){
   const maxIdx = navBtns.length - 1;
-  if(!animate){
+  navAnim++; // новая анимация отменяет старую
+  if(!animate || idx === navPos){
     navPos = idx;
-    setNavIndicatorX(navPos, 1, 1);
+    setNavIndicatorX(idx, 1, 1);
     return;
   }
   const from = navPos;
+  const token = navAnim;
   const t0 = performance.now();
   const dur = 520;
   const easeOutBack = t => {
@@ -280,6 +283,7 @@ function moveNavIndicator(idx, animate){
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   };
   const frame = now => {
+    if(token !== navAnim) return; // есть более новая анимация — старая умирает
     const p = Math.min(1, (now - t0) / dur);
     const raw = from + (idx - from) * easeOutBack(p);
     const x = Math.min(Math.max(raw, 0), maxIdx); // не выходим за пределы панели
