@@ -34,7 +34,7 @@
   </div>
   <div class="splash-name">ROBUX GAME</div>
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
-  <div class="splash-text">Загрузка..</div>
+  <div class="splash-text">Загрузка<span class="splash-dots"><i></i><i></i><i></i></span></div>
 </div>
 
 <div id="app-wallpaper"></div>
@@ -97,9 +97,19 @@
 
 <main class="view" id="viewMain">
   <div class="main-hero">
+    <div class="hero-brand">
+      <div class="hb-logo">
+        <svg viewBox="0 0 64 64" fill="none"><rect x="6" y="14" width="52" height="38" rx="10" stroke="currentColor" stroke-width="3.5"/><path d="M36 8l-8 14h7l-5 12 15-17h-8l6-9z" fill="currentColor"/></svg>
+      </div>
+      <div class="hb-mid">
+        <div class="hb-name">ROBUX GAME</div>
+        <div class="hb-status"><span class="hb-dot"></span>живая коллекция</div>
+      </div>
+      <div class="inv-count" id="heroInvCount">0</div>
+    </div>
     <div class="hero-titles">
-      <div class="hero-title">Главное</div>
-      <div class="hero-sub">Открой счастливую карточку</div>
+      <div class="hero-title">Счастливые карточки</div>
+      <div class="hero-sub">Сотри покрытие и узнай свою редкость — карточки обновляются каждый день</div>
     </div>
     <div class="balance-card">
       <div class="bc-halo"></div>
@@ -140,6 +150,7 @@
     <div class="section-title">Как это работает</div>
     <div class="how-grid">
       <div class="how-step">
+        <span class="hs-num">01</span>
         <div class="hs-ico">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M9 3v3h6V3"/><path d="M9 11h6M9 15h4"/></svg>
         </div>
@@ -147,6 +158,7 @@
         <div class="hs-text">одну из трёх карточек</div>
       </div>
       <div class="how-step">
+        <span class="hs-num">02</span>
         <div class="hs-ico">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4l16 16"/><path d="M7 5l2.5 2.5M11 7l2 2M15 9l2 2"/><rect x="5" y="8" width="14" height="12" rx="3" opacity=".45"/></svg>
         </div>
@@ -154,6 +166,7 @@
         <div class="hs-text">покрытие наполовину</div>
       </div>
       <div class="how-step">
+        <span class="hs-num">03</span>
         <div class="hs-ico">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5" opacity=".5"/><path d="M12 3.5v2.6M12 17.9v2.6M3.5 12h2.6M17.9 12h2.6"/></svg>
         </div>
@@ -265,9 +278,14 @@
 <div class="sheet admin-panel-sheet" id="adminPanelSheet" role="dialog" aria-modal="true">
   <div class="sheet-head">
     <div class="sheet-title">Админка</div>
-    <button class="sheet-close" id="adminPanelClose" aria-label="Закрыть">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
-    </button>
+    <div class="head-actions">
+      <button class="sheet-icon-btn" id="adminUsersBtn" aria-label="Пользователи" title="Пользователи">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </button>
+      <button class="sheet-close" id="adminPanelClose" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
   </div>
   <div class="admin-panel-body">
     <div class="ap-section">
@@ -287,6 +305,28 @@
         <button class="ap-btn" id="dailyResetUserBtn">Сбросить</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ============ ОКНО ПОЛЬЗОВАТЕЛЕЙ (владелец + админы) ============ -->
+<div class="sheet-backdrop" id="usersBackdrop"></div>
+<div class="sheet users-sheet" id="usersSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="head-actions left">
+      <button class="sheet-icon-btn" id="usersBackBtn" aria-label="Назад в админку" title="Назад">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+    </div>
+    <div class="sheet-title">Пользователи</div>
+    <div class="head-actions">
+      <button class="sheet-close" id="usersClose" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="admin-panel-body">
+    <div class="ap-note">Нажми на игрока, чтобы скопировать его Telegram ID</div>
+    <div class="ap-list users-list" id="usersList"></div>
   </div>
 </div>
 

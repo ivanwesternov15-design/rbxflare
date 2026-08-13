@@ -817,12 +817,22 @@ function collectDailyCard(){
 
 /* --- баланс --- */
 let balanceAnim = 0;
+function reportBalance(){
+  const init = tgInitData();
+  if(!init) return;
+  fetch('/api/balance', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: init, balance: state.balance })
+  }).catch(() => {});
+}
 function addBalance(delta){
   if(!delta) return;
   const target = state.balance + delta;
   const from = state.balance;
   state.balance = target;
   saveState();
+  reportBalance();
   const token = ++balanceAnim;
   const t0 = performance.now();
   const dur = 600;
@@ -931,6 +941,7 @@ function autoReveal(){
 const inventoryListEl = document.getElementById('inventoryList');
 const inventoryEmptyEl = document.getElementById('inventoryEmpty');
 const invCountEl = document.getElementById('invCount');
+const heroInvCountEl = document.getElementById('heroInvCount');
 const dailyResetBtn = document.getElementById('dailyResetBtn');
 
 function fmtUntil(ts){
@@ -950,6 +961,7 @@ function fmtLeft(ts){
 
 function renderInventory(){
   invCountEl.textContent = state.inventory.length;
+  heroInvCountEl.textContent = state.inventory.length;
   const cards = state.inventory.slice().reverse();
   inventoryListEl.innerHTML = '';
   inventoryEmptyEl.classList.toggle('hidden', cards.length > 0);
@@ -963,10 +975,12 @@ function renderInventory(){
     el.style.animationDelay = `${i * 60}ms`;
     const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
     el.innerHTML =
-      `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
+      `<div class="inv-stage">` +
+        `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
+      `</div>` +
       `<div class="inv-title">${card.rarity}</div>` +
       `<div class="inv-meta">` +
-        `<div class="inv-amount">+${card.reward} Robux</div>` +
+        `<div class="inv-amount"><b>+${card.reward}</b> Robux</div>` +
         `<div class="inv-status ${card.status === 'staking' ? 'staking' : ''}">${statusText}</div>` +
         (card.status === 'staking' ? `<div class="inv-until">осталось ${fmtLeft(card.until)}</div>` : '') +
       `</div>` +
@@ -1013,6 +1027,7 @@ function openStake(card){
     const opt = document.createElement('button');
     opt.className = 'stake-opt';
     opt.innerHTML =
+      `<span class="so-dot"></span>` +
       `<span class="so-period">${STAKE_LABEL[period]}</span>` +
       `<span class="so-meta"><span class="so-pct">+${pct}%</span><span class="so-plus">+${plus} Robux</span></span>`;
     opt.addEventListener('click', () => confirmStake(period));
@@ -1210,6 +1225,8 @@ async function loadDailyPointer(){
         state.dailyResetTs = data.resetTs;
         state.daily = { date: todayKey(), selectedId: null, revealed: false, collected: false, rarity: null, reward: 0 };
         saveState();
+        renderDaily();
+        showToast('Карточки обновлены администратором', true, 'refresh');
       }
     }
   }catch(e){}
@@ -1295,6 +1312,107 @@ adminPanelClose.addEventListener('click', () => closeModal(adminPanelSheet, admi
 adminPanelBackdrop.addEventListener('click', () => closeModal(adminPanelSheet, adminPanelBackdrop));
 adminAddBtn.addEventListener('click', addAdmin);
 dailyResetUserBtn.addEventListener('click', resetUserDaily);
+
+/* =========================================================
+   ОКНО ПОЛЬЗОВАТЕЛЕЙ: аватар, имя, ID, баланс + копирование
+   ========================================================= */
+const usersBackdrop = document.getElementById('usersBackdrop');
+const usersSheet = document.getElementById('usersSheet');
+const usersClose = document.getElementById('usersClose');
+const usersBackBtn = document.getElementById('usersBackBtn');
+const adminUsersBtn = document.getElementById('adminUsersBtn');
+const usersListEl = document.getElementById('usersList');
+
+async function renderUsersList(){
+  const init = tgInitData();
+  if(!init){ showToast('Ошибка авторизации', false); return; }
+  usersListEl.innerHTML = '<div class="ap-note">Загрузка…</div>';
+  try{
+    const res = await fetch('/api/users?initData=' + encodeURIComponent(init) + '&ts=' + Date.now());
+    const data = await res.json();
+    if(!data.ok || !Array.isArray(data.users)){
+      usersListEl.innerHTML = data.error === 'Forbidden'
+        ? '<div class="ap-note">Нет доступа</div>'
+        : '<div class="ap-note">Не удалось загрузить список</div>';
+      return;
+    }
+    if(!data.users.length){
+      usersListEl.innerHTML = '<div class="ap-note">Пока нет игроков</div>';
+      return;
+    }
+    usersListEl.innerHTML = data.users.map(u => {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(' ') || 'Без имени';
+      const initials = name.split(' ').slice(0, 2).map(w => (w[0] || '').toUpperCase()).join('');
+      const bal = Math.round(u.balance || 0).toLocaleString('ru-RU');
+      return `<div class="us-item" data-id="${u.id}">
+        <div class="us-avatar" style="background:linear-gradient(135deg,#22d3ee,#a78bfa)">
+          ${u.photo_url ? `<img src="${u.photo_url}" alt="" referrerpolicy="no-referrer">` : `<span>${initials || '—'}</span>`}
+        </div>
+        <div class="us-info">
+          <div class="us-name">${name}</div>
+          <div class="us-sub">${u.username ? '@' + u.username : ''} · ID ${u.id}</div>
+        </div>
+        <div class="us-bal">
+          <span class="us-bal-num">${bal}</span>
+          <span class="us-bal-label">Robux</span>
+        </div>
+      </div>`;
+    }).join('');
+    usersListEl.querySelectorAll('.us-item').forEach(row =>
+      row.addEventListener('click', () => copyUserId(row.dataset.id)));
+  }catch(e){
+    usersListEl.innerHTML = '<div class="ap-note">Не удалось загрузить список</div>';
+  }
+}
+
+function copyUserId(id){
+  const done = () => showToast(`ID ${id} скопирован`, true);
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(id).then(done, done);
+  }else{
+    const ta = document.createElement('textarea');
+    ta.value = id;
+    document.body.appendChild(ta);
+    ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    done();
+  }
+}
+
+function openUsersList(){
+  closeModal(adminPanelSheet, adminPanelBackdrop);
+  renderUsersList();
+  openModal(usersSheet, usersBackdrop);
+}
+
+function backToAdmin(){
+  closeModal(usersSheet, usersBackdrop);
+  renderAdminList();
+  openModal(adminPanelSheet, adminPanelBackdrop);
+}
+
+adminUsersBtn.addEventListener('click', openUsersList);
+usersBackBtn.addEventListener('click', backToAdmin);
+usersClose.addEventListener('click', () => closeModal(usersSheet, usersBackdrop));
+usersBackdrop.addEventListener('click', () => closeModal(usersSheet, usersBackdrop));
+
+/* =========================================================
+   РЕАЛТАЙМ: если админ сбросил карточки — обновимся сами,
+   без перезахода в мини-апп (опрос + при фокусе вкладки)
+   ========================================================= */
+let realtimeTimer = null;
+function startRealtime(){
+  stopRealtime();
+  realtimeTimer = setInterval(loadDailyPointer, 10000);
+}
+function stopRealtime(){
+  if(realtimeTimer){ clearInterval(realtimeTimer); realtimeTimer = null; }
+}
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible') loadDailyPointer();
+});
+window.addEventListener('focus', loadDailyPointer);
 
 /* =========================================================
    КОНФИГ СЕРВЕРА + ПРЕДЗАГРУЗКА
@@ -1425,6 +1543,9 @@ Promise.allSettled([
   renderDaily();
   renderInventory();
   document.body.classList.add('preloaded');
+  reportBalance();
+  startRealtime();
   const wait = Math.max(0, 950 - (performance.now() - bootStart));
   setTimeout(() => splashEl.classList.add('done'), wait);
+  setTimeout(() => document.body.classList.add('ready'), wait + 80);
 });

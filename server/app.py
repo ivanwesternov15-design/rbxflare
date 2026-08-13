@@ -284,6 +284,41 @@ def api_daily_pointer():
     return jsonify(ok=True, resetTs=resets.get(user_id, 0))
 
 
+@app.post("/api/balance")
+def api_report_balance():
+    """Клиент сообщает свой баланс — для списка пользователей в админке."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    balance = data.get("balance")
+    if not isinstance(balance, (int, float)) or balance < 0:
+        return jsonify(ok=False, error="bad balance"), 400
+    users = load_users()
+    uid = str(verified["user"]["id"])
+    if uid in users:
+        users[uid]["balance"] = int(balance)
+        save_users(users)
+    return jsonify(ok=True)
+
+
+@app.get("/api/users")
+def api_get_users():
+    """Список всех пользователей с балансами — видно владельцу и админам."""
+    verified = verify_init_data(request.args.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if not is_privileged(verified["user"]["id"]):
+        return jsonify(ok=False, error="Forbidden"), 403
+    users = load_users()
+    items = [public_user(u) for u in users.values()]
+    items.sort(key=lambda u: u.get("balance", 0), reverse=True)
+    for it in items:
+        if it.get("photo_url"):
+            it["photo_url"] = it["photo_url"].split("?", 1)[0]
+    return jsonify(ok=True, users=items)
+
+
 def load_settings():
     try:
         return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
@@ -476,6 +511,7 @@ def public_user(u):
         "bio": u.get("bio") or "",
         "birthday": u.get("birthday") or "",
         "first_login": u.get("first_login") or None,
+        "balance": int(u.get("balance") or 0),
     }
 
 
