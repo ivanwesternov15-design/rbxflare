@@ -264,8 +264,7 @@ def api_put_user():
     if not user:
         return jsonify(ok=False, error="User not found"), 404
 
-    if "bio" in data:
-        user["bio"] = str(data.get("bio") or "").strip()[:200]
+    # "О себе" обновляется только из Telegram (при /start) — редактирование запрещено
     if "birthday" in data:
         user["birthday"] = str(data.get("birthday") or "").strip()[:10]
     save_users(users)

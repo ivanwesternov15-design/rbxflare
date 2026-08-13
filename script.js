@@ -164,7 +164,7 @@ function renderProfile(){
   if(p.photo_url){
     AVATAR_EL.style.setProperty('--avatar-url', `url('${p.photo_url}')`);
   }
-  $('bioValue').textContent = p.bio || 'Нажми, чтобы добавить «О себе»';
+  $('bioValue').textContent = p.bio || '—';
   if(p.birthday){
     $('dateLabel').textContent = 'День рождения';
     $('dateValue').textContent = fmtDate(p.birthday, true);
@@ -234,7 +234,6 @@ function startEdit(which){
   cancelBtn.addEventListener('click', () => endEdit(which));
 }
 
-$('bioPanel').addEventListener('click', () => startEdit('bio'));
 $('datePanel').addEventListener('click', () => startEdit('birthday'));
 
 /* ---- глобальные прокрутки и шторка ---- */
