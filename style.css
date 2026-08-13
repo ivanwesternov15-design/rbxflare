@@ -76,16 +76,25 @@
      ========================================================= */
   .card{
     position:relative;
-    background:rgba(46,67,85,.42);
-    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(160deg, rgba(74,92,106,.38) 0%, rgba(17,33,45,.62) 100%);
+    border:1px solid rgba(255,255,255,.16);
     border-radius:var(--radius-card);
-    backdrop-filter:blur(8px) saturate(1.4);
-    -webkit-backdrop-filter:blur(8px) saturate(1.4);
-    box-shadow:0 24px 48px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.06);
+    backdrop-filter:blur(22px) saturate(1.7);
+    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    box-shadow:0 24px 48px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.05), 0 0 44px -10px rgba(94,116,134,.4);
     padding:12px 14px 18px;
     opacity:0;
     transform:translateY(18px);
     animation:cardIn .7s var(--ease) forwards;
+  }
+  .card::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    z-index:2;
+    background:linear-gradient(120deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.04) 32%, rgba(255,255,255,0) 62%);
   }
   @keyframes cardIn{to{opacity:1; transform:translateY(0);}}
 
@@ -122,10 +131,10 @@
     width:36px; height:36px;
     border-radius:50%;
     border:1px solid rgba(255,255,255,.28);
-    background:rgba(17,33,45,.5);
-    backdrop-filter:blur(6px);
-    -webkit-backdrop-filter:blur(6px);
-    box-shadow:0 6px 18px -6px rgba(0,0,0,.6);
+    background:rgba(255,255,255,.1);
+    backdrop-filter:blur(10px);
+    -webkit-backdrop-filter:blur(10px);
+    box-shadow:0 6px 18px -6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.15);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
     color:var(--text-main);
@@ -368,11 +377,11 @@
     z-index:11;
     border-radius:28px;
     padding:16px;
-    background:linear-gradient(180deg, rgba(30,49,64,.68) 0%, rgba(10,25,34,.68) 100%);
-    border:1px solid rgba(94,116,134,.4);
-    backdrop-filter:blur(18px) saturate(1.4);
-    -webkit-backdrop-filter:blur(18px) saturate(1.4);
-    box-shadow:0 24px 64px -16px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.1);
+    background:linear-gradient(160deg, rgba(74,92,106,.42) 0%, rgba(10,25,34,.68) 100%);
+    border:1px solid rgba(255,255,255,.18);
+    backdrop-filter:blur(24px) saturate(1.7);
+    -webkit-backdrop-filter:blur(24px) saturate(1.7);
+    box-shadow:0 24px 64px -16px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.16), 0 0 44px -10px rgba(94,116,134,.4);
     opacity:0;
     transform:translate(-50%,-50%) scale(.88) translateY(12px);
     pointer-events:none;
@@ -386,6 +395,14 @@
     visibility:visible;
     transform:translate(-50%,-50%) scale(1) translateY(0);
     pointer-events:auto;
+  }
+  .sheet::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    border-radius:inherit;
+    pointer-events:none;
+    background:linear-gradient(120deg, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 35%, rgba(255,255,255,0) 60%);
   }
 
   .sheet-head{
@@ -549,11 +566,11 @@
     gap:2px;
     padding:8px 10px;
     border-radius:24px;
-    background:rgba(17,33,45,.55);
-    border:1px solid rgba(94,116,134,.35);
-    backdrop-filter:blur(16px) saturate(1.4);
-    -webkit-backdrop-filter:blur(16px) saturate(1.4);
-    box-shadow:0 12px 32px -10px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.08);
+    background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.6) 100%);
+    border:1px solid rgba(255,255,255,.16);
+    backdrop-filter:blur(22px) saturate(1.7);
+    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    box-shadow:0 12px 32px -10px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.16), 0 0 30px -8px rgba(94,116,134,.35);
     animation:navIn .6s var(--ease) .5s both;
   }
   @keyframes navIn{
