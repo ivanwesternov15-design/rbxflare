@@ -107,22 +107,25 @@
     to{ opacity:1; transform:translateY(0); }
   }
 
-  /* верхняя панель */
+  /* верхняя панель — кнопка «Внешний вид» поверх баннера */
   .top-bar{
+    position:absolute;
+    top:18px; right:18px;
+    z-index:4;
     display:flex;
     justify-content:flex-end;
     align-items:center;
-    margin-bottom:0;
-    min-height:30px;
   }
 
   .icon-btn{
     position:relative;
-    z-index:3;
-    width:30px; height:30px;
-    border-radius:var(--radius-pill);
-    border:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.06);
+    width:36px; height:36px;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.28);
+    background:rgba(17,33,45,.5);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    box-shadow:0 6px 18px -6px rgba(0,0,0,.6);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
     color:var(--text-main);
