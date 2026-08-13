@@ -8,6 +8,7 @@
     --lilac:#5E7486;
     --lilac-pale:#B7C3CA;
     --lilac-white:#F8FAFC;
+    --lilac-light:#8A9FB2;
 
     --bg-void:#06141B;
     --accent-1:var(--lilac);
@@ -248,7 +249,7 @@
     flex-wrap:wrap;
   }
   .handle{
-    color:var(--lilac);
+    color:var(--lilac-light);
     font-weight:600;
     font-size:14px;
   }
@@ -282,7 +283,7 @@
     display:flex;
     align-items:center;
     gap:7px;
-    color:var(--lilac);
+    color:var(--lilac-light);
     font-weight:700;
     font-size:11.5px;
     letter-spacing:.05em;
