@@ -1308,10 +1308,31 @@ function openAdminPanel(){
 }
 
 adminGear.addEventListener('click', openAdminPanel);
-adminPanelClose.addEventListener('click', () => closeModal(adminPanelSheet, adminPanelBackdrop));
-adminPanelBackdrop.addEventListener('click', () => closeModal(adminPanelSheet, adminPanelBackdrop));
 adminAddBtn.addEventListener('click', addAdmin);
 dailyResetUserBtn.addEventListener('click', resetUserDaily);
+
+/* клики админки/пользователей через делегирование — работает
+   даже если прямые слушатели потерялись из-за пересоздания DOM */
+document.addEventListener('click', e => {
+  const el = e.target.closest('#adminPanelClose, #usersClose, #adminUsersBtn, #usersBackBtn, #adminPanelBackdrop, #usersBackdrop');
+  if(!el) return;
+  switch(el.id){
+    case 'adminPanelClose':
+    case 'adminPanelBackdrop':
+      closeModal(adminPanelSheet, adminPanelBackdrop);
+      break;
+    case 'usersClose':
+    case 'usersBackdrop':
+      closeModal(usersSheet, usersBackdrop);
+      break;
+    case 'adminUsersBtn':
+      openUsersList();
+      break;
+    case 'usersBackBtn':
+      backToAdmin();
+      break;
+  }
+});
 
 /* =========================================================
    ОКНО ПОЛЬЗОВАТЕЛЕЙ: аватар, имя, ID, баланс + копирование
@@ -1366,17 +1387,39 @@ async function renderUsersList(){
 }
 
 function copyUserId(id){
-  const done = () => showToast(`ID ${id} скопирован`, true);
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(id).then(done, done);
-  }else{
+  const done = ok => showToast(ok ? `ID ${id} скопирован` : `ID: ${id}`, true);
+  try{
+    const tgW = window.Telegram && window.Telegram.WebApp;
+    if(tgW && tgW.ClipboardText && tgW.ClipboardText.set){
+      tgW.ClipboardText.set(String(id));
+      done(true);
+      return;
+    }
+  }catch(e){}
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(String(id)).then(() => done(true), () => fallbackCopy(id, done));
+      return;
+    }
+  }catch(e){}
+  fallbackCopy(id, done);
+}
+
+function fallbackCopy(id, done){
+  try{
     const ta = document.createElement('textarea');
-    ta.value = id;
+    ta.value = String(id);
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;';
     document.body.appendChild(ta);
     ta.select();
-    try{ document.execCommand('copy'); }catch(e){}
+    ta.setSelectionRange(0, ta.value.length);
+    let ok = false;
+    try{ ok = document.execCommand('copy'); }catch(e){}
     ta.remove();
-    done();
+    done(ok);
+  }catch(e){
+    done(false);
   }
 }
 
@@ -1391,11 +1434,6 @@ function backToAdmin(){
   renderAdminList();
   openModal(adminPanelSheet, adminPanelBackdrop);
 }
-
-adminUsersBtn.addEventListener('click', openUsersList);
-usersBackBtn.addEventListener('click', backToAdmin);
-usersClose.addEventListener('click', () => closeModal(usersSheet, usersBackdrop));
-usersBackdrop.addEventListener('click', () => closeModal(usersSheet, usersBackdrop));
 
 /* =========================================================
    РЕАЛТАЙМ: если админ сбросил карточки — обновимся сами,
@@ -1545,7 +1583,7 @@ Promise.allSettled([
   document.body.classList.add('preloaded');
   reportBalance();
   startRealtime();
-  const wait = Math.max(0, 950 - (performance.now() - bootStart));
+  const wait = Math.max(0, 1400 - (performance.now() - bootStart));
   setTimeout(() => splashEl.classList.add('done'), wait);
   setTimeout(() => document.body.classList.add('ready'), wait + 80);
 });

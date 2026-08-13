@@ -776,7 +776,7 @@
   .app-toast .t-text{ flex:1; text-align:center; line-height:1.35; }
 
   @media (prefers-reduced-motion: reduce){
-    *{ animation-duration:.001ms !important; transition-duration:.001ms !important; }
+    *:not(.splash):not(.splash *):not(.drop-wrap):not(.drop-wrap *):not(.drop-flash):not(.drop-flash *){ animation-duration:.001ms !important; transition-duration:.001ms !important; }
   }
 
   /* =========================================================
