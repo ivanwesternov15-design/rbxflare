@@ -260,29 +260,35 @@ const navIndicator = document.getElementById('navIndicator');
 const navBtns = [...document.querySelectorAll('.nav-btn')];
 let navPos = 0;
 
-function setNavIndicatorX(x){
-  navIndicator.style.transform = `translateX(calc(${x} * 100% + ${x * 2}px))`;
+function setNavIndicatorX(x, sx, sy){
+  navIndicator.style.transform =
+    `translateX(calc(${x} * 100% + ${x * 2}px)) scale(${sx}, ${sy})`;
 }
 
 function moveNavIndicator(idx, animate){
+  const maxIdx = navBtns.length - 1;
   if(!animate){
     navPos = idx;
-    setNavIndicatorX(navPos);
+    setNavIndicatorX(navPos, 1, 1);
     return;
   }
   const from = navPos;
   const t0 = performance.now();
   const dur = 520;
   const easeOutBack = t => {
-    const c1 = 1.70158, c3 = c1 + 1;
+    const c1 = 1.3, c3 = c1 + 1;
     return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   };
   const frame = now => {
     const p = Math.min(1, (now - t0) / dur);
-    navPos = from + (idx - from) * easeOutBack(p);
-    setNavIndicatorX(navPos);
+    const raw = from + (idx - from) * easeOutBack(p);
+    const x = Math.min(Math.max(raw, 0), maxIdx); // не выходим за пределы панели
+    const jelly = Math.sin(Math.PI * Math.min(1, Math.abs(raw - from) / Math.max(idx - from, 1e-6)));
+    const sx = 1 + 0.09 * jelly;
+    const sy = 1 - 0.07 * jelly;
+    setNavIndicatorX(x, sx, sy);
     if(p < 1) requestAnimationFrame(frame);
-    else navPos = idx;
+    else { navPos = idx; setNavIndicatorX(idx, 1, 1); }
   };
   requestAnimationFrame(frame);
 }
