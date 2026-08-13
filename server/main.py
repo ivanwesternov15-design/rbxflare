@@ -59,6 +59,14 @@ PORT = int(os.environ.get("PORT", CONFIG.get("port", 8080)))
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("bot")
 
+BUILD_COMMIT = ""
+try:
+    BUILD_COMMIT = (BASE_DIR / "VERSION").read_text(encoding="utf-8").strip()[:12]
+except OSError:
+    pass
+
+log.info("BUILD COMMIT: %s", BUILD_COMMIT or "unknown")
+
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
 
@@ -211,7 +219,7 @@ async def main_async():
 
 
 def run_flask():
-    log.info("flask on :%s", PORT)
+    log.info("flask on :%s (build %s)", PORT, BUILD_COMMIT or "unknown")
     flask_app.run(host="0.0.0.0", port=PORT)
 
 
