@@ -12,9 +12,32 @@
 </head>
 <body>
 
+<!-- ============ ЭКРАН ЗАГРУЗКИ ============ -->
+<div class="splash" id="splash">
+  <div class="splash-card">
+    <div class="splash-logo">
+      <svg viewBox="0 0 64 64" fill="none">
+        <defs>
+          <linearGradient id="lgSplash" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#5E7486"/><stop offset="1" stop-color="#B7C3CA"/>
+          </linearGradient>
+        </defs>
+        <rect x="6" y="14" width="52" height="38" rx="10" stroke="url(#lgSplash)" stroke-width="3.5"/>
+        <path d="M36 8l-8 14h7l-5 12 15-17h-8l6-9z" fill="url(#lgSplash)"/>
+      </svg>
+    </div>
+    <svg class="splash-ring" viewBox="0 0 48 48" fill="none">
+      <circle cx="24" cy="24" r="20" stroke="rgba(94,116,134,.35)" stroke-width="4"/>
+      <path d="M44 24a20 20 0 0 0-20-20" stroke="url(#lgSplash)" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+    <div class="splash-name">Uxintace</div>
+    <div class="splash-text">Загрузка..</div>
+  </div>
+</div>
+
 <div id="app-wallpaper"></div>
 
-<main class="view" id="viewProfile">
+<main class="view hidden" id="viewProfile">
 <div class="page">
   <div class="card">
 
@@ -67,9 +90,9 @@
 </div>
 </main>
 
-<main class="view hidden" id="viewCards">
+<main class="view" id="viewMain">
   <div class="cards-top">
-    <div class="cards-title">Карточки</div>
+    <div class="cards-title">Главное</div>
     <div class="balance-pill">
       <svg class="bal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
       <span class="bal-val" id="balanceValue">0</span>
@@ -88,9 +111,28 @@
   </div>
 
   <div class="cards-section">
+    <div class="section-title">Как это работает</div>
+    <div class="how-card">
+      <svg class="how-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.5 6 .9-4.3 4.2 1 6-5.4-2.9-5.4 2.9 1-6L3.3 9.4l6-.9z"/></svg>
+      <span>Выбери карточку, сотри покрытие наполовину — и узнай свою редкость</span>
+    </div>
+  </div>
+</main>
+
+<main class="view hidden" id="viewCards">
+  <div class="cards-top">
+    <div class="cards-title">Карточки</div>
+    <div class="head-actions">
+      <button class="icon-btn admin-btn hidden" id="adminBtn" aria-label="Настройка карточек">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.2"/><circle cx="8" cy="16" r="2.2"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="cards-section">
     <div class="section-title">Инвентарь</div>
     <div class="inventory" id="inventoryList"></div>
-    <div class="inventory-empty" id="inventoryEmpty">Пока пусто — забери ежедневную карточку</div>
+    <div class="inventory-empty" id="inventoryEmpty">Пока пусто — выбей карточку на «Главном»</div>
   </div>
 </main>
 
@@ -133,10 +175,44 @@
   </div>
 </div>
 
+<!-- ============ ОКНО СТЕЙКИНГА ============ -->
+<div class="sheet-backdrop" id="stakeBackdrop"></div>
+<div class="sheet stake-sheet" id="stakeSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title" id="stakeTitle">Стейкинг</div>
+    <button class="sheet-close" id="stakeClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="stake-preview" id="stakePreview"></div>
+  <div class="stake-options" id="stakeOptions"></div>
+</div>
+
+<!-- ============ АДМИН-ПАНЕЛЬ НАСТРОЙКИ КАРТОЧЕК (только владелец) ============ -->
+<div class="sheet-backdrop" id="adminBackdrop"></div>
+<div class="sheet admin-sheet" id="adminSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Настройка карточек</div>
+    <button class="sheet-close" id="adminClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-tiers" id="adminTiers"></div>
+  </div>
+  <div class="admin-foot">
+    <div class="admin-note">Проценты стейкинга начисляются от суммы карточки</div>
+    <button class="admin-save" id="adminSave">
+      <svg class="as-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+      Сохранить изменения
+    </button>
+  </div>
+</div>
+
 <!-- ============ НИЖНЯЯ НАВИГАЦИЯ ============ -->
 <nav class="bottom-nav" id="bottomNav">
   <div class="nav-indicator" id="navIndicator"></div>
-  <button class="nav-btn" data-view="main" aria-label="Главное">
+  <button class="nav-btn active" data-view="main" aria-label="Главное">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/></svg>
     <span>Главное</span>
   </button>
@@ -152,7 +228,7 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="17" rx="3.5"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg>
     <span>Задания</span>
   </button>
-  <button class="nav-btn active" data-view="profile" aria-label="Профиль">
+  <button class="nav-btn" data-view="profile" aria-label="Профиль">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5c0-4.2 3.4-7.5 7.5-7.5s7.5 3.3 7.5 7.5"/></svg>
     <span>Профиль</span>
   </button>

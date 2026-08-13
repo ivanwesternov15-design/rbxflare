@@ -86,6 +86,87 @@ def seed_defaults():
 seed_defaults()
 
 SETTINGS_FILE = DATA_DIR / "settings.json"
+CONFIG_FILE = DATA_DIR / "config.json"
+
+DEFAULT_CONFIG = {
+    "tiers": {
+        "Basic":    {"reward": 40,   "stake": {"12h": 0.5, "24h": 1,   "3d": 3,   "7d": 7}},
+        "Silver":   {"reward": 120,  "stake": {"12h": 0.75, "24h": 1.5, "3d": 4,  "7d": 9}},
+        "Gold":     {"reward": 300,  "stake": {"12h": 1,    "24h": 2,   "3d": 5,  "7d": 12}},
+        "Diamond":  {"reward": 800,  "stake": {"12h": 1.5,  "24h": 3,   "3d": 8,  "7d": 18}},
+        "Mythic":   {"reward": 2500, "stake": {"12h": 2,    "24h": 4,   "3d": 10, "7d": 25}},
+    }
+}
+VALID_TIERS = tuple(DEFAULT_CONFIG["tiers"])
+STAKE_PERIODS = ("12h", "24h", "3d", "7d")
+
+
+def load_config():
+    """Дефолты + сохранённые админом правки (deep merge по редкостям)."""
+    merged = json.loads(json.dumps(DEFAULT_CONFIG))
+    try:
+        saved = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        saved = {}
+    for tier, data in (saved.get("tiers") or {}).items():
+        if tier not in merged["tiers"] or not isinstance(data, dict):
+            continue
+        if isinstance(data.get("reward"), (int, float)) and data["reward"] > 0:
+            merged["tiers"][tier]["reward"] = round(float(data["reward"]), 0)
+        stake = data.get("stake")
+        if isinstance(stake, dict):
+            for period in STAKE_PERIODS:
+                val = stake.get(period)
+                if isinstance(val, (int, float)) and val >= 0:
+                    merged["tiers"][tier]["stake"][period] = float(val)
+    return merged
+
+
+def save_config(cfg):
+    CONFIG_FILE.write_text(json.dumps(cfg, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+@app.get("/api/config")
+def api_get_config():
+    """Конфиг карточек (суммы выпадения + проценты стейкинга) — всем пользователям."""
+    return jsonify(ok=True, config=load_config())
+
+
+@app.post("/api/config")
+def api_set_config():
+    """Сохранение конфига карточек — только владелец."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if verified["user"]["id"] not in OWNER_IDS:
+        return jsonify(ok=False, error="Forbidden"), 403
+
+    tiers = data.get("tiers")
+    if not isinstance(tiers, dict):
+        return jsonify(ok=False, error="bad config"), 400
+
+    cleaned = {}
+    for tier, spec in tiers.items():
+        if tier not in VALID_TIERS or not isinstance(spec, dict):
+            continue
+        reward = spec.get("reward")
+        if not isinstance(reward, (int, float)) or not (1 <= reward <= 100000):
+            return jsonify(ok=False, error=f"bad reward for {tier}"), 400
+        stake = {}
+        for period in STAKE_PERIODS:
+            val = spec.get("stake", {}).get(period)
+            if not isinstance(val, (int, float)) or not (0 <= val <= 1000):
+                return jsonify(ok=False, error=f"bad stake {tier} {period}"), 400
+            stake[period] = float(val)
+        cleaned[tier] = {"reward": round(float(reward), 0), "stake": stake}
+
+    if not cleaned:
+        return jsonify(ok=False, error="bad config"), 400
+
+    save_config({"tiers": cleaned})
+    logging.getLogger("bot").info("владелец обновил конфиг карточек: %s", list(cleaned))
+    return jsonify(ok=True, config=load_config())
 
 
 def load_settings():

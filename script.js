@@ -557,7 +557,7 @@ function openSheet(){
   backdrop.classList.add('open');
   sheet.classList.add('open');
   bottomNav.classList.add('locked');
-  animateSheet(true);
+  animateModal(sheet, backdrop, true);
   renderGrid(state.tab);
   refreshLibrary();
   Object.keys(LIBRARY).forEach(t => preloadTab(t));
@@ -570,42 +570,54 @@ function closeSheet(){
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
   bottomNav.classList.remove('locked');
-  animateSheet(false);
+  animateModal(sheet, backdrop, false);
   if(window._scanTimer){ clearInterval(window._scanTimer); window._scanTimer = null; }
 }
 
-/* ---- плавное появление/исчезание окна (rAF, не зависит от системных настроек) ---- */
-let sheetAnim = 0;
-function animateSheet(open){
-  const token = ++sheetAnim;
+/* ---- плавное появление/исчезание модальных окон (rAF) ---- */
+let modalAnim = 0;
+function animateModal(modal, bd, open){
+  const token = ++modalAnim;
   const t0 = performance.now();
   const dur = open ? 480 : 300;
-  if(open) sheet.style.visibility = 'visible';
+  if(open) modal.style.visibility = 'visible';
   const ease = open
     ? (t) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
     : (t) => 1 - Math.pow(1 - t, 3);
 
   const frame = now => {
-    if(token !== sheetAnim) return;
+    if(token !== modalAnim) return;
     const p = Math.min(1, (now - t0) / dur);
     const e = ease(p);
     const rev = 1 - e;
     const o = open ? e : rev;
-    backdrop.style.opacity = o;
-    sheet.style.opacity = o;
-    sheet.style.filter = `blur(${rev * 10}px)`;
-    sheet.style.transform = `translate(-50%, -50%) scale(${open ? 0.86 + 0.14 * e : 0.9 + 0.1 * rev}) translateY(${rev * (open ? 18 : 10)}px)`;
+    bd.style.opacity = o;
+    modal.style.opacity = o;
+    modal.style.filter = `blur(${rev * 10}px)`;
+    modal.style.transform = `translate(-50%, -50%) scale(${open ? 0.86 + 0.14 * e : 0.9 + 0.1 * rev}) translateY(${rev * (open ? 18 : 10)}px)`;
     if(p < 1){ requestAnimationFrame(frame); }
     else if(!open){
-      sheet.style.visibility = 'hidden';
-      sheet.style.opacity = 0;
-      backdrop.style.opacity = 0;
+      modal.style.visibility = 'hidden';
+      modal.style.opacity = 0;
+      bd.style.opacity = 0;
     }else{
-      sheet.style.filter = 'blur(0px)';
-      sheet.style.transform = 'translate(-50%, -50%) scale(1)';
+      modal.style.filter = 'blur(0px)';
+      modal.style.transform = 'translate(-50%, -50%) scale(1)';
     }
   };
   requestAnimationFrame(frame);
+}
+
+function openModal(modal, bd){
+  bd.classList.add('open');
+  modal.classList.add('open');
+  animateModal(modal, bd, true);
+}
+
+function closeModal(modal, bd){
+  bd.classList.remove('open');
+  modal.classList.remove('open');
+  animateModal(modal, bd, false);
 }
 
 menuBtn.addEventListener('click', openSheet);
@@ -613,12 +625,46 @@ sheetClose.addEventListener('click', closeSheet);
 backdrop.addEventListener('click', closeSheet);
 
 /* =========================================================
-   КАРТОЧКИ: ежедневные карточки + скретч + инвентарь
+   КАРТОЧКИ: ежедневные паки (Главное) + скретч 50% +
+   PNG-дроп по редкости + инвентарь/стейкинг (Карточки)
    ========================================================= */
-const REWARD_POOL = [10, 25, 50, 100, 250, 500, 1000];
-const CARD_IMAGES = (typeof GALLERY === 'object' && GALLERY)
-  ? ['tgminiapprbx/fons/flaze.jpg', 'tgminiapprbx/fons/crystal.jpg', 'tgminiapprbx/fons/moon.jpg']
-  : ['tgminiapprbx/fons/flaze.jpg', 'tgminiapprbx/fons/crystal.jpg', 'tgminiapprbx/fons/moon.jpg'];
+const DEFAULT_CONFIG = {
+  tiers: {
+    Basic:    { reward: 40,   stake: { '12h': 0.5, '24h': 1,   '3d': 3,   '7d': 7 } },
+    Silver:   { reward: 120,  stake: { '12h': 0.75, '24h': 1.5, '3d': 4,  '7d': 9 } },
+    Gold:     { reward: 300,  stake: { '12h': 1,    '24h': 2,   '3d': 5,  '7d': 12 } },
+    Diamond:  { reward: 800,  stake: { '12h': 1.5,  '24h': 3,   '3d': 8,  '7d': 18 } },
+    Mythic:   { reward: 2500, stake: { '12h': 2,    '24h': 4,   '3d': 10, '7d': 25 } },
+  }
+};
+const TIER_ORDER = ['Basic', 'Silver', 'Gold', 'Diamond', 'Mythic'];
+const TIER_STYLE = {
+  Basic:   { img: 'tgminiapprbx/Cards/Basic.png',   colors: ['#070d17', '#4e5568'] },
+  Silver:  { img: 'tgminiapprbx/Cards/Silver.png',  colors: ['#7680a6', '#212842'] },
+  Gold:    { img: 'tgminiapprbx/Cards/Gold.png',    colors: ['#ffd838', '#b57528'] },
+  Diamond: { img: 'tgminiapprbx/Cards/Diamond.png', colors: ['#188cfe', '#01114c'] },
+  Mythic:  { img: 'tgminiapprbx/Cards/Mythic.png',  colors: ['#bf3cde', '#c64dfa', '#300f47'] },
+};
+const DROP_WEIGHTS = { Basic: 42, Silver: 27, Gold: 17, Diamond: 10, Mythic: 4 };
+const STAKE_LABEL = { '12h': '12 часов', '24h': '24 часа', '3d': '3 дня', '7d': '7 дней' };
+const STAKE_MS = { '12h': 12 * 3600e3, '24h': 24 * 3600e3, '3d': 3 * 86400e3, '7d': 7 * 86400e3 };
+
+let APP_CONFIG = null;
+function tierCfg(name){ return ((APP_CONFIG || {}).tiers || {})[name] || DEFAULT_CONFIG.tiers[name]; }
+function tierVars(name){
+  const c = TIER_STYLE[name].colors;
+  return `--t1:${c[0]};--t2:${c[1]};--t3:${c[2] || c[1]}`;
+}
+function rollRarity(){
+  const total = TIER_ORDER.reduce((s, t) => s + DROP_WEIGHTS[t], 0);
+  let r = Math.random() * total;
+  for(const t of TIER_ORDER){
+    r -= DROP_WEIGHTS[t];
+    if(r <= 0) return t;
+  }
+  return 'Basic';
+}
+
 const dailyGridEl = document.getElementById('dailyGrid');
 const dailyDoneEl = document.getElementById('dailyDone');
 const collectBtnEl = document.getElementById('collectBtn');
@@ -627,19 +673,18 @@ const balanceValueEl = document.getElementById('balanceValue');
 function todayKey(){ return new Date().toISOString().slice(0, 10); }
 
 function ensureDaily(){
-  if(!state.daily || state.daily.date !== todayKey()){
-    const rewards = [0, 1, 2].reduce((acc, id) => {
-      acc[id] = REWARD_POOL[Math.floor(Math.random() * REWARD_POOL.length)];
-      return acc;
-    }, {});
-    state.daily = { date: todayKey(), rewards, selectedId: null, revealed: false, collected: false };
+  if(!state.daily || state.daily.date !== todayKey() || (state.daily.revealed && !state.daily.rarity)){
+    state.daily = { date: todayKey(), selectedId: null, revealed: false, collected: false, rarity: null, reward: 0 };
     saveState();
   }
 }
 
-function dailyCardImage(id){
-  const srcs = (LIBRARY.fons && LIBRARY.fons.length) ? LIBRARY.fons : CARD_IMAGES;
-  return srcs[id % srcs.length];
+function installScratchIfSelected(){
+  const d = state.daily;
+  if(d.selectedId !== null && !d.revealed){
+    const sel = dailyGridEl.querySelector(`.d-card[data-id="${d.selectedId}"]`);
+    if(sel && !sel.querySelector('.scratch-layer')) initScratch(sel, d.selectedId);
+  }
 }
 
 function renderDaily(){
@@ -647,40 +692,41 @@ function renderDaily(){
   scratchState = null;
   const d = state.daily;
   dailyGridEl.innerHTML = '';
-  dailyGridEl.classList.toggle('solo', d.revealed);
+  dailyGridEl.classList.remove('solo', 'hidden');
+  collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
+  dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
+  if(d.revealed && d.collected){ dailyGridEl.classList.add('hidden'); return; }
+  if(d.revealed){
+    dailyGridEl.classList.add('solo');
+    dailyGridEl.innerHTML = dropHTML(d.rarity, d.reward);
+    return;
+  }
   [0, 1, 2].forEach(id => {
+    const tier = TIER_ORDER[id % TIER_ORDER.length];
     const el = document.createElement('div');
-    el.className = 'd-card';
+    el.className = 'd-card pack';
     el.dataset.id = id;
-    el.style.backgroundImage = `url('${dailyCardImage(id)}')`;
+    el.style.setProperty('--t1', TIER_STYLE[tier].colors[0]);
+    el.style.setProperty('--t2', TIER_STYLE[tier].colors[1]);
+    el.style.setProperty('--t3', TIER_STYLE[tier].colors[2] || TIER_STYLE[tier].colors[1]);
+    el.style.animationDelay = `${id * 130}ms`;
     el.innerHTML =
       `<div class="d-card-num">0${id + 1}</div>` +
-      `<div class="d-reward">` +
-      toastSvg('win', 'd-win') +
-      `<div class="d-amount">+${d.rewards[id]}</div>` +
-      `<div class="d-robux">Robux</div>` +
-      `</div>`;
+      `<div class="pack-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9.8 9a2.4 2.4 0 0 1 4.6 1c0 1.6-2.4 2-2.4 3.4"/><circle cx="12" cy="17" r="1.1" fill="currentColor" stroke="none"/></svg></div>` +
+      `<div class="pack-label">Карточка</div>`;
     if(d.selectedId !== null){
-      if(id === d.selectedId) el.classList.add('selected');
-      else if(d.revealed) el.classList.add('gone', 'hidden');
-      else el.classList.add('dim');
-    }
-    if(d.revealed && id === d.selectedId){
-      el.classList.add('raised');
-      const reward = el.querySelector('.d-reward');
-      setTimeout(() => reward.classList.add('shown'), 60);
+      el.classList.toggle('selected', id === d.selectedId);
+      el.classList.toggle('dim', id !== d.selectedId);
     }
     el.addEventListener('click', () => selectDailyCard(id));
     dailyGridEl.appendChild(el);
   });
-  collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
-  dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
-  if(d.revealed && d.collected) dailyGridEl.classList.add('hidden');
+  installScratchIfSelected();
 }
 
 /* --- события стейта: select / reveal / collect --- */
 function selectDailyCard(id){
-  if(state.daily.revealed || state.daily.collected) return;
+  if(state.daily.revealed || state.daily.collected || state.daily.selectedId !== null) return;
   state.daily.selectedId = id;
   saveState();
   dailyGridEl.querySelectorAll('.d-card').forEach(el => {
@@ -690,18 +736,36 @@ function selectDailyCard(id){
   initScratch(dailyGridEl.querySelector(`.d-card[data-id="${id}"]`), id);
 }
 
+function dropHTML(rarity, reward){
+  const v = tierVars(rarity);
+  return `<div class="drop-wrap tier-shine" style="${v}">
+    <div class="drop-halo tier-glow" style="${v}"></div>
+    <div class="tier-chip tier-glow" style="${v}">
+      <svg class="dc-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l4 6-9 12L3 9z"/></svg>${rarity}
+    </div>
+    <img class="drop-png" src="${TIER_STYLE[rarity].img}" alt="${rarity}">
+    <div class="drop-reward-line">
+      <svg class="drop-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+      <span class="drop-amount">+${reward}</span>
+      <span class="stake-sub">Robux</span>
+    </div>
+  </div>`;
+}
+
 function revealDailyCard(id){
+  if(state.daily.revealed) return;
+  const rarity = rollRarity();
+  const reward = Math.round(tierCfg(rarity).reward);
   state.daily.revealed = true;
+  state.daily.rarity = rarity;
+  state.daily.reward = reward;
   saveState();
   const sel = dailyGridEl.querySelector(`.d-card[data-id="${id}"]`);
   const canvas = sel && sel.querySelector('.scratch-layer');
   if(canvas){
     canvas.classList.add('reveal');
-    canvas.addEventListener('transitionend', () => canvas.remove(), { once: true });
     setTimeout(() => canvas.remove(), 520);
   }
-  const reward = sel && sel.querySelector('.d-reward');
-  if(reward) setTimeout(() => reward.classList.add('shown'), 80);
   dailyGridEl.querySelectorAll('.d-card').forEach(el => {
     if(el.dataset.id !== String(id)){
       el.classList.add('gone');
@@ -710,22 +774,22 @@ function revealDailyCard(id){
   });
   setTimeout(() => {
     dailyGridEl.classList.add('solo');
-    if(sel) sel.classList.add('raised');
+    dailyGridEl.innerHTML = dropHTML(rarity, reward);
     collectBtnEl.classList.remove('hidden');
   }, 400);
-  addBalance(state.daily.rewards[id]);
+  addBalance(reward);
 }
 
 function collectDailyCard(){
-  if(state.daily.collected || !state.daily.selectedId) return;
-  const id = state.daily.selectedId;
+  if(state.daily.collected || !state.daily.rarity) return;
   state.inventory.push({
-    id: `daily-${state.daily.date}-${id}`,
+    id: `daily-${state.daily.date}-${Date.now()}`,
     type: 'daily',
-    level: 'Basic',
-    rewardRobux: state.daily.rewards[id],
+    rarity: state.daily.rarity,
+    reward: state.daily.reward,
     status: 'available',
-    img: dailyCardImage(id),
+    until: 0,
+    img: TIER_STYLE[state.daily.rarity].img,
   });
   state.daily.collected = true;
   saveState();
@@ -758,8 +822,8 @@ function addBalance(delta){
   requestAnimationFrame(frame);
 }
 
-/* --- скретч (защитный слой поверх награды) --- */
-const SCRATCH_THRESHOLD = 0.30;
+/* --- скретч (защитный слой поверх пака, стереть >= 50%) --- */
+const SCRATCH_THRESHOLD = 0.50;
 let scratchState = null;
 
 function initScratch(cardEl, id){
@@ -846,48 +910,232 @@ function autoReveal(){
   scratchState = null;
 }
 
-/* --- инвентарь --- */
+/* =========================================================
+   ИНВЕНТАРЬ (вкладка «Карточки») + СТЕЙКИНГ
+   ========================================================= */
 const inventoryListEl = document.getElementById('inventoryList');
 const inventoryEmptyEl = document.getElementById('inventoryEmpty');
+
+function fmtUntil(ts){
+  return new Date(ts).toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
 
 function renderInventory(){
   inventoryListEl.innerHTML = '';
   inventoryEmptyEl.classList.toggle('hidden', state.inventory.length > 0);
   state.inventory.forEach((card, i) => {
+    const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
     const el = document.createElement('div');
     el.className = 'inv-card';
-    const staking = card.status === 'staking';
+    el.style.setProperty('--t1', st.colors[0]);
+    el.style.setProperty('--t2', st.colors[1]);
+    el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
+    const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
     el.innerHTML =
-      `<div class="inv-thumb" style="background-image:url('${card.img}')"></div>` +
-      `<div class="inv-info">` +
-        `<div class="inv-title">Ежедневная карта</div>` +
-        `<div class="inv-meta">` +
-          `<span class="chip">${card.level}</span>` +
-          `<span class="chip reward">+${card.rewardRobux} Robux</span>` +
-          `<span class="chip ${staking ? 'staking' : ''}">${staking ? 'В стейкинге' : 'Доступна'}</span>` +
-        `</div>` +
+      `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
+      `<div class="inv-title">${card.rarity}</div>` +
+      `<div class="inv-meta">` +
+        `<div class="inv-amount">+${card.reward} Robux</div>` +
+        `<div class="inv-status ${card.status === 'staking' ? 'staking' : ''}">${statusText}</div>` +
+        (card.until ? `<div class="inv-until">до ${fmtUntil(card.until)}</div>` : '') +
       `</div>` +
-      `<button class="stake-btn ${staking ? 'off' : ''}" data-i="${i}">` +
-        (staking ? 'Забрать из стейкинга' : 'Отправить в стейкинг') +
-      `</button>`;
-    el.querySelector('.stake-btn').addEventListener('click', () => {
-      state.inventory[i].status = staking ? 'available' : 'staking';
-      saveState();
-      renderInventory();
-    });
+      (card.status === 'available'
+        ? `<button class="stake-btn" data-i="${i}">Стейкинг</button>`
+        : card.status === 'staking'
+          ? `<button class="stake-btn off" data-i="${i}">Забрать из стейкинга</button>`
+          : '');
+    const btn = el.querySelector('.stake-btn');
+    if(btn) btn.addEventListener('click', () => card.status === 'staking' ? withdrawStake(i) : openStake(i));
     inventoryListEl.appendChild(el);
   });
 }
 
-/* ---- переключение экранов нижней навигации ---- */
+/* --- окно стейкинга --- */
+const stakeSheet = document.getElementById('stakeSheet');
+const stakeBackdrop = document.getElementById('stakeBackdrop');
+const stakeClose = document.getElementById('stakeClose');
+const stakePreview = document.getElementById('stakePreview');
+const stakeOptions = document.getElementById('stakeOptions');
+let stakeCardIdx = -1;
+
+function openStake(i){
+  const card = state.inventory[i];
+  if(!card || card.status !== 'available') return;
+  stakeCardIdx = i;
+  const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
+  stakePreview.innerHTML =
+    `<img class="stake-png tier-shine" src="${card.img}" alt="${card.rarity}" style="${tierVars(card.rarity)}">` +
+    `<div class="inv-title">${card.rarity}</div>` +
+    `<div class="stake-sub">Сумма карточки — <b>+${card.reward} Robux</b></div>`;
+  stakeOptions.innerHTML = '';
+  const stake = (tierCfg(card.rarity).stake) || {};
+  Object.keys(STAKE_LABEL).forEach(period => {
+    const pct = stake[period] || 0;
+    const plus = Math.round(card.reward * pct / 100);
+    const opt = document.createElement('button');
+    opt.className = 'stake-opt';
+    opt.innerHTML =
+      `<span class="so-period">${STAKE_LABEL[period]}</span>` +
+      `<span class="so-meta"><span class="so-pct">+${pct}%</span><span class="so-plus">+${plus} Robux</span></span>`;
+    opt.addEventListener('click', () => confirmStake(period));
+    stakeOptions.appendChild(opt);
+  });
+  openModal(stakeSheet, stakeBackdrop);
+}
+
+function confirmStake(period){
+  const card = state.inventory[stakeCardIdx];
+  if(!card) return;
+  card.status = 'staking';
+  card.period = period;
+  card.pct = (tierCfg(card.rarity).stake || {})[period] || 0;
+  card.until = Date.now() + STAKE_MS[period];
+  saveState();
+  closeModal(stakeSheet, stakeBackdrop);
+  renderInventory();
+  showToast('Карточка отправлена в стейкинг', true, 'win');
+}
+
+function withdrawStake(i){
+  const card = state.inventory[i];
+  if(!card || card.status !== 'staking') return;
+  if(card.until > Date.now()){
+    showToast(`Стейкинг завершится ${fmtUntil(card.until)}`, false);
+    return;
+  }
+  const bonus = Math.round(card.reward * (card.pct || 0) / 100);
+  card.status = 'used';
+  saveState();
+  renderInventory();
+  if(bonus > 0){
+    addBalance(bonus);
+    showToast(`Стейкинг завершён: +${bonus} Robux`, true, 'win');
+  }else{
+    showToast('Стейкинг завершён', true, 'win');
+  }
+}
+
+/* =========================================================
+   АДМИН-ПАНЕЛЬ: суммы выпадения и проценты стейкинга
+   ========================================================= */
+const adminSheet = document.getElementById('adminSheet');
+const adminBackdrop = document.getElementById('adminBackdrop');
+const adminClose = document.getElementById('adminClose');
+const adminBtn = document.getElementById('adminBtn');
+const adminTiersEl = document.getElementById('adminTiers');
+const adminSaveBtn = document.getElementById('adminSave');
+const adminForm = [];
+
+function renderAdminTiers(){
+  adminTiersEl.innerHTML = '';
+  adminForm.length = 0;
+  TIER_ORDER.forEach(tier => {
+    const st = TIER_STYLE[tier];
+    const cfg = tierCfg(tier);
+    const card = document.createElement('div');
+    card.className = 'admin-tier';
+    card.innerHTML =
+      `<div class="admin-tier-top">` +
+        `<img class="at-img tier-shine" src="${st.img}" alt="${tier}" style="${tierVars(tier)}">` +
+        `<div><div class="at-name">${tier}</div><div class="at-sub">Сумма выпадения · ${cfg.reward} Robux</div></div>` +
+      `</div>` +
+      `<div class="admin-tier-grid">` +
+        `<div class="at-field"><label>Сумма выпадения, Robux</label>` +
+          `<input class="at-input" type="number" min="1" max="100000" step="1" data-tier="${tier}" data-f="reward" value="${cfg.reward}"></div>` +
+        Object.keys(STAKE_LABEL).map(p =>
+          `<div class="at-field"><label>Стейкинг ${STAKE_LABEL[p].toLowerCase()} +%</label>` +
+          `<input class="at-input" type="number" min="0" max="1000" step="0.25" data-tier="${tier}" data-f="${p}" value="${cfg.stake[p]}"></div>`
+        ).join('') +
+      `</div>`;
+    card.querySelectorAll('.at-input').forEach(inp => {
+      inp.addEventListener('input', () => inp.classList.add('dirty'));
+      adminForm.push(inp);
+    });
+    adminTiersEl.appendChild(card);
+  });
+  adminSaveBtn.innerHTML =
+    `<svg class="as-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>` +
+    `Сохранить изменения`;
+}
+
+function saveAdmin(){
+  const init = tgInitData();
+  if(!init){ showToast('Ошибка авторизации', false); return; }
+  const tiers = {};
+  for(const inp of adminForm){
+    const val = parseFloat(inp.value);
+    if(!isFinite(val) || val < 0){
+      inp.classList.add('dirty');
+      showToast('Проверь заполнение полей', false);
+      return;
+    }
+    const key = `${inp.dataset.tier}.${inp.dataset.f}`;
+    if(inp.dataset.f === 'reward'){
+      if(val < 1){ inp.classList.add('dirty'); showToast('Сумма не может быть меньше 1', false); return; }
+      tiers[inp.dataset.tier] = tiers[inp.dataset.tier] || { reward: val, stake: {} };
+      tiers[inp.dataset.tier].reward = val;
+    }else{
+      tiers[inp.dataset.tier] = tiers[inp.dataset.tier] || { reward: tierCfg(inp.dataset.tier).reward, stake: {} };
+      tiers[inp.dataset.tier].stake[inp.dataset.f] = val;
+    }
+  }
+  adminSaveBtn.classList.add('saving');
+  fetch('/api/config', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: init, tiers })
+  })
+    .then(r => r.json())
+    .then(data => {
+      adminSaveBtn.classList.remove('saving');
+      if(data.ok && data.config){
+        APP_CONFIG = data.config;
+        adminSaveBtn.classList.add('done');
+        adminSaveBtn.innerHTML =
+          `<svg class="as-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>` +
+          `Сохранено`;
+        setTimeout(() => {
+          adminSaveBtn.classList.remove('done');
+          renderAdminTiers();
+        }, 1300);
+        document.querySelectorAll('.at-input').forEach(i => i.classList.remove('dirty'));
+        showToast('Настройки карточек сохранены', true, 'refresh');
+      }else{
+        showToast('Не удалось сохранить настройки', false);
+      }
+    })
+    .catch(() => { adminSaveBtn.classList.remove('saving'); showToast('Ошибка сети', false); });
+}
+
+function openAdmin(){
+  renderAdminTiers();
+  openModal(adminSheet, adminBackdrop);
+}
+
+/* =========================================================
+   КОНФИГ СЕРВЕРА + ПРЕДЗАГРУЗКА
+   ========================================================= */
+async function loadConfig(){
+  try{
+    const res = await fetch('/api/config?ts=' + Date.now());
+    const data = await res.json();
+    if(data.ok && data.config) APP_CONFIG = data.config;
+  }catch(e){}
+}
+
+function preloadPNGs(){
+  return Promise.all(TIER_ORDER.map(t => new Promise(res => {
+    const im = new Image();
+    im.onload = im.onerror = res;
+    im.src = TIER_STYLE[t].img;
+  })));
+}
+
+/* ---- переключение экранов нижней навигации (контент рендерится один раз) ---- */
 function switchView(view){
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-  const map = { main: 'viewSoon', cards: 'viewCards', refs: 'viewSoon', tasks: 'viewSoon', profile: 'viewProfile' };
-  document.getElementById(map[view] || 'viewProfile').classList.remove('hidden');
-  if(view === 'cards'){
-    renderDaily();
-    renderInventory();
-  }
+  const map = { main: 'viewMain', cards: 'viewCards', refs: 'viewSoon', tasks: 'viewSoon', profile: 'viewProfile' };
+  document.getElementById(map[view] || 'viewMain').classList.remove('hidden');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -961,10 +1209,33 @@ if(tg){
 
 collectBtnEl.addEventListener('click', collectDailyCard);
 
+stakeClose.addEventListener('click', () => closeModal(stakeSheet, stakeBackdrop));
+stakeBackdrop.addEventListener('click', () => closeModal(stakeSheet, stakeBackdrop));
+adminClose.addEventListener('click', () => closeModal(adminSheet, adminBackdrop));
+adminBackdrop.addEventListener('click', () => closeModal(adminSheet, adminBackdrop));
+adminSaveBtn.addEventListener('click', saveAdmin);
+adminBtn.addEventListener('click', openAdmin);
+
 applySelected();
-refreshLibrary();
-loadProfile();
-loadSettings();
 balanceValueEl.textContent = state.balance;
 renderDaily();
 renderInventory();
+
+if(PROFILE && OWNER_IDS.includes(PROFILE.id)){
+  adminBtn.classList.remove('hidden');
+}
+
+/* ---- экран загрузки: ждём все данные, затем красиво уходим ---- */
+const splashEl = document.getElementById('splash');
+const bootStart = performance.now();
+Promise.allSettled([
+  loadProfile(),
+  refreshLibrary(),
+  loadSettings(),
+  loadConfig(),
+  preloadPNGs(),
+]).then(() => {
+  if(PROFILE && OWNER_IDS.includes(PROFILE.id)) adminBtn.classList.remove('hidden');
+  const wait = Math.max(0, 950 - (performance.now() - bootStart));
+  setTimeout(() => splashEl.classList.add('done'), wait);
+});
