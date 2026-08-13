@@ -258,6 +258,17 @@ def api_put_user():
     return jsonify(ok=True, user=public_user(user))
 
 
+@app.after_request
+def no_cache(resp):
+    """Не кешировать HTML/CSS/JS — иначе Telegram WebView показывает старую версию."""
+    path = request.path or ""
+    if path.endswith((".html", ".css", ".js")) or path == "/":
+        resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
+    return resp
+
+
 # ---------- фронтенд ----------
 @app.get("/")
 def index():
