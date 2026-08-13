@@ -318,6 +318,17 @@ menuBtn.addEventListener('click', openSheet);
 sheetClose.addEventListener('click', closeSheet);
 backdrop.addEventListener('click', closeSheet);
 
+/* ---- нижняя навигация (пока работает только «Профиль») ---- */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if(btn.dataset.view === 'profile'){
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+});
+
 /* ---- старт ---- */
 if(tg){
   document.documentElement.classList.add('tg-mode');
