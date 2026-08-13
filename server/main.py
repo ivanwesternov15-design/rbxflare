@@ -135,6 +135,28 @@ async def cmd_getphoto(message: Message):
     await message.answer("Пришли мне фото — сразу добавлю его в галерею аватарок мини-аппа \U0001F4F8")
 
 
+@dp.message(Command("clear"))
+async def cmd_clear(message: Message):
+    """Удаляет все фотографии, добавленные через бота (линкуется с папкой uploads в галерее)."""
+    removed = 0
+    for kind in ("avatars", "fons", "podfons"):
+        folder = UPLOADS_DIR / kind
+        if not folder.is_dir():
+            continue
+        for f in folder.iterdir():
+            try:
+                if f.is_file():
+                    f.unlink()
+                    removed += 1
+            except OSError as exc:
+                log.warning("не удалось удалить %s: %s", f.name, exc)
+    log.info("очистка uploads: удалено файлов = %s (chat %s)", removed, message.chat.id)
+    if removed:
+        await message.answer(f"Готово! Удалено файлов: {removed}. Открой профиль заново \u2705")
+    else:
+        await message.answer("Папка загрузок и так пустая \U0001F44D")
+
+
 @dp.message(F.photo)
 async def on_photo(message: Message):
     chat_id = message.chat.id
