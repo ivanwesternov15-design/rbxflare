@@ -26,7 +26,7 @@ from aiogram.types import (
     WebAppInfo,
 )
 
-from app import app as flask_app
+from app import app as flask_app, fetch_telegram_photo
 
 BASE_DIR = Path(__file__).resolve().parent
 DATA_DIR = Path(os.environ.get("DATA_DIR") or BASE_DIR / "data")
@@ -135,6 +135,19 @@ async def cmd_start(message: Message):
             log.info("bio %s: уже актуально (users=%s)", uid, uid in users)
     except Exception as exc:
         log.warning("get_chat bio: %s", exc)
+
+    # сразу подтягиваем аватарку из профиля Telegram и сохраняем локально
+    try:
+        users = load_users()
+        uid = str(message.chat.id)
+        if uid in users and not (users[uid].get("photo_url") or "").startswith("/uploads/"):
+            photo = fetch_telegram_photo(message.chat.id)
+            if photo:
+                users[uid]["photo_url"] = photo
+                save_users(users)
+                log.info("аватарка сохранена при /start: %s", uid)
+    except Exception as exc:
+        log.warning("photo on /start: %s", exc)
 
 
 @dp.message(Command("getphoto"))

@@ -151,7 +151,7 @@ def public_user(u):
 
 # ---------- фото профиля из Telegram (если в initData не пришло) ----------
 def fetch_telegram_photo(user_id):
-    """Достаёт главное фото профиля через Bot API и возвращает прямую ссылку."""
+    """Достаёт главное фото профиля через Bot API и сохраняет локально в uploads."""
     try:
         resp = requests.get(
             f"https://api.telegram.org/bot{BOT_TOKEN}/getUserProfilePhotos",
@@ -171,7 +171,19 @@ def fetch_telegram_photo(user_id):
         file_path = (fdata.get("result") or {}).get("file_path")
         if not file_path:
             return ""
-        return f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}"
+
+        dl = requests.get(
+            f"https://api.telegram.org/file/bot{BOT_TOKEN}/{file_path}",
+            timeout=15,
+        )
+        if dl.status_code != 200 or not dl.content:
+            return ""
+
+        dest = UPLOADS_DIR / "avatars" / f"profile_{user_id}.jpg"
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_bytes(dl.content)
+        logging.getLogger("bot").info("аватар сохранён локально: %s", dest.name)
+        return f"/uploads/avatars/profile_{user_id}.jpg"
     except Exception as exc:
         logging.getLogger("bot").warning("fetch photo: %s", exc)
         return ""
@@ -211,7 +223,10 @@ def api_init():
             save_users(users)
 
     # если аватарка не пришла в initData — вытаскиваем через Bot API
-    if not users[uid].get("photo_url"):
+    stored_photo = users[uid].get("photo_url") or ""
+    if stored_photo.startswith("https://api.telegram.org/"):
+        stored_photo = ""  # старая внешняя ссылка — перекачиваем локально
+    if not stored_photo:
         photo = fetch_telegram_photo(verified["user"]["id"])
         if photo:
             users[uid]["photo_url"] = photo
@@ -220,7 +235,7 @@ def api_init():
 
     res_user = public_user(users[uid])
     if res_user.get("photo_url"):
-        res_user["photo_url"] += res_user["photo_url"].split("?", 1)[0]
+        res_user["photo_url"] = res_user["photo_url"].split("?", 1)[0]
 
     return jsonify(ok=True, user=res_user)
 
