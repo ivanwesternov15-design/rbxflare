@@ -256,10 +256,21 @@ sheetClose.addEventListener('click', closeSheet);
 backdrop.addEventListener('click', closeSheet);
 
 /* ---- нижняя навигация (пока работает только «Профиль») ---- */
-document.querySelectorAll('.nav-btn').forEach(btn => {
+const navIndicator = document.getElementById('navIndicator');
+const navBtns = [...document.querySelectorAll('.nav-btn')];
+
+function moveNavIndicator(btn){
+  const idx = navBtns.indexOf(btn);
+  navIndicator.style.transform = `translateX(calc(${idx} * 100% + ${idx * 2}px))`;
+}
+
+moveNavIndicator(navBtns.find(b => b.classList.contains('active')) || navBtns[navBtns.length - 1]);
+
+navBtns.forEach(btn => {
   btn.addEventListener('click', () => {
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    navBtns.forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+    moveNavIndicator(btn);
     if(btn.dataset.view === 'profile'){
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }

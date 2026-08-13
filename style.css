@@ -119,7 +119,7 @@
   /* верхняя панель — кнопка «Внешний вид» поверх баннера */
   .top-bar{
     position:absolute;
-    top:18px; right:18px;
+    top:12px; right:14px;
     z-index:4;
     display:flex;
     justify-content:flex-end;
@@ -150,7 +150,7 @@
     z-index:1;
     width:100%;
     height:124px;
-    margin-top:-15px;
+    margin-top:-6px;
     border-radius:18px;
     overflow:hidden;
     background-image:var(--fon-url, url('tgminiapprbx/fons/flaze.jpg'));
@@ -167,7 +167,7 @@
   .avatar-wrap{
     position:relative;
     width:96px; height:96px;
-    margin:-63px auto 0;
+    margin:-54px auto 0;
     z-index:2;
   }
   .avatar-ring{
@@ -202,10 +202,11 @@
   .avatar-photo .swap-fade{ border-radius:50%; }
   .online-dot{
     position:absolute;
-    right:8px; bottom:2px;
-    width:15px; height:15px;
+    right:11px; bottom:0px;
+    width:12px; height:12px;
     border-radius:50%;
     background:var(--online);
+    box-shadow:0 0 0 2px rgba(6,20,27,.9);
     z-index:3;
   }
 
@@ -579,6 +580,7 @@
   }
   .nav-btn{
     position:relative;
+    z-index:1;
     flex:1;
     display:flex;
     flex-direction:column;
@@ -593,23 +595,34 @@
     padding:7px 2px;
     border-radius:18px;
     cursor:pointer;
-    transition:color .25s var(--ease), background .25s var(--ease), box-shadow .25s var(--ease);
+    transition:color .3s var(--ease), background .3s var(--ease), transform .3s var(--ease);
   }
   .nav-btn svg{
     width:22px; height:22px;
-    transition:transform .25s var(--ease), filter .25s var(--ease);
+    transition:transform .3s var(--ease), filter .3s var(--ease);
   }
   .nav-btn:active{ transform:scale(.88); }
   .nav-btn.active{
     color:#fff;
-    background:linear-gradient(135deg, var(--accent-2), var(--accent-1));
-    border:1px solid rgba(255,255,255,.18);
-    box-shadow:0 8px 22px -6px rgba(94,116,134,.65), 0 0 18px -4px rgba(94,116,134,.4);
-    animation:navPop .35s var(--ease);
+    transform:translateY(-1px);
   }
   .nav-btn.active svg{
-    transform:translateY(-1px) scale(1.1);
-    filter:drop-shadow(0 0 7px rgba(255,255,255,.55));
+    transform:scale(1.12);
+    filter:drop-shadow(0 0 8px rgba(255,255,255,.6));
+  }
+  .nav-indicator{
+    position:absolute;
+    top:8px; bottom:8px;
+    left:10px;
+    z-index:0;
+    width:calc((100% - 28px) / 5);
+    border-radius:18px;
+    background:linear-gradient(135deg, rgba(94,116,134,.85) 0%, rgba(46,67,85,.92) 100%);
+    border:1px solid rgba(255,255,255,.25);
+    backdrop-filter:blur(10px) saturate(1.5);
+    -webkit-backdrop-filter:blur(10px) saturate(1.5);
+    box-shadow:0 8px 22px -6px rgba(94,116,134,.7), 0 0 20px -4px rgba(94,116,134,.45), inset 0 1px 0 rgba(255,255,255,.3);
+    transition:transform .5s cubic-bezier(.22,1.15,.4,1);
   }
   @keyframes navPop{
     0%{ transform:scale(.82); }
