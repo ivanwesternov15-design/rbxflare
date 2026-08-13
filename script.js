@@ -953,7 +953,7 @@ function renderInventory(){
     el.style.setProperty('--t2', st.colors[1]);
     el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
     el.style.animationDelay = `${i * 60}ms`;
-    const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Стейтинг не активирован');
+    const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
     el.innerHTML =
       `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
       `<div class="inv-title">${card.rarity}</div>` +
