@@ -681,8 +681,46 @@ const dailyGridEl = document.getElementById('dailyGrid');
 const dailyDoneEl = document.getElementById('dailyDone');
 const collectBtnEl = document.getElementById('collectBtn');
 const balanceValueEl = document.getElementById('balanceValue');
+const heroAvatarEl = document.getElementById('heroAvatar');
+const heroNameEl = document.getElementById('heroName');
+const heroIdEl = document.getElementById('heroId');
+const dailyTimerEl = document.getElementById('dailyTimer');
+const dailyTimerTextEl = document.getElementById('dailyTimerText');
 
 function todayKey(){ return new Date().toISOString().slice(0, 10); }
+
+function renderHero(){
+  if(!PROFILE) return;
+  const name = [PROFILE.first_name, PROFILE.last_name].filter(Boolean).join(' ') || 'Игрок';
+  heroNameEl.textContent = name;
+  heroIdEl.textContent = `ID: ${PROFILE.id}`;
+  const init = (name.trim()[0] || '?').toUpperCase();
+  if(PROFILE.photo_url){
+    heroAvatarEl.innerHTML = `<img src="${PROFILE.photo_url}" alt="" referrerpolicy="no-referrer">`;
+  }else{
+    heroAvatarEl.textContent = init;
+  }
+}
+
+/* таймер «обновление через N」— после того как карточка уже открыта */
+let dailyTimerId = null;
+function startDailyTimer(show){
+  if(dailyTimerId){ clearInterval(dailyTimerId); dailyTimerId = null; }
+  dailyTimerEl.classList.toggle('hidden', !show);
+  if(!show) return;
+  const tick = () => {
+    const now = new Date();
+    const end = new Date(now); end.setHours(24, 0, 0, 0);
+    let s = Math.max(0, Math.floor((end - now) / 1000));
+    const h = String(Math.floor(s / 3600)).padStart(2, '0');
+    s %= 3600;
+    const m = String(Math.floor(s / 60)).padStart(2, '0');
+    const sec = String(s % 60).padStart(2, '0');
+    dailyTimerTextEl.textContent = `обновление через ${h}:${m}:${sec}`;
+  };
+  tick();
+  dailyTimerId = setInterval(tick, 1000);
+}
 
 function ensureDaily(){
   if(!state.daily || state.daily.date !== todayKey() || (state.daily.revealed && !state.daily.rarity)){
@@ -691,22 +729,14 @@ function ensureDaily(){
   }
 }
 
-function installScratchIfSelected(){
-  const d = state.daily;
-  if(d.selectedId !== null && !d.revealed){
-    const sel = dailyGridEl.querySelector(`.d-card[data-id="${d.selectedId}"]`);
-    if(sel && !sel.querySelector('.scratch-layer')) initScratch(sel, d.selectedId);
-  }
-}
-
 function renderDaily(){
   ensureDaily();
-  scratchState = null;
   const d = state.daily;
   dailyGridEl.innerHTML = '';
   dailyGridEl.classList.remove('solo', 'hidden');
   collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
   dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
+  startDailyTimer(d.revealed);
   if(d.revealed && d.collected){ dailyGridEl.classList.add('hidden'); return; }
   if(d.revealed){
     dailyGridEl.classList.add('solo');
@@ -729,19 +759,23 @@ function renderDaily(){
     el.addEventListener('click', () => selectDailyCard(id));
     dailyGridEl.appendChild(el);
   });
-  installScratchIfSelected();
+  if(d.selectedId !== null){
+    setTimeout(() => revealDailyCard(d.selectedId), 250);
+  }
 }
 
-/* --- события стейта: select / reveal / collect --- */
+/* --- события стейта: select (выбивание) / reveal / collect --- */
 function selectDailyCard(id){
   if(state.daily.revealed || state.daily.collected || state.daily.selectedId !== null) return;
   state.daily.selectedId = id;
   saveState();
+  const sel = dailyGridEl.querySelector(`.d-card[data-id="${id}"]`);
+  if(!sel) return;
   dailyGridEl.querySelectorAll('.d-card').forEach(el => {
-    el.classList.toggle('selected', el.dataset.id === String(id));
-    el.classList.toggle('dim', el.dataset.id !== String(id));
+    if(el !== sel){ el.classList.add('gone'); }
   });
-  initScratch(dailyGridEl.querySelector(`.d-card[data-id="${id}"]`), id);
+  sel.classList.add('selected', 'burst');
+  setTimeout(() => revealDailyCard(id), 800);
 }
 
 function dropHTML(rarity, reward){
@@ -776,13 +810,9 @@ function revealDailyCard(id){
   state.daily.reward = reward;
   saveState();
   const sel = dailyGridEl.querySelector(`.d-card[data-id="${id}"]`);
-  const canvas = sel && sel.querySelector('.scratch-layer');
-  if(canvas){
-    canvas.classList.add('reveal');
-    setTimeout(() => canvas.remove(), 520);
-  }
+  if(sel) sel.classList.add('gone');
   dailyGridEl.querySelectorAll('.d-card').forEach(el => {
-    if(el.dataset.id !== String(id)){
+    if(el !== sel){
       el.classList.add('gone');
       setTimeout(() => el.classList.add('hidden'), 380);
     }
@@ -791,7 +821,8 @@ function revealDailyCard(id){
     dailyGridEl.classList.add('solo');
     dailyGridEl.innerHTML = dropHTML(rarity, reward);
     collectBtnEl.classList.remove('hidden');
-  }, 400);
+    startDailyTimer(true);
+  }, 420);
   addBalance(reward);
 }
 
@@ -847,101 +878,12 @@ function addBalance(delta){
   requestAnimationFrame(frame);
 }
 
-/* --- скретч (защитный слой поверх пака, стереть >= 50%) --- */
-const SCRATCH_THRESHOLD = 0.50;
-let scratchState = null;
-
-function initScratch(cardEl, id){
-  if(scratchState) return;
-  const canvas = document.createElement('canvas');
-  canvas.className = 'scratch-layer';
-  cardEl.appendChild(canvas);
-  const rect = cardEl.getBoundingClientRect();
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.round(rect.width * dpr);
-  canvas.height = Math.round(rect.height * dpr);
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-  const g = ctx.createLinearGradient(0, 0, rect.width, rect.height);
-  g.addColorStop(0, '#253745');
-  g.addColorStop(1, '#11212D');
-  ctx.fillStyle = g;
-  ctx.fillRect(0, 0, rect.width, rect.height);
-  ctx.save();
-  ctx.translate(rect.width / 2, rect.height / 2);
-  ctx.rotate(-Math.PI / 4);
-  ctx.fillStyle = 'rgba(94,116,134,.22)';
-  for(let i = -rect.height; i < rect.width * 1.6; i += 26){
-    ctx.fillRect(i, -60, 14, rect.height + 120);
-  }
-  ctx.restore();
-  ctx.fillStyle = 'rgba(248,250,252,.85)';
-  ctx.font = '700 15px Inter, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('Потри карточку', rect.width / 2, rect.height / 2 - 6);
-  ctx.fillStyle = 'rgba(183,195,202,.7)';
-  ctx.font = '600 13px Inter, sans-serif';
-  ctx.fillText('✦ ✦ ✦', rect.width / 2, rect.height / 2 + 16);
-
-  const brush = Math.max(14, rect.width * .11);
-  const pos = e => {
-    const r = canvas.getBoundingClientRect();
-    return { x: e.clientX - r.left, y: e.clientY - r.top };
-  };
-  let active = false;
-  let last = null;
-  const erase = (p, dist) => {
-    ctx.globalCompositeOperation = 'destination-out';
-    if(last){
-      ctx.lineWidth = brush * 2;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(last.x, last.y);
-      ctx.lineTo(p.x, p.y);
-      ctx.stroke();
-    }else{
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, brush, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    scratchState.erased += dist * brush * 1.6 + Math.PI * brush * brush * .3;
-    last = p;
-    if(scratchState.erased / (rect.width * rect.height) >= SCRATCH_THRESHOLD) autoReveal();
-  };
-
-  canvas.addEventListener('pointerdown', e => {
-    e.preventDefault();
-    canvas.setPointerCapture(e.pointerId);
-    active = true;
-    last = null;
-    erase(pos(e), 0);
-  });
-  canvas.addEventListener('pointermove', e => {
-    if(!active) return;
-    const p = pos(e);
-    const dist = last ? Math.hypot(p.x - last.x, p.y - last.y) : 0;
-    erase(p, dist);
-  });
-  canvas.addEventListener('pointerup', () => { active = false; });
-  canvas.addEventListener('pointercancel', () => { active = false; });
-
-  scratchState = { id, erased: 0 };
-}
-
-function autoReveal(){
-  if(!scratchState || state.daily.revealed) return;
-  revealDailyCard(scratchState.id);
-  scratchState = null;
-}
-
 /* =========================================================
    ИНВЕНТАРЬ (вкладка «Карточки») + СТЕЙКИНГ
    ========================================================= */
 const inventoryListEl = document.getElementById('inventoryList');
 const inventoryEmptyEl = document.getElementById('inventoryEmpty');
 const invCountEl = document.getElementById('invCount');
-const heroInvCountEl = document.getElementById('heroInvCount');
 const dailyResetBtn = document.getElementById('dailyResetBtn');
 
 function fmtUntil(ts){
@@ -961,7 +903,6 @@ function fmtLeft(ts){
 
 function renderInventory(){
   invCountEl.textContent = state.inventory.length;
-  heroInvCountEl.textContent = state.inventory.length;
   const cards = state.inventory.slice().reverse();
   inventoryListEl.innerHTML = '';
   inventoryEmptyEl.classList.toggle('hidden', cards.length > 0);
@@ -1578,6 +1519,7 @@ Promise.allSettled([
     dailyResetBtn.classList.remove('hidden');
     adminGear.classList.remove('hidden');
   }
+  renderHero();
   renderDaily();
   renderInventory();
   document.body.classList.add('preloaded');
