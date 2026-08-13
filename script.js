@@ -7,19 +7,18 @@
    ========================================================= */
 const FOLDER = 'tgminiapprbx';
 const LIBRARY = (typeof GALLERY === 'object' && GALLERY) || {
-  avatars: ['tgminiapprbx/avatars/violet_dream.jpg'],
   fons: ['tgminiapprbx/fons/flaze.jpg'],
   podfons: ['tgminiapprbx/podfons/night_violet.jpg'],
 };
 
 const IMAGE_RE = /\.(jpe?g|png)$/i;
 
-const CSS_VAR = { avatars: '--avatar-url', fons: '--fon-url', podfons: '--wallpaper-url' };
+const CSS_VAR = { fons: '--fon-url', podfons: '--wallpaper-url' };
 const TARGET_EL = {
-  avatars: document.getElementById('avatarPhoto'),
   fons: document.getElementById('banner'),
   podfons: document.getElementById('app-wallpaper'),
 };
+const AVATAR_EL = document.getElementById('avatarPhoto');
 
 async function scanFolder(folder){
   const kind = folder.split('/').pop();
@@ -53,13 +52,6 @@ async function refreshLibrary(){
       if(!same){ LIBRARY[k] = results[i]; changed = true; }
     }
   });
-  // фото профиля из Telegram — первой плиткой в "Аватар"
-  if(PROFILE && PROFILE.photo_url){
-    if(!LIBRARY.avatars.includes(PROFILE.photo_url)){
-      LIBRARY.avatars.unshift(PROFILE.photo_url);
-      changed = true;
-    }
-  }
   if(changed){
     keys.forEach(k => { if(!LIBRARY[k].includes(state.selected[k])) state.selected[k] = LIBRARY[k][0]; });
     saveState();
@@ -69,7 +61,6 @@ async function refreshLibrary(){
 }
 
 function applySelected(){
-  TARGET_EL.avatars.style.setProperty(CSS_VAR.avatars, `url('${state.selected.avatars}')`);
   TARGET_EL.fons.style.setProperty(CSS_VAR.fons, `url('${state.selected.fons}')`);
   TARGET_EL.podfons.style.setProperty(CSS_VAR.podfons, `url('${state.selected.podfons}')`);
 }
@@ -77,13 +68,12 @@ function applySelected(){
 /* =========================================================
    КЕШИРОВАНИЕ ВЫБОРА (localStorage)
    ========================================================= */
-const STORAGE_KEY = 'uxintace-gallery-v1';
+const STORAGE_KEY = 'uxintace-gallery-v2';
 
 const state = (() => {
   const base = {
-    tab: 'avatars',
+    tab: 'fons',
     selected: {
-      avatars: LIBRARY.avatars[0],
       fons: LIBRARY.fons[0],
       podfons: LIBRARY.podfons[0],
     }
@@ -172,8 +162,7 @@ function renderProfile(){
   if(OWNER_IDS.includes(p.id)) $('ownerBadge').style.display = 'inline-flex';
 
   if(p.photo_url){
-    state.selected.avatars = p.photo_url;
-    TARGET_EL.avatars.style.setProperty(CSS_VAR.avatars, `url('${p.photo_url}')`);
+    AVATAR_EL.style.setProperty('--avatar-url', `url('${p.photo_url}')`);
   }
   $('bioValue').textContent = p.bio || 'Нажми, чтобы добавить «О себе»';
   if(p.birthday){
@@ -335,8 +324,8 @@ if(tg){
   document.documentElement.classList.add('tg-mode');
   tg.ready();
   tg.expand();
-  tg.setHeaderColor('#0e0613');
-  tg.setBackgroundColor('#0e0613');
+  tg.setHeaderColor('#06141B');
+  tg.setBackgroundColor('#06141B');
 }
 
 applySelected();
