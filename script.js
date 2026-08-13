@@ -96,6 +96,7 @@ function animateToast(toast, show){
   const t0 = performance.now();
   const dur = 380;
   const ease = show ? (t => 1 - Math.pow(1 - t, 3)) : (t => t * t);
+  if(show) toast.style.visibility = 'visible';
   const frame = now => {
     if(token !== toast._anim) return;
     const p = Math.min(1, (now - t0) / dur);
@@ -104,7 +105,6 @@ function animateToast(toast, show){
     toast.style.transform = `translateX(-50%) translateY(${(show ? 1 - e : -e) * 40}px)`;
     if(p < 1){ requestAnimationFrame(frame); }
     else if(!show) toast.style.visibility = 'hidden';
-    else toast.style.visibility = 'visible';
   };
   requestAnimationFrame(frame);
 }
@@ -116,7 +116,12 @@ function toastSvg(icon, cls){
   const refresh =
     `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
     `<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
-  return icon === 'trash' ? trash : refresh;
+  const arrow =
+    `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>`;
+  if(icon === 'trash') return trash;
+  if(icon === 'arrow') return arrow;
+  return refresh;
 }
 
 function showToast(text, ok, icon){
