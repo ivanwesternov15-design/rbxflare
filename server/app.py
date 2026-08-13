@@ -31,6 +31,7 @@ USERS_FILE = DATA_DIR / "users.json"
 USERS_BACKUP = DATA_DIR / "users.json.bak"
 
 ALLOWED_KINDS = ("avatars", "fons", "podfons")
+OWNER_IDS = (8414792453,)  # только владелец может удалять фоны
 PORT = int(os.environ.get("PORT", 8080))
 
 with open(BASE_DIR / "config.json", encoding="utf-8") as fh:
@@ -83,6 +84,49 @@ def api_files(kind):
 @app.get("/uploads/<path:path>")
 def uploads(path):
     return send_from_directory(str(UPLOADS_DIR), path)
+
+
+@app.delete("/api/files")
+def api_delete_files():
+    """Удаление фонов (только для владельца). paths — список вида /uploads/<kind>/<name>
+    или /tgminiapprbx/<kind>/<name>."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if verified["user"]["id"] not in OWNER_IDS:
+        return jsonify(ok=False, error="Forbidden"), 403
+
+    paths = data.get("paths") or []
+    if not isinstance(paths, list):
+        return jsonify(ok=False, error="bad paths"), 400
+
+    deleted = 0
+    for raw in paths:
+        raw = str(raw or "")
+        parts = [p for p in raw.split("/") if p]
+        if len(parts) != 3 or parts[0] not in ("uploads", "tgminiapprbx"):
+            continue
+        kind, name = parts[1], parts[2]
+        if kind not in ALLOWED_KINDS:
+            continue
+        if not name.lower().endswith((".jpg", ".jpeg", ".png")):
+            continue
+        if not name.replace(".", "").replace("-", "").replace("_", "").isalnum():
+            continue
+        base = UPLOADS_DIR if parts[0] == "uploads" else ROOT_DIR / "tgminiapprbx"
+        target = (base / kind / name).resolve()
+        if target.parent != (base / kind).resolve():
+            continue
+        try:
+            if target.is_file():
+                target.unlink()
+                deleted += 1
+                logging.getLogger("bot").info("удалено: %s", target)
+        except OSError as exc:
+            logging.getLogger("bot").warning("delete %s: %s", target, exc)
+
+    return jsonify(ok=True, deleted=deleted)
 
 
 # ---------- валидация initData ----------

@@ -167,6 +167,7 @@ function renderProfile(){
   $('bioValue').textContent = p.bio || '—';
   $('dateLabel').textContent = 'Первый вход';
   $('dateValue').textContent = p.first_login ? fmtDate(p.first_login, true) : '—';
+  setupTabs();
 }
 
 $('datePanel').addEventListener('click', () => {
@@ -198,16 +199,109 @@ function renderGrid(tab){
       cell.dataset.src = src;
       cell.style.backgroundImage = `url('${src}')`;
       cell.innerHTML = `<span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></span>`;
-      cell.addEventListener('click', () => selectImage(tab, src, cell));
+      cell.addEventListener('click', () => {
+        if(deleteMode){ toggleDel(cell); return; }
+        selectImage(tab, src, cell);
+      });
       grid.appendChild(cell);
     }
     cell.style.animationDelay = `${Math.min(i, 5) * 45}ms`;
     cell.classList.toggle('selected', state.selected[tab] === src);
+    cell.classList.toggle('armed', deleteMode && selectedToDelete.has(src));
   });
 
   existing.forEach((cell, src) => {
     if(!list.includes(src)) cell.remove(); // убрать удалённые файлы
   });
+}
+
+/* ---- удаление фонов (только владелец) ---- */
+let deleteMode = false;
+const selectedToDelete = new Set();
+const trashBtn = document.getElementById('sheetTrash');
+const delBar = document.getElementById('delBar');
+const delCount = document.getElementById('delCount');
+const delConfirm = document.getElementById('delConfirm');
+const delCancel = document.getElementById('delCancel');
+
+function updateDelBar(){
+  delCount.textContent = selectedToDelete.size ? `Выбрано: ${selectedToDelete.size}` : 'Выбери фото';
+  delConfirm.disabled = selectedToDelete.size === 0;
+}
+
+function toggleDel(cell){
+  const src = cell.dataset.src;
+  if(selectedToDelete.has(src)){ selectedToDelete.delete(src); cell.classList.remove('armed'); }
+  else{ selectedToDelete.add(src); cell.classList.add('armed'); }
+  updateDelBar();
+}
+
+function enterDeleteMode(){
+  deleteMode = true;
+  trashBtn.classList.add('active');
+  sheet.classList.add('delete-on');
+  delBar.classList.add('open');
+  selectedToDelete.clear();
+  updateDelBar();
+}
+
+function exitDeleteMode(){
+  deleteMode = false;
+  trashBtn.classList.remove('active');
+  sheet.classList.remove('delete-on');
+  delBar.classList.remove('open');
+  selectedToDelete.clear();
+  document.querySelectorAll('.thumb.armed').forEach(c => c.classList.remove('armed'));
+}
+
+trashBtn.addEventListener('click', () => {
+  if(sheet.classList.contains('open')) deleteMode ? exitDeleteMode() : enterDeleteMode();
+});
+delCancel.addEventListener('click', exitDeleteMode);
+delConfirm.addEventListener('click', async () => {
+  if(!selectedToDelete.size) return;
+  const paths = [...selectedToDelete];
+  const id = tgInitData();
+  try{
+    const res = await fetch('/api/files', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: id, paths })
+    });
+    const data = await res.json();
+    if(data.ok && data.deleted){
+      paths.forEach(p => {
+        const kind = p.split('/')[2];
+        if(LIBRARY[kind]) LIBRARY[kind] = LIBRARY[kind].filter(x => x !== p);
+      });
+      exitDeleteMode();
+      renderGrid(state.tab);
+      applySelected();
+      saveState();
+    }else{
+      alert('Не удалось удалить: ' + (data.error || 'ошибка'));
+    }
+  }catch(e){
+    console.warn('[api] delete error:', e);
+    alert('Ошибка сети при удалении');
+  }
+});
+
+/* ---- вкладки: «Фон приложения» только для владельца ---- */
+function setupTabs(){
+  const isOwner = OWNER_IDS.includes(PROFILE.id);
+  trashBtn.style.display = isOwner ? '' : 'none';
+  tabBtns.forEach(b => {
+    b.style.display = (b.dataset.tab === 'podfons' && !isOwner) ? 'none' : '';
+  });
+  tabsWrap.classList.toggle('tabs-single', !isOwner);
+  if(!isOwner && state.tab === 'podfons'){
+    state.tab = 'fons';
+    tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === 'fons'));
+    tabsWrap.classList.remove('tabs-single');
+    animateGrid(-1);
+    saveState();
+  }
 }
 
 function crossFade(el, src){
@@ -240,7 +334,7 @@ let gridAnim = 0;
 function animateGrid(dir){
   const token = ++gridAnim;
   const t0 = performance.now();
-  const dur = 360;
+  const dur = 420;
   const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
   let swapped = false;
 
@@ -249,19 +343,41 @@ function animateGrid(dir){
     const p = Math.min(1, (now - t0) / dur);
     if(p < .5){
       const v = ease(p * 2);
-      grid.style.opacity = 1 - v * .45;
-      grid.style.transform = `translateX(${dir * 22 * v}px)`;
+      grid.style.opacity = 1 - v * .6;
+      grid.style.transform = `translateX(${dir * 34 * v}px) scale(${1 - v * .03})`;
+      grid.style.filter = `blur(${v * 4}px)`;
     }else{
       if(!swapped){ swapped = true; renderGrid(state.tab); }
       const v = ease((p - .5) * 2);
-      grid.style.opacity = .55 + v * .45;
-      grid.style.transform = `translateX(${dir * 22 * (1 - v)}px)`;
+      grid.style.opacity = .4 + v * .6;
+      grid.style.transform = `translateX(${dir * 34 * (1 - v)}px) scale(${.97 + v * .03})`;
+      grid.style.filter = `blur(${(1 - v) * 4}px)`;
     }
     if(p < 1){ requestAnimationFrame(frame); }
     else{
       grid.style.opacity = '';
       grid.style.transform = '';
+      grid.style.filter = '';
     }
+  };
+  requestAnimationFrame(frame);
+}
+
+const tabBtns = [...tabsWrap.querySelectorAll('.tab-btn')];
+let tabAnim = 0;
+
+function animateTabIndicator(toIdx){
+  const token = ++tabAnim;
+  const from = parseFloat(getComputedStyle(tabIndicator).transform.split(',')[4]) * 100 || 0;
+  const t0 = performance.now();
+  const dur = 360;
+  const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  const frame = now => {
+    if(token !== tabAnim) return;
+    const p = Math.min(1, (now - t0) / dur);
+    const v = ease(p);
+    tabIndicator.style.transform = `translateX(${from + (toIdx - from) * v}%)`;
+    if(p < 1) requestAnimationFrame(frame);
   };
   requestAnimationFrame(frame);
 }
@@ -272,14 +388,13 @@ function switchTab(tab){
   const nextIdx = keys.indexOf(tab);
   const dir = nextIdx > prevIdx ? 1 : -1;
   state.tab = tab;
-  [...tabsWrap.querySelectorAll('.tab-btn')].forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const idx = nextIdx;
-  tabIndicator.style.transform = `translateX(${idx * 100}%)`;
+  tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  animateTabIndicator(nextIdx);
   animateGrid(dir);
   saveState();
 }
 
-tabsWrap.querySelectorAll('.tab-btn').forEach(btn => {
+tabBtns.forEach(btn => {
   btn.addEventListener('click', () => switchTab(btn.dataset.tab));
 });
 
@@ -294,6 +409,7 @@ function openSheet(){
   }
 }
 function closeSheet(){
+  if(deleteMode) exitDeleteMode();
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
   animateSheet(false);

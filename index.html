@@ -70,9 +70,14 @@
 <div class="sheet" id="sheet" role="dialog" aria-modal="true">
   <div class="sheet-head">
     <div class="sheet-title">Внешний вид</div>
-    <button class="sheet-close" id="sheetClose" aria-label="Закрыть">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
-    </button>
+    <div class="sheet-actions">
+      <button class="sheet-close" id="sheetTrash" aria-label="Удалить" style="display:none">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2M6.5 7l.9 12.1A2 2 0 0 0 9.4 21h5.2a2 2 0 0 0 2-1.9L17.5 7"/><path d="M10 11v6M14 11v6"/></svg>
+      </button>
+      <button class="sheet-close" id="sheetClose" aria-label="Закрыть">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+      </button>
+    </div>
   </div>
 
   <div class="tabs">
@@ -83,6 +88,15 @@
 
   <div class="sheet-body">
     <div class="grid fade-pane" id="grid"></div>
+  </div>
+</div>
+
+<!-- ============ ПАНЕЛЬ УДАЛЕНИЯ (только для владельца) ============ -->
+<div class="del-bar" id="delBar">
+  <span class="del-count" id="delCount">Выбрано: 0</span>
+  <div class="del-actions">
+    <button class="del-btn cancel" id="delCancel">Отмена</button>
+    <button class="del-btn confirm" id="delConfirm">Удалить</button>
   </div>
 </div>
 
