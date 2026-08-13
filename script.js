@@ -183,6 +183,7 @@ const state = (() => {
     balance: 0,
     daily: null,
     inventory: [],
+    dailyResetTs: 0,
   };
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -200,6 +201,7 @@ const state = (() => {
         if(typeof parsed.balance === 'number') base.balance = parsed.balance;
         if(parsed.daily && typeof parsed.daily === 'object') base.daily = parsed.daily;
         if(Array.isArray(parsed.inventory)) base.inventory = parsed.inventory;
+        if(typeof parsed.dailyResetTs === 'number') base.dailyResetTs = parsed.dailyResetTs;
       }
     }
   }catch(e){}
@@ -214,6 +216,7 @@ function saveState(){
       balance: state.balance,
       daily: state.daily,
       inventory: state.inventory,
+      dailyResetTs: state.dailyResetTs,
     }));
   }catch(e){}
 }
@@ -1161,6 +1164,139 @@ function openAdmin(){
 }
 
 /* =========================================================
+   АДМИНКА: шестерёнка в профиле — управление админами
+   и принудительный сброс ежедневных карточек игрокам
+   ========================================================= */
+let ADMINS = [];
+const adminGear = document.getElementById('adminGear');
+const adminPanelSheet = document.getElementById('adminPanelSheet');
+const adminPanelBackdrop = document.getElementById('adminPanelBackdrop');
+const adminPanelClose = document.getElementById('adminPanelClose');
+const adminListEl = document.getElementById('adminList');
+const adminAddInput = document.getElementById('adminAddInput');
+const adminAddBtn = document.getElementById('adminAddBtn');
+const dailyResetUserInput = document.getElementById('dailyResetUserInput');
+const dailyResetUserBtn = document.getElementById('dailyResetUserBtn');
+
+function isPriv(){
+  return !!(PROFILE && (OWNER_IDS.includes(PROFILE.id) || ADMINS.includes(PROFILE.id)));
+}
+
+async function loadAdmins(){
+  try{
+    const init = tgInitData();
+    if(!init) return;
+    const res = await fetch('/api/admins?initData=' + encodeURIComponent(init) + '&ts=' + Date.now());
+    const data = await res.json();
+    if(data.ok && Array.isArray(data.adminIds)){
+      ADMINS = data.adminIds;
+      if(isPriv()) adminGear.classList.remove('hidden');
+    }
+  }catch(e){}
+}
+
+async function loadDailyPointer(){
+  try{
+    const init = tgInitData();
+    if(!init) return;
+    const res = await fetch('/api/daily-pointer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: init }),
+    });
+    const data = await res.json();
+    if(data.ok && typeof data.resetTs === 'number'){
+      if(data.resetTs > (state.dailyResetTs || 0)){
+        state.dailyResetTs = data.resetTs;
+        state.daily = { date: todayKey(), selectedId: null, revealed: false, collected: false, rarity: null, reward: 0 };
+        saveState();
+      }
+    }
+  }catch(e){}
+}
+
+function renderAdminList(){
+  const ids = OWNER_IDS.concat(ADMINS);
+  adminListEl.innerHTML = ids.map(id => {
+    const isOwner = OWNER_IDS.includes(id);
+    return `<div class="ap-item">
+      <span class="ap-id">${id}${isOwner ? ' <em>владелец</em>' : ''}</span>
+      ${isOwner ? '' : `<button class="ap-mini" data-rm="${id}">Убрать</button>`}
+    </div>`;
+  }).join('');
+  adminListEl.querySelectorAll('.ap-mini').forEach(b =>
+    b.addEventListener('click', () => removeAdmin(Number(b.dataset.rm))));
+}
+
+function postAdmin(action, userId, okMsg, errHtml){
+  const init = tgInitData();
+  if(!init){ showToast('Ошибка авторизации', false); return; }
+  fetch('/api/admins', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: init, action, userId })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(data.ok && Array.isArray(data.adminIds)){
+        ADMINS = data.adminIds;
+        renderAdminList();
+        showToast(okMsg, true, 'refresh');
+      }else{
+        showToast(errHtml, false);
+      }
+    })
+    .catch(() => showToast('Ошибка сети', false));
+}
+
+function addAdmin(){
+  const id = parseInt(adminAddInput.value, 10);
+  if(!isFinite(id) || id <= 0){ showToast('Введи корректный ID игрока', false); return; }
+  postAdmin('add', id, 'Админ добавлен', 'Не удалось добавить админа');
+  adminAddInput.value = '';
+}
+
+function removeAdmin(id){
+  postAdmin('remove', id, 'Админ убран', 'Не удалось убрать админа');
+}
+
+function resetUserDaily(){
+  const id = parseInt(dailyResetUserInput.value, 10);
+  if(!isFinite(id) || id <= 0){ showToast('Введи корректный ID игрока', false); return; }
+  const init = tgInitData();
+  if(!init){ showToast('Ошибка авторизации', false); return; }
+  dailyResetUserBtn.classList.add('saving');
+  fetch('/api/daily-reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: init, userId: id })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(data.ok){
+        showToast(`Карточки игрока ${id} сброшены`, true, 'refresh');
+        dailyResetUserInput.value = '';
+      }else{
+        showToast('Не удалось сбросить', false);
+      }
+    })
+    .catch(() => showToast('Ошибка сети', false))
+    .finally(() => dailyResetUserBtn.classList.remove('saving'));
+}
+
+function openAdminPanel(){
+  if(!isPriv()) return;
+  renderAdminList();
+  openModal(adminPanelSheet, adminPanelBackdrop);
+}
+
+adminGear.addEventListener('click', openAdminPanel);
+adminPanelClose.addEventListener('click', () => closeModal(adminPanelSheet, adminPanelBackdrop));
+adminPanelBackdrop.addEventListener('click', () => closeModal(adminPanelSheet, adminPanelBackdrop));
+adminAddBtn.addEventListener('click', addAdmin);
+dailyResetUserBtn.addEventListener('click', resetUserDaily);
+
+/* =========================================================
    КОНФИГ СЕРВЕРА + ПРЕДЗАГРУЗКА
    ========================================================= */
 async function loadConfig(){
@@ -1266,13 +1402,6 @@ adminBtn.addEventListener('click', openAdmin);
 
 applySelected();
 balanceValueEl.textContent = state.balance;
-renderDaily();
-renderInventory();
-
-if(PROFILE && OWNER_IDS.includes(PROFILE.id)){
-  adminBtn.classList.remove('hidden');
-  dailyResetBtn.classList.remove('hidden');
-}
 
 /* ---- экран загрузки: ждём все данные, затем красиво уходим ---- */
 const splashEl = document.getElementById('splash');
@@ -1283,11 +1412,18 @@ Promise.allSettled([
   loadSettings(),
   loadConfig(),
   preloadPNGs(),
+  loadAdmins(),
+  loadDailyPointer(),
 ]).then(() => {
   if(PROFILE && OWNER_IDS.includes(PROFILE.id)){
     adminBtn.classList.remove('hidden');
-    dailyResetBtn.classList.remove('hidden');
   }
+  if(isPriv()){
+    dailyResetBtn.classList.remove('hidden');
+    adminGear.classList.remove('hidden');
+  }
+  renderDaily();
+  renderInventory();
   document.body.classList.add('preloaded');
   const wait = Math.max(0, 950 - (performance.now() - bootStart));
   setTimeout(() => splashEl.classList.add('done'), wait);

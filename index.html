@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Профиль — Uxintace</title>
+<title>Профиль — Robux Game</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,7 +32,7 @@
       </svg>
     </div>
   </div>
-  <div class="splash-name">UXINTACE</div>
+  <div class="splash-name">ROBUX GAME</div>
   <div class="splash-bar"><div class="splash-bar-fill"></div></div>
   <div class="splash-text">Загрузка..</div>
 </div>
@@ -47,6 +47,9 @@
       <!-- Кнопка выхода удалена по ТЗ. При необходимости верните её сюда. -->
       <button class="icon-btn" id="menuBtn" aria-label="Меню">
         <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></svg>
+      </button>
+      <button class="icon-btn hidden" id="adminGear" aria-label="Админка" style="margin-left:8px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.08a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03z"/></svg>
       </button>
     </div>
 
@@ -254,6 +257,36 @@
       <svg class="as-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
       Сохранить изменения
     </button>
+  </div>
+</div>
+
+<!-- ============ ОКНО АДМИНКИ (владелец + админы) ============ -->
+<div class="sheet-backdrop" id="adminPanelBackdrop"></div>
+<div class="sheet admin-panel-sheet" id="adminPanelSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Админка</div>
+    <button class="sheet-close" id="adminPanelClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-panel-body">
+    <div class="ap-section">
+      <div class="ap-title">Администраторы</div>
+      <div class="ap-note">Добавь игрока по его Telegram ID — он сможет открывать эту панель и сбрасывать карточки</div>
+      <div class="ap-list" id="adminList"></div>
+      <div class="ap-row">
+        <input class="ap-input" id="adminAddInput" type="number" inputmode="numeric" placeholder="ID игрока">
+        <button class="ap-btn" id="adminAddBtn">Добавить</button>
+      </div>
+    </div>
+    <div class="ap-section">
+      <div class="ap-title">Ежедневные карточки</div>
+      <div class="ap-note">Сброс сработает у игрока при следующем входе — он сможет выбрать карточку заново</div>
+      <div class="ap-row">
+        <input class="ap-input" id="dailyResetUserInput" type="number" inputmode="numeric" placeholder="ID игрока">
+        <button class="ap-btn" id="dailyResetUserBtn">Сбросить</button>
+      </div>
+    </div>
   </div>
 </div>
 

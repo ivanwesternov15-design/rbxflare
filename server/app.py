@@ -179,6 +179,111 @@ def api_set_config():
     return jsonify(ok=True, config=load_config())
 
 
+# ---------- администраторы и принудительный сброс ежедневных карточек ----------
+ADMIN_FILE = DATA_DIR / "admins.json"
+DAILY_RESET_FILE = DATA_DIR / "daily_resets.json"
+
+
+def load_admins():
+    try:
+        raw = json.loads(ADMIN_FILE.read_text(encoding="utf-8")).get("adminIds", [])
+        return {int(x) for x in raw if isinstance(x, (int, float)) and int(x) > 0}
+    except (OSError, ValueError):
+        return set()
+
+
+def save_admins(ids):
+    ADMIN_FILE.write_text(json.dumps({"adminIds": sorted(ids)}, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def load_daily_resets():
+    try:
+        return {int(k): int(v) for k, v in json.loads(DAILY_RESET_FILE.read_text(encoding="utf-8")).items()}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_daily_resets(reg):
+    DAILY_RESET_FILE.write_text(json.dumps(reg, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+ADMINS = load_admins()
+
+
+def is_privileged(user_id):
+    """Владелец или назначенный администратор."""
+    return user_id in OWNER_IDS or user_id in ADMINS
+
+
+@app.get("/api/admins")
+def api_get_admins():
+    """Список администраторов — видно владельцу и админам."""
+    verified = verify_init_data(request.args.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if not is_privileged(verified["user"]["id"]):
+        return jsonify(ok=False, error="Forbidden"), 403
+    return jsonify(ok=True, adminIds=sorted(ADMINS))
+
+
+@app.post("/api/admins")
+def api_set_admin():
+    """Добавить/убрать администратора — только владелец."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if verified["user"]["id"] not in OWNER_IDS:
+        return jsonify(ok=False, error="Forbidden"), 403
+    action = data.get("action")
+    user_id = data.get("userId")
+    if action not in ("add", "remove") or not isinstance(user_id, (int, float)) or int(user_id) <= 0:
+        return jsonify(ok=False, error="bad params"), 400
+    user_id = int(user_id)
+    if user_id in OWNER_IDS:
+        return jsonify(ok=False, error="owner is always admin"), 400
+    if action == "add":
+        ADMINS.add(user_id)
+    else:
+        ADMINS.discard(user_id)
+    save_admins(ADMINS)
+    logging.getLogger("bot").info("владелец %s админа %s", "добавил" if action == "add" else "убрал", user_id)
+    return jsonify(ok=True, adminIds=sorted(ADMINS))
+
+
+@app.post("/api/daily-reset")
+def api_reset_daily():
+    """Принудительный сброс ежедневных карточек игроку — владелец или админ."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if not is_privileged(verified["user"]["id"]):
+        return jsonify(ok=False, error="Forbidden"), 403
+    user_id = data.get("userId")
+    if not isinstance(user_id, (int, float)) or int(user_id) <= 0:
+        return jsonify(ok=False, error="bad userId"), 400
+    user_id = int(user_id)
+    resets = load_daily_resets()
+    resets[user_id] = int(time.time())
+    save_daily_resets(resets)
+    logging.getLogger("bot").info("сброс ежедневных карточек игроку %s", user_id)
+    return jsonify(ok=True, resetTs=resets[user_id])
+
+
+@app.post("/api/daily-pointer")
+def api_daily_pointer():
+    """Собственный маркер принудительного сброса: если сервер сбросил daily
+    позже нашей отметки — клиент обнуляет карточки."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    user_id = verified["user"]["id"]
+    resets = load_daily_resets()
+    return jsonify(ok=True, resetTs=resets.get(user_id, 0))
+
+
 def load_settings():
     try:
         return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
