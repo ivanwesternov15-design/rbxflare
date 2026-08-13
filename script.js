@@ -62,7 +62,76 @@ async function refreshLibrary(){
 
 function applySelected(){
   TARGET_EL.fons.style.setProperty(CSS_VAR.fons, `url('${state.selected.fons}')`);
-  TARGET_EL.podfons.style.setProperty(CSS_VAR.podfons, `url('${state.selected.podfons}')`);
+  const isOwner = PROFILE && OWNER_IDS.includes(PROFILE.id);
+  const w = (!isOwner && GLOBAL_WALLPAPER) ? GLOBAL_WALLPAPER : state.selected.podfons;
+  TARGET_EL.podfons.style.setProperty(CSS_VAR.podfons, `url('${w}')`);
+}
+
+/* ---- глобальные настройки: фон приложения применяется ко всем ---- */
+let GLOBAL_WALLPAPER = '';
+async function loadSettings(){
+  try{
+    const res = await fetch('/api/settings?ts=' + Date.now());
+    const data = await res.json();
+    if(!data.ok) return;
+    const isOwner = PROFILE && OWNER_IDS.includes(PROFILE.id);
+    if(data.wallpaper){
+      GLOBAL_WALLPAPER = data.wallpaper;
+      if(isOwner){
+        state.selected.podfons = data.wallpaper;
+        if(!LIBRARY.podfons.includes(data.wallpaper)){
+          LIBRARY.podfons.unshift(data.wallpaper);
+          saveState();
+          if(sheet.classList.contains('open')) renderGrid(state.tab);
+        }
+      }
+      TARGET_EL.podfons.style.setProperty(CSS_VAR.podfons, `url('${data.wallpaper}')`);
+    }
+  }catch(e){}
+}
+
+/* ---- тост-уведомление ---- */
+function showToast(text, ok){
+  let toast = document.getElementById('appToast');
+  if(!toast){
+    toast = document.createElement('div');
+    toast.id = 'appToast';
+    document.body.appendChild(toast);
+  }
+  toast.className = 'app-toast' + (ok ? '' : ' err');
+  toast.innerHTML =
+    '<svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>' +
+    `<span>${text}</span>` +
+    '<svg class="t-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+    '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>';
+  void toast.offsetWidth;
+  toast.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function notifyChange(tab, src){
+  if(!PROFILE || !OWNER_IDS.includes(PROFILE.id)) return;
+  if(tab !== 'fons' && tab !== 'podfons') return;
+  const id = tgInitData();
+  if(!id){ showToast('Не успешно изменить фон', false); return; }
+  fetch('/api/settings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: id, kind: tab, path: src })
+  })
+    .then(r => r.json())
+    .then(data => {
+      const label = tab === 'fons' ? 'Фон карточки' : 'Фон приложения';
+      if(data.ok){
+        const count = tab === 'podfons' ? ` — обновилось у ${data.users} пользователей` : '';
+        showToast(`Вы успешно изменили ${label}${count}`, true);
+      }else{
+        showToast('Не успешно изменить ' + label, false);
+      }
+    })
+    .catch(() => showToast('Не успешно изменить фон', false));
 }
 
 /* =========================================================
@@ -327,6 +396,7 @@ function selectImage(tab, src, cellEl){
   const el = TARGET_EL[tab];
   crossFade(el, src);
   saveState();
+  notifyChange(tab, src);
 }
 
 /* ---- плавный переход между вкладками галереи (выезд/въезд по направлению) ---- */
@@ -530,3 +600,4 @@ if(tg){
 applySelected();
 refreshLibrary();
 loadProfile();
+loadSettings();

@@ -31,7 +31,7 @@ USERS_FILE = DATA_DIR / "users.json"
 USERS_BACKUP = DATA_DIR / "users.json.bak"
 
 ALLOWED_KINDS = ("avatars", "fons", "podfons")
-OWNER_IDS = (8414792453,)  # только владелец может удалять фоны
+OWNER_IDS = (8414792453,)  # только владелец может менять глобальные настройки и удалять фоны
 PORT = int(os.environ.get("PORT", 8080))
 
 with open(BASE_DIR / "config.json", encoding="utf-8") as fh:
@@ -56,6 +56,76 @@ def save_users(users):
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+
+SETTINGS_FILE = DATA_DIR / "settings.json"
+
+
+def load_settings():
+    try:
+        return json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def save_settings(settings):
+    SETTINGS_FILE.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def gallery_path(raw):
+    """Разбирает путь вида /uploads/<kind>/<name> или /tgminiapprbx/<kind>/<name>."""
+    parts = [p for p in str(raw or "").split("/") if p]
+    if len(parts) != 3 or parts[0] not in ("uploads", "tgminiapprbx"):
+        return None
+    kind, name = parts[1], parts[2]
+    if kind not in ALLOWED_KINDS:
+        return None
+    if not name.lower().endswith((".jpg", ".jpeg", ".png")):
+        return None
+    if not name.replace(".", "").replace("-", "").replace("_", "").isalnum():
+        return None
+    base = UPLOADS_DIR if parts[0] == "uploads" else ROOT_DIR / "tgminiapprbx"
+    target = (base / kind / name).resolve()
+    if target.parent != (base / kind).resolve():
+        return None
+    return target
+
+
+# ---------- глобальные настройки: фон приложения для всех пользователей ----------
+@app.get("/api/settings")
+def api_get_settings():
+    s = load_settings()
+    wallpaper = s.get("wallpaper") or ""
+    if wallpaper:
+        p = gallery_path(wallpaper)
+        if not p or not p.is_file():
+            wallpaper = ""
+            s.pop("wallpaper", None)
+            save_settings(s)
+    return jsonify(ok=True, wallpaper=wallpaper, users=len(load_users()))
+
+
+@app.post("/api/settings")
+def api_set_settings():
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    if verified["user"]["id"] not in OWNER_IDS:
+        return jsonify(ok=False, error="Forbidden"), 403
+
+    kind = data.get("kind")
+    path = str(data.get("path") or "")
+    if kind not in ("fons", "podfons") or not gallery_path(path):
+        return jsonify(ok=False, error="bad path"), 400
+
+    s = load_settings()
+    if kind == "podfons":
+        s["wallpaper"] = path
+    else:
+        s["banner"] = path
+    save_settings(s)
+    logging.getLogger("bot").info("владелец сменил %s: %s", kind, path)
+    return jsonify(ok=True, users=len(load_users()))
 
 
 # ---------- список картинок и аплоады ----------
@@ -103,20 +173,8 @@ def api_delete_files():
 
     deleted = 0
     for raw in paths:
-        raw = str(raw or "")
-        parts = [p for p in raw.split("/") if p]
-        if len(parts) != 3 or parts[0] not in ("uploads", "tgminiapprbx"):
-            continue
-        kind, name = parts[1], parts[2]
-        if kind not in ALLOWED_KINDS:
-            continue
-        if not name.lower().endswith((".jpg", ".jpeg", ".png")):
-            continue
-        if not name.replace(".", "").replace("-", "").replace("_", "").isalnum():
-            continue
-        base = UPLOADS_DIR if parts[0] == "uploads" else ROOT_DIR / "tgminiapprbx"
-        target = (base / kind / name).resolve()
-        if target.parent != (base / kind).resolve():
+        target = gallery_path(raw)
+        if not target:
             continue
         try:
             if target.is_file():
