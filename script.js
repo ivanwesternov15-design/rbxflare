@@ -90,8 +90,36 @@ async function loadSettings(){
   }catch(e){}
 }
 
-/* ---- тост-уведомление ---- */
-function showToast(text, ok){
+/* ---- тост-уведомление (rAF: въезд сверху вниз, уезд вверх) ---- */
+function animateToast(toast, show){
+  const token = (toast._anim = (toast._anim || 0) + 1);
+  const t0 = performance.now();
+  const dur = 380;
+  const ease = show ? (t => 1 - Math.pow(1 - t, 3)) : (t => t * t);
+  const frame = now => {
+    if(token !== toast._anim) return;
+    const p = Math.min(1, (now - t0) / dur);
+    const e = ease(p);
+    toast.style.opacity = show ? e : 1 - e;
+    toast.style.transform = `translateX(-50%) translateY(${(show ? 1 - e : -e) * 40}px)`;
+    if(p < 1){ requestAnimationFrame(frame); }
+    else if(!show) toast.style.visibility = 'hidden';
+    else toast.style.visibility = 'visible';
+  };
+  requestAnimationFrame(frame);
+}
+
+function toastSvg(icon, cls){
+  const trash =
+    `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M4 7h16M9 7V5a1.5 1.5 0 0 1 1.5-1.5h3A1.5 1.5 0 0 1 15 5v2M6.5 7l.9 12.1A2 2 0 0 0 9.4 21h5.2a2 2 0 0 0 2-1.9L17.5 7"/><path d="M10 11v6M14 11v6"/></svg>`;
+  const refresh =
+    `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">` +
+    `<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`;
+  return icon === 'trash' ? trash : refresh;
+}
+
+function showToast(text, ok, icon){
   let toast = document.getElementById('appToast');
   if(!toast){
     toast = document.createElement('div');
@@ -100,15 +128,12 @@ function showToast(text, ok){
   }
   toast.className = 'app-toast' + (ok ? '' : ' err');
   toast.innerHTML =
-    '<svg class="t-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>' +
-    `<span>${text}</span>` +
-    '<svg class="t-arr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
-    '<path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>';
-  void toast.offsetWidth;
-  toast.classList.add('show');
+    toastSvg(icon, 't-ico') +
+    `<span class="t-text">${text}</span>` +
+    toastSvg('arrow', 't-arr');
+  animateToast(toast, true);
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => toast.classList.remove('show'), 3000);
+  toast._t = setTimeout(() => animateToast(toast, false), 3000);
 }
 
 function notifyChange(tab, src){
@@ -126,7 +151,7 @@ function notifyChange(tab, src){
       const label = tab === 'fons' ? 'Фон карточки' : 'Фон приложения';
       if(data.ok){
         const count = tab === 'podfons' ? ` — обновилось у ${data.users} пользователей` : '';
-        showToast(`Вы успешно изменили ${label}${count}`, true);
+        showToast(`Вы успешно изменили ${label}${count}`, true, 'refresh');
       }else{
         showToast('Не успешно изменить ' + label, false);
       }
@@ -251,6 +276,7 @@ const menuBtn = document.getElementById('menuBtn');
 const backdrop = document.getElementById('backdrop');
 const sheet = document.getElementById('sheet');
 const sheetClose = document.getElementById('sheetClose');
+const bottomNav = document.getElementById('bottomNav');
 
 function renderGrid(tab){
   const list = LIBRARY[tab];
@@ -339,14 +365,23 @@ delConfirm.addEventListener('click', async () => {
     });
     const data = await res.json();
     if(data.ok && data.deleted){
+      const kinds = new Set();
       paths.forEach(p => {
         const kind = p.split('/')[2];
+        kinds.add(kind);
         if(LIBRARY[kind]) LIBRARY[kind] = LIBRARY[kind].filter(x => x !== p);
+        if(state.selected[kind] === p) state.selected[kind] = LIBRARY[kind] && LIBRARY[kind][0] ? LIBRARY[kind][0] : '';
       });
       exitDeleteMode();
       renderGrid(state.tab);
       applySelected();
       saveState();
+      const n = data.deleted;
+      const word = n === 1 ? 'фотографию' : (n >= 2 && n <= 4 ? 'фотографии' : 'фотографий');
+      const label = kinds.size > 1
+        ? word
+        : word + ' из «' + (kinds.has('podfons') ? 'Фон приложения' : 'Фон карточки') + '»';
+      showToast(`Вы успешно удалили ${n} ${label}`, true, 'trash');
     }else{
       alert('Не удалось удалить: ' + (data.error || 'ошибка'));
     }
@@ -474,6 +509,7 @@ tabBtns.forEach(btn => {
 function openSheet(){
   backdrop.classList.add('open');
   sheet.classList.add('open');
+  bottomNav.classList.add('locked');
   animateSheet(true);
   renderGrid(state.tab);
   refreshLibrary();
@@ -485,6 +521,7 @@ function closeSheet(){
   if(deleteMode) exitDeleteMode();
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
+  bottomNav.classList.remove('locked');
   animateSheet(false);
   if(window._scanTimer){ clearInterval(window._scanTimer); window._scanTimer = null; }
 }
