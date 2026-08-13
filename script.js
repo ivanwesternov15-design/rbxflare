@@ -235,12 +235,47 @@ function selectImage(tab, src, cellEl){
   saveState();
 }
 
+/* ---- плавный переход между вкладками галереи (выезд/въезд по направлению) ---- */
+let gridAnim = 0;
+function animateGrid(dir){
+  const token = ++gridAnim;
+  const t0 = performance.now();
+  const dur = 360;
+  const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+  let swapped = false;
+
+  const frame = now => {
+    if(token !== gridAnim) return;
+    const p = Math.min(1, (now - t0) / dur);
+    if(p < .5){
+      const v = ease(p * 2);
+      grid.style.opacity = 1 - v * .45;
+      grid.style.transform = `translateX(${dir * 22 * v}px)`;
+    }else{
+      if(!swapped){ swapped = true; renderGrid(state.tab); }
+      const v = ease((p - .5) * 2);
+      grid.style.opacity = .55 + v * .45;
+      grid.style.transform = `translateX(${dir * 22 * (1 - v)}px)`;
+    }
+    if(p < 1){ requestAnimationFrame(frame); }
+    else{
+      grid.style.opacity = '';
+      grid.style.transform = '';
+    }
+  };
+  requestAnimationFrame(frame);
+}
+
 function switchTab(tab){
+  const keys = Object.keys(LIBRARY);
+  const prevIdx = keys.indexOf(state.tab);
+  const nextIdx = keys.indexOf(tab);
+  const dir = nextIdx > prevIdx ? 1 : -1;
   state.tab = tab;
   [...tabsWrap.querySelectorAll('.tab-btn')].forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  const idx = Object.keys(LIBRARY).indexOf(tab);
+  const idx = nextIdx;
   tabIndicator.style.transform = `translateX(${idx * 100}%)`;
-  renderGrid(tab);
+  animateGrid(dir);
   saveState();
 }
 
@@ -281,14 +316,16 @@ function animateSheet(open){
     const p = Math.min(1, (now - t0) / dur);
     const e = ease(p);
     const rev = 1 - e;
-    backdrop.style.opacity = e;
-    sheet.style.opacity = e;
+    const o = open ? e : rev;
+    backdrop.style.opacity = o;
+    sheet.style.opacity = o;
     sheet.style.filter = `blur(${rev * 10}px)`;
     sheet.style.transform = `translate(-50%, -50%) scale(${open ? 0.86 + 0.14 * e : 0.9 + 0.1 * rev}) translateY(${rev * (open ? 18 : 10)}px)`;
     if(p < 1){ requestAnimationFrame(frame); }
     else if(!open){
       sheet.style.visibility = 'hidden';
       sheet.style.opacity = 0;
+      backdrop.style.opacity = 0;
     }else{
       sheet.style.filter = 'blur(0px)';
       sheet.style.transform = 'translate(-50%, -50%) scale(1)';
