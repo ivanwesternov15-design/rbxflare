@@ -909,27 +909,31 @@ function renderInventory(){
   cards.forEach((card, i) => {
     const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
     const el = document.createElement('div');
-    el.className = 'inv-card' + (card.status === 'used' ? ' used' : '');
+    el.className = 'inv-row' + (card.status === 'used' ? ' used' : '');
     el.style.setProperty('--t1', st.colors[0]);
     el.style.setProperty('--t2', st.colors[1]);
     el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
-    el.style.animationDelay = `${i * 60}ms`;
+    el.style.animationDelay = `${i * 70}ms`;
     const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
     el.innerHTML =
-      `<div class="inv-stage">` +
+      `<div class="inv-thumb">` +
         `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
       `</div>` +
-      `<div class="inv-title">${card.rarity}</div>` +
-      `<div class="inv-meta">` +
-        `<div class="inv-amount"><b>+${card.reward}</b> Robux</div>` +
-        `<div class="inv-status ${card.status === 'staking' ? 'staking' : ''}">${statusText}</div>` +
-        (card.status === 'staking' ? `<div class="inv-until">осталось ${fmtLeft(card.until)}</div>` : '') +
+      `<div class="inv-mid">` +
+        `<div class="inv-title">${card.rarity}</div>` +
+        `<div class="inv-reward">+${card.reward} Robux</div>` +
+        `<div class="inv-rowfoot">` +
+          `<span class="inv-status ${card.status === 'staking' ? 'staking' : card.status === 'used' ? 'used' : ''}">${statusText}</span>` +
+          (card.status === 'staking' ? `<span class="inv-until">осталось ${fmtLeft(card.until)}</span>` : '') +
+        `</div>` +
       `</div>` +
-      (card.status === 'available'
-        ? `<button class="stake-btn" data-i="${i}">Стейкинг</button>`
-        : card.status === 'staking'
-          ? `<button class="stake-btn off" data-i="${i}">Забрать</button>`
-          : '');
+      `<div class="inv-act">` +
+        (card.status === 'available'
+          ? `<button class="stake-btn" data-i="${i}">Стейкинг</button>`
+          : card.status === 'staking'
+            ? `<button class="stake-btn off" data-i="${i}">Забрать</button>`
+            : '') +
+      `</div>`;
     const btn = el.querySelector('.stake-btn');
     if(btn) btn.addEventListener('click', () => card.status === 'staking' ? withdrawStake(card) : openStake(card));
     inventoryListEl.appendChild(el);
@@ -958,7 +962,7 @@ function openStake(card){
   const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
   stakePreview.innerHTML =
     `<img class="stake-png tier-shine" src="${card.img}" alt="${card.rarity}" style="${tierVars(card.rarity)}">` +
-    `<div class="inv-title">${card.rarity}</div>` +
+    `<div class="stake-title">${card.rarity}</div>` +
     `<div class="stake-sub">Сумма карточки — <b>+${card.reward} Robux</b></div>`;
   stakeOptions.innerHTML = '';
   const stake = (tierCfg(card.rarity).stake) || {};
