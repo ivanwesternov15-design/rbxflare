@@ -17,6 +17,7 @@ import os
 import shutil
 import time
 import urllib.parse
+from datetime import date, datetime
 from pathlib import Path
 
 import requests
@@ -565,6 +566,51 @@ def load_referrals_data():
         return {}
 
 
+def enrich_referral_user(users, uid, joined_date):
+    """Если записи о реферале нет — подтягивает имя/username/фото через Bot API."""
+    if uid in users:
+        return users[uid]
+    try:
+        resp = requests.get(
+            f"https://api.telegram.org/bot{BOT_TOKEN}/getChat",
+            params={"chat_id": uid},
+            timeout=10,
+        ).json()
+        res = resp.get("result") or {}
+        if not res:
+            return None
+        users[uid] = {
+            "id": int(uid),
+            "first_name": res.get("first_name") or res.get("title") or "Игрок",
+            "last_name": res.get("last_name") or "",
+            "username": res.get("username") or "",
+            "photo_url": fetch_telegram_photo(uid),
+            "language_code": "",
+            "is_premium": False,
+            "created_at": int(time.time() * 1000),
+            "first_login": joined_date or time.strftime("%Y-%m-%d"),
+            "bio": "",
+            "birthday": "",
+        }
+        save_users(users)
+        return users[uid]
+    except Exception as exc:
+        log.warning("enrich referral %s: %s", uid, exc)
+        return None
+
+
+def streak_fallback(u):
+    """Если реферал не репортил стрик — активность = дни с первого входа."""
+    if not u or not u.get("first_login"):
+        return 0
+    try:
+        fl = datetime.strptime(u["first_login"][:10], "%Y-%m-%d").date()
+        days = (date.today() - fl).days + 1
+        return max(0, min(days, 60))
+    except ValueError:
+        return 0
+
+
 @app.get("/api/referrals")
 def api_get_referrals():
     """Список рефералов текущего пользователя + его реферальная ссылка."""
@@ -577,7 +623,12 @@ def api_get_referrals():
     users = load_users()
     items = []
     for r in lst:
-        u = users.get(str(r.get("id")))
+        rid = str(r.get("id"))
+        u = users.get(rid)
+        if not u:
+            u = enrich_referral_user(users, rid, r.get("date"))
+            users = load_users()  # refresh (может поменяться при save)
+            u = users.get(rid)
         items.append({
             "id": r.get("id"),
             "date": r.get("date"),
@@ -586,7 +637,7 @@ def api_get_referrals():
             "username": (u.get("username") if u else "") or "",
             "avatar": (u.get("photo_url") if u else "") or "",
             "tasks": int((u.get("tasks_done") if u else 0) or 0),
-            "streak": int((u.get("streak_days") if u else 0) or 0),
+            "streak": int((u.get("streak_days") if u else 0) or 0) or streak_fallback(u),
         })
     return jsonify(
         ok=True,
@@ -607,7 +658,14 @@ def api_report_progress():
     uid = str(verified["user"]["id"])
     users = load_users()
     if uid not in users:
-        return jsonify(ok=False, error="User not found"), 404
+        users[uid] = {
+            "id": int(uid),
+            "first_name": "", "last_name": "", "username": "",
+            "photo_url": "", "language_code": "", "is_premium": False,
+            "created_at": int(time.time() * 1000),
+            "first_login": time.strftime("%Y-%m-%d"),
+            "bio": "", "birthday": "",
+        }
     users[uid]["tasks_done"] = max(0, int(body.get("tasks") or 0))
     users[uid]["streak_days"] = max(0, int(body.get("streak") or 0))
     save_users(users)

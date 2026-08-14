@@ -2016,15 +2016,15 @@ withdrawBackdrop.addEventListener('click', () => closeModal(withdrawSheet, withd
 let realtimeTimer = null;
 function startRealtime(){
   stopRealtime();
-  realtimeTimer = setInterval(() => { loadDailyPointer(); loadReferrals(); }, 10000);
+  realtimeTimer = setInterval(() => { loadDailyPointer(); loadReferrals(); }, 5000);
 }
 function stopRealtime(){
   if(realtimeTimer){ clearInterval(realtimeTimer); realtimeTimer = null; }
 }
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible') loadDailyPointer();
+  if(document.visibilityState === 'visible'){ loadDailyPointer(); loadReferrals(); }
 });
-window.addEventListener('focus', loadDailyPointer);
+window.addEventListener('focus', () => { loadDailyPointer(); loadReferrals(); });
 
 /* =========================================================
    КОНФИГ СЕРВЕРА + ПРЕДЗАГРУЗКА
