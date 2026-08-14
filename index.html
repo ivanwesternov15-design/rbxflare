@@ -102,7 +102,34 @@
 </main>
 
 <main class="view" id="viewMain">
-  <div class="hero">
+
+  <!-- ===== HEADER: логотип + уведомления ===== -->
+  <div class="mh-header">
+    <div class="mh-brand">
+      <div class="mh-logo">
+        <svg viewBox="0 0 44 40" fill="none">
+          <defs>
+            <linearGradient id="lgLogo" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#EAF4FF"/><stop offset="1" stop-color="#8FD9FF"/>
+            </linearGradient>
+          </defs>
+          <path d="M20 2 6 11v18l14 9 14-9V11L20 2z" stroke="url(#lgLogo)" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M20 2v36M6 11l14 9 14-9" stroke="url(#lgLogo)" stroke-width="1.4" stroke-linejoin="round" opacity=".55"/>
+        </svg>
+      </div>
+      <div class="mh-titles">
+        <div class="mh-name">ROBUX GAME</div>
+        <div class="mh-live"><i></i>ЖИВАЯ КОЛЛЕКЦИЯ</div>
+      </div>
+    </div>
+    <button class="mh-bell" id="notifBellBtn" aria-label="Уведомления">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span class="mh-badge hidden" id="notifBadge">0</span>
+    </button>
+  </div>
+
+  <!-- ===== ПРОФИЛЬ ===== -->
+  <div class="mh-profile">
     <div class="hero-user">
       <div class="hero-avatar" id="heroAvatar"><span>?</span></div>
       <div class="hero-info">
@@ -110,18 +137,48 @@
         <div class="hero-id" id="heroId">ID: —</div>
       </div>
     </div>
-    <div class="hero-bal">
-      <svg class="hero-bal-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
-      <div class="hero-bal-mid">
-        <div class="hero-bal-num" id="balanceValue">0</div>
-        <div class="hero-bal-cur">Robux</div>
+
+    <div class="mh-balances">
+      <div class="bal-box bal-robux">
+        <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
+          <path d="M24 4 6 14v20l18 10 18-10V14L24 4z" stroke="#00FFD0" stroke-width="2.3" stroke-linejoin="round"/>
+          <path d="M24 4v40M6 14l18 10 18-10" stroke="#00FFD0" stroke-width="1.3" stroke-linejoin="round" opacity=".45"/>
+          <circle cx="24" cy="24" r="6.5" stroke="#00FFD0" stroke-width="1.6" opacity=".8"/>
+        </svg>
+        <div class="bal-mid">
+          <div class="bal-label">Robux</div>
+          <div class="bal-num" id="balanceValue">0</div>
+        </div>
+      </div>
+      <div class="bal-box bal-coins">
+        <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
+          <path d="M24 4c-6 8-12 12-12 22a12 12 0 0 0 24 0c0-6-3-9-5-12 0 4-2 6-4 6-3 0-4-3-4-6 0-4 1-7 1-10z" fill="#FFB020" stroke="#FF7A1A" stroke-width="1.6" stroke-linejoin="round"/>
+        </svg>
+        <div class="bal-mid">
+          <div class="bal-label">Coins</div>
+          <div class="bal-num" id="coinsValue">0</div>
+        </div>
       </div>
     </div>
   </div>
 
+  <!-- ===== STREAK ===== -->
+  <div class="mh-streak">
+    <div class="streak-left">
+      <svg class="streak-flame" viewBox="0 0 24 24" fill="#FFC72C"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.4-2-1-3 1 4-1 5-2 5-1.5 0-2-1.5-1-3 .8-1.6 1-3.4-2-6z" opacity=".9"/><path d="M9 14a5 5 0 0 0 10 0c0-2-1-3.5-2-5 .6 3-.6 4.4-2 4.4-1.7 0-2.4-1.7-1.6-3.4C14.2 8 12.6 6 12 4c.6 4-3 5-3 10z"/></svg>
+      <span class="streak-title">STREAK</span>
+      <span class="streak-days" id="streakDays">0 дней</span>
+    </div>
+    <div class="streak-right">
+      <svg class="streak-coin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#FFC72C" stroke="#B8860B" stroke-width="1"/><text x="12" y="16" font-size="11" font-weight="800" fill="#7a4e00" text-anchor="middle">R</text></svg>
+      <span class="streak-bonus" id="streakBonus">+25</span>
+    </div>
+  </div>
+
+  <!-- ===== ЕЖЕДНЕВНЫЕ КАРТОЧКИ ===== -->
   <div class="daily-panel">
     <div class="dp-head">
-      <div class="dp-title">Ежедневные карточки</div>
+      <div class="dp-title">Твои карточки на сегодня</div>
       <div class="dp-actions">
         <div class="dp-timer hidden" id="dailyTimer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
@@ -132,8 +189,11 @@
         </button>
       </div>
     </div>
-    <div class="dp-sub">Выбери карточку и сотри покрытие — редкость узнаешь только после скретча</div>
     <div class="daily-grid" id="dailyGrid"></div>
+    <div class="dp-hint">
+      <span>Выбери одну карточку</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="#2397FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
+    </div>
     <div class="daily-done hidden" id="dailyDone">
       <svg class="dd-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 3v3h6V3"/><path d="M9 11h6M9 15h6"/></svg>
       <span>Приходи завтра за новой карточкой</span>
@@ -143,6 +203,77 @@
       <span>Забрать карточку</span>
     </button>
   </div>
+
+  <!-- ===== СЕТКА: ЗАДАНИЯ / СТЕЙКИНГ / РЕФЕРАЛЫ / ВЫВОД ===== -->
+  <div class="mh-grid">
+    <button class="mh-tile" id="tasksBtn">
+      <div class="mh-tile-ico tile-cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 14.4 8.6l6.6.6-5 4.3 1.5 6.4L12 16.7l-5.5 3.2 1.5-6.4-5-4.3 6.6-.6L12 2.5z"/></svg>
+      </div>
+      <div class="mh-tile-mid">
+        <div class="mh-tile-title">Задания</div>
+        <div class="mh-tile-sub" id="taskBtnProgress">0 / 7 выполнено</div>
+      </div>
+      <svg class="mh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <button class="mh-tile" id="stakingBtn">
+      <div class="mh-tile-ico tile-gold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 14.4 8.6l6.6.6-5 4.3 1.5 6.4L12 16.7l-5.5 3.2 1.5-6.4-5-4.3 6.6-.6L12 2.5z"/></svg>
+      </div>
+      <div class="mh-tile-mid">
+        <div class="mh-tile-title">Стейкинг</div>
+        <div class="mh-tile-sub" id="stakingSub">0 карточек</div>
+      </div>
+      <svg class="mh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <button class="mh-tile" id="refsBtnMain">
+      <div class="mh-tile-ico tile-violet">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.7 20c0-3.5 2.8-6 6.3-6s6.3 2.5 6.3 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.5.3 4.8 2 4.8 5.4"/></svg>
+      </div>
+      <div class="mh-tile-mid">
+        <div class="mh-tile-title">Рефералы</div>
+        <div class="mh-tile-sub" id="refCount">0 рефералов</div>
+      </div>
+      <svg class="mh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+
+    <button class="mh-tile" id="withdrawBtn">
+      <div class="mh-tile-ico tile-amber">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 9.5c0-1.4 1.2-2 2.5-2s2.5.7 2.5 2c0 3-5 1.7-5 4.5 0 1.3 1.2 2 2.5 2s2.5-.6 2.5-2"/></svg>
+      </div>
+      <div class="mh-tile-mid">
+        <div class="mh-tile-title">Вывод</div>
+        <div class="mh-tile-sub" id="withdrawSub">0 / 40 Robux</div>
+      </div>
+      <svg class="mh-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
+  <!-- ===== ПРОМО: выполни задания и получи карточку ===== -->
+  <div class="mh-promo">
+    <div class="promo-gift">
+      <svg viewBox="0 0 60 60" fill="none">
+        <rect x="8" y="24" width="44" height="28" rx="4" fill="#0E2C4A" stroke="#2397FF" stroke-width="2"/>
+        <rect x="8" y="24" width="44" height="10" fill="#123A61"/>
+        <rect x="26" y="10" width="8" height="42" fill="#1ED4FF" opacity=".85"/>
+        <path d="M30 10c-6 0-10-4-10-8 4 0 10 3 10 8z" fill="#9B5CFF"/>
+        <path d="M30 10c6 0 10-4 10-8-4 0-10 3-10 8z" fill="#1ED4FF"/>
+      </svg>
+    </div>
+    <div class="promo-mid">
+      <div class="promo-text">Выполни все задания и получи</div>
+      <div class="promo-title">+1 карточку!</div>
+      <div class="promo-progress">
+        <div class="promo-progress-track"><div class="promo-progress-fill" id="promoProgressFill" style="width:0%"></div></div>
+        <span class="promo-progress-text" id="promoProgressText">0 / 7</span>
+      </div>
+    </div>
+    <button class="promo-btn" id="promoGoBtn">Смотреть задания</button>
+    <button class="promo-btn promo-claim hidden" id="promoClaimBtn">Забрать награду</button>
+  </div>
+
 </main>
 
 <main class="view hidden" id="viewCards">
@@ -295,6 +426,110 @@
   <div class="admin-panel-body">
     <div class="ap-note">Нажми на игрока, чтобы скопировать его Telegram ID</div>
     <div class="ap-list users-list" id="usersList"></div>
+  </div>
+</div>
+
+<!-- ============ ОКНО УВЕДОМЛЕНИЙ ============ -->
+<div class="sheet-backdrop" id="notifBackdrop"></div>
+<div class="sheet notif-sheet" id="notifSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Уведомления</div>
+    <button class="sheet-close" id="notifClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-panel-body">
+    <div class="notif-list" id="notifList"></div>
+    <div class="inventory-empty" id="notifEmpty">
+      <svg class="ie-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg>
+      <span>Уведомлений пока нет</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ОКНО ЗАДАНИЙ ============ -->
+<div class="sheet-backdrop" id="tasksBackdrop"></div>
+<div class="sheet tasks-sheet" id="tasksSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Задания</div>
+    <button class="sheet-close" id="tasksClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-panel-body">
+    <div class="ap-note" id="tasksProgressText">0 / 7 выполнено</div>
+    <div class="task-list" id="tasksList"></div>
+  </div>
+</div>
+
+<!-- ============ ОКНО РЕФЕРАЛОВ ============ -->
+<div class="sheet-backdrop" id="refsBackdrop"></div>
+<div class="sheet refs-sheet" id="refsSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Рефералы</div>
+    <button class="sheet-close" id="refsClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-panel-body">
+    <div class="ref-summary">
+      <div class="ref-summary-num" id="refCountBig">0</div>
+      <div class="ref-summary-label">приглашённых друзей</div>
+    </div>
+    <div class="ref-link-box">
+      <div class="ref-link-text" id="refLinkText">—</div>
+      <button class="ref-copy-btn" id="refCopyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Копировать
+      </button>
+    </div>
+    <div class="ap-note">+50 Coins за каждого друга, который откроет игру по твоей ссылке</div>
+    <div class="ref-list" id="refList"></div>
+    <div class="inventory-empty" id="refEmpty">
+      <svg class="ie-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c2.6.3 5 2.1 5 5.5"/></svg>
+      <span>Пока никто не присоединился по ссылке</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ОКНО СТЕЙКИНГА (обзор) ============ -->
+<div class="sheet-backdrop" id="stakeOvBackdrop"></div>
+<div class="sheet stake-ov-sheet" id="stakeOvSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Стейкинг</div>
+    <button class="sheet-close" id="stakeOvClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-panel-body">
+    <div class="ap-note">Карточки в стейкинге: <b id="stakeOvCount">0</b>. Управлять стейкингом можно на вкладке «Карточки»</div>
+    <div class="so-list" id="stakeOvList"></div>
+    <div class="inventory-empty" id="stakeOvEmpty">
+      <svg class="ie-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 3v3h6V3"/><path d="M9 11h6M9 15h6"/></svg>
+      <span>Нет карточек в стейкинге</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ОКНО ВЫВОДА ============ -->
+<div class="sheet-backdrop" id="withdrawBackdrop"></div>
+<div class="sheet withdraw-sheet" id="withdrawSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sheet-title">Вывод средств</div>
+    <button class="sheet-close" id="withdrawClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="admin-panel-body">
+    <div class="wd-balance-box">
+      <div class="wd-balance-label">Твой баланс</div>
+      <div class="wd-balance-num"><span id="wdBalance">0</span> Robux</div>
+    </div>
+    <div class="wd-progress">
+      <div class="wd-progress-track"><div class="wd-progress-fill" id="wdProgressFill" style="width:0%"></div></div>
+      <span class="wd-progress-text" id="wdProgressText">0 / 40 Robux</span>
+    </div>
+    <div class="ap-note">Минимальная сумма для вывода — 40 Robux. Функция вывода находится в разработке — точные условия объявим позже</div>
   </div>
 </div>
 

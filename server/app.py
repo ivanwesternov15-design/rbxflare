@@ -59,11 +59,35 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 
+DELETED_SEEDS_FILE = DATA_DIR / "deleted_seeds.json"
+
+
+def load_deleted_seeds():
+    try:
+        return set(json.loads(DELETED_SEEDS_FILE.read_text(encoding="utf-8")))
+    except (OSError, ValueError):
+        return set()
+
+
+def save_deleted_seeds(names):
+    DELETED_SEEDS_FILE.write_text(json.dumps(sorted(names), ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def mark_seed_deleted(kind, name):
+    """Запоминаем, что дефолтную (репозиторную) картинку удалили — чтобы
+    seed_defaults() не восстанавливал её обратно при следующем рестарте."""
+    deleted = load_deleted_seeds()
+    deleted.add(f"{kind}/{name}")
+    save_deleted_seeds(deleted)
+
+
 def seed_defaults():
     """Переносим картинки галереи из репозитория (tgminiapprbx/) в персистентное
     хранилище DATA_DIR/uploads/ — иначе удаление на BotHost не работает:
     файлы лежат в образе контейнера и восстанавливаются при редеплое,
-    а удалять их оттуда нельзя (часто read-only). Пересев идемпотентен."""
+    а удалять их оттуда нельзя (часто read-only). Пересев идемпотентен.
+    Уже удалённые владельцем/админом картинки повторно не сеются."""
+    deleted = load_deleted_seeds()
     for kind in ALLOWED_KINDS:
         src = ROOT_DIR / "tgminiapprbx" / kind
         if not src.is_dir():
@@ -72,6 +96,8 @@ def seed_defaults():
         dest.mkdir(parents=True, exist_ok=True)
         for f in src.glob("*"):
             if f.suffix.lower() not in (".jpg", ".jpeg", ".png"):
+                continue
+            if f"{kind}/{f.name}" in deleted:
                 continue
             target = dest / f.name
             if target.exists():
@@ -411,13 +437,13 @@ def uploads(path):
 
 @app.delete("/api/files")
 def api_delete_files():
-    """Удаление фонов (только для владельца). paths — список вида /uploads/<kind>/<name>
-    или /tgminiapprbx/<kind>/<name>."""
+    """Удаление фонов — владелец или назначенный администратор. paths — список вида
+    /uploads/<kind>/<name> или /tgminiapprbx/<kind>/<name>."""
     data = request.get_json(silent=True) or {}
     verified = verify_init_data(data.get("initData"))
     if not verified:
         return jsonify(ok=False, error="Invalid initData"), 401
-    if verified["user"]["id"] not in OWNER_IDS:
+    if not is_privileged(verified["user"]["id"]):
         return jsonify(ok=False, error="Forbidden"), 403
 
     paths = data.get("paths") or []
@@ -427,10 +453,13 @@ def api_delete_files():
     deleted = 0
     s = load_settings()
     settings_changed = False
+    newly_deleted_seeds = set()
     for raw in paths:
         target = gallery_path(raw)
         if not target:
             continue
+        parts = [p for p in str(raw).split("/") if p]
+        kind, name = parts[1], parts[2]
         try:
             if target.is_file():
                 target.unlink()
@@ -442,10 +471,18 @@ def api_delete_files():
                 if s.get("banner") == raw:
                     s.pop("banner", None)
                     settings_changed = True
+                # если это была дефолтная (репозиторная) картинка — запоминаем,
+                # чтобы seed_defaults() не восстановил её при следующем рестарте
+                repo_file = ROOT_DIR / "tgminiapprbx" / kind / name
+                if repo_file.is_file():
+                    newly_deleted_seeds.add(f"{kind}/{name}")
         except OSError as exc:
             logging.getLogger("bot").warning("delete %s: %s", target, exc)
     if settings_changed:
         save_settings(s)
+    if newly_deleted_seeds:
+        existing = load_deleted_seeds()
+        save_deleted_seeds(existing | newly_deleted_seeds)
 
     return jsonify(ok=True, deleted=deleted)
 
@@ -512,7 +549,65 @@ def public_user(u):
         "birthday": u.get("birthday") or "",
         "first_login": u.get("first_login") or None,
         "balance": int(u.get("balance") or 0),
+        "pending_coins": int(u.get("pending_coins") or 0),
     }
+
+
+# ---------- рефералы ----------
+REFERRALS_FILE = DATA_DIR / "referrals.json"
+BOT_USERNAME = "rbxflare_bot"
+
+
+def load_referrals_data():
+    try:
+        return json.loads(REFERRALS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+@app.get("/api/referrals")
+def api_get_referrals():
+    """Список рефералов текущего пользователя + его реферальная ссылка."""
+    verified = verify_init_data(request.args.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    uid = verified["user"]["id"]
+    data = load_referrals_data()
+    lst = data.get(str(uid)) or []
+    users = load_users()
+    items = []
+    for r in lst:
+        u = users.get(str(r.get("id")))
+        items.append({
+            "id": r.get("id"),
+            "date": r.get("date"),
+            "name": ([u.get("first_name"), u.get("last_name")] and " ".join(
+                filter(None, [u.get("first_name"), u.get("last_name")]))) if u else "Игрок",
+            "username": (u.get("username") if u else "") or "",
+        })
+    return jsonify(
+        ok=True,
+        count=len(items),
+        list=list(reversed(items)),
+        link=f"https://t.me/{BOT_USERNAME}?start=ref_{uid}",
+    )
+
+
+@app.post("/api/claim-pending")
+def api_claim_pending():
+    """Забрать накопленные монеты за рефералов (начисленные ботом при /start).
+    Обнуляет pending_coins на сервере, клиент добавляет их к state.coins."""
+    data = request.get_json(silent=True) or {}
+    verified = verify_init_data(data.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    users = load_users()
+    uid = str(verified["user"]["id"])
+    amount = int((users.get(uid) or {}).get("pending_coins") or 0)
+    if amount and uid in users:
+        users[uid]["pending_coins"] = 0
+        save_users(users)
+    return jsonify(ok=True, amount=amount)
 
 
 # ---------- фото профиля из Telegram (если в initData не пришло) ----------

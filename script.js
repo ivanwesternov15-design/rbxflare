@@ -181,9 +181,13 @@ const state = (() => {
       podfons: LIBRARY.podfons[0],
     },
     balance: 0,
+    coins: 0,
     daily: null,
     inventory: [],
     dailyResetTs: 0,
+    streak: { count: 0, lastDate: null },
+    tasks: {},           // { taskId: { progress, claimed } }
+    notifications: [],   // [{ id, icon, title, text, ts, read }]
   };
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -199,9 +203,15 @@ const state = (() => {
           });
         }
         if(typeof parsed.balance === 'number') base.balance = parsed.balance;
+        if(typeof parsed.coins === 'number') base.coins = parsed.coins;
         if(parsed.daily && typeof parsed.daily === 'object') base.daily = parsed.daily;
         if(Array.isArray(parsed.inventory)) base.inventory = parsed.inventory;
         if(typeof parsed.dailyResetTs === 'number') base.dailyResetTs = parsed.dailyResetTs;
+        if(parsed.streak && typeof parsed.streak === 'object'){
+          base.streak = { count: Number(parsed.streak.count) || 0, lastDate: parsed.streak.lastDate || null };
+        }
+        if(parsed.tasks && typeof parsed.tasks === 'object') base.tasks = parsed.tasks;
+        if(Array.isArray(parsed.notifications)) base.notifications = parsed.notifications;
       }
     }
   }catch(e){}
@@ -214,9 +224,13 @@ function saveState(){
       tab: state.tab,
       selected: state.selected,
       balance: state.balance,
+      coins: state.coins,
       daily: state.daily,
       inventory: state.inventory,
       dailyResetTs: state.dailyResetTs,
+      streak: state.streak,
+      tasks: state.tasks,
+      notifications: state.notifications,
     }));
   }catch(e){}
 }
@@ -415,10 +429,10 @@ delConfirm.addEventListener('click', async () => {
   }
 });
 
-/* ---- вкладки: «Фон приложения» только для владельца ---- */
+/* ---- вкладки: «Фон приложения» только для владельца, удаление — владелец + админы ---- */
 function setupTabs(){
   const isOwner = OWNER_IDS.includes(PROFILE.id);
-  trashBtn.style.display = isOwner ? '' : 'none';
+  trashBtn.style.display = isPriv() ? '' : 'none';
   tabBtns.forEach(b => {
     b.style.display = (b.dataset.tab === 'podfons' && !isOwner) ? 'none' : '';
   });
@@ -449,6 +463,7 @@ function crossFade(el, src){
 
 function selectImage(tab, src, cellEl){
   state.selected[tab] = src;
+  state.bgChanged = true;
   [...grid.children].forEach(c => c.classList.remove('selected'));
   cellEl.classList.add('selected');
 
@@ -456,6 +471,9 @@ function selectImage(tab, src, cellEl){
   crossFade(el, src);
   saveState();
   notifyChange(tab, src);
+  const label = tab === 'fons' ? 'Фон карточки' : 'Фон приложения';
+  addNotification('refresh', 'Фон изменён', `${label} успешно обновлён`);
+  if(typeof renderTasks === 'function') renderTasks();
 }
 
 /* ---- плавный переход между вкладками галереи (выезд/въезд по направлению) ---- */
@@ -824,6 +842,9 @@ function revealDailyCard(id){
     startDailyTimer(true);
   }, 420);
   addBalance(reward);
+  if(rarity === 'Diamond' || rarity === 'Mythic'){
+    addNotification('gem', `Выпала карта ${rarity}!`, `Тебе повезло — редкая карточка ${rarity} принесла +${reward} Robux`);
+  }
 }
 
 function collectDailyCard(){
@@ -843,6 +864,7 @@ function collectDailyCard(){
   dailyGridEl.classList.add('hidden');
   dailyDoneEl.classList.remove('hidden');
   renderInventory();
+  if(typeof renderTasks === 'function') renderTasks();
   showToast('Ежедневная карта в инвентаре', true, 'win');
 }
 
@@ -864,6 +886,8 @@ function addBalance(delta){
   state.balance = target;
   saveState();
   reportBalance();
+  if(typeof renderWithdraw === 'function') renderWithdraw();
+  if(typeof renderTasks === 'function') renderTasks();
   const token = ++balanceAnim;
   const t0 = performance.now();
   const dur = 600;
@@ -876,6 +900,351 @@ function addBalance(delta){
     else balanceValueEl.textContent = target;
   };
   requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   COINS — вторая валюта (временная экономика, будет дорабатываться)
+   ========================================================= */
+const coinsValueEl = document.getElementById('coinsValue');
+let coinsAnim = 0;
+function addCoins(delta){
+  if(!delta) return;
+  const target = state.coins + delta;
+  const from = state.coins;
+  state.coins = target;
+  saveState();
+  if(!coinsValueEl) return;
+  const token = ++coinsAnim;
+  const t0 = performance.now();
+  const dur = 600;
+  const frame = now => {
+    if(token !== coinsAnim) return;
+    const p = Math.min(1, (now - t0) / dur);
+    const v = Math.round(from + (target - from) * (1 - Math.pow(1 - p, 3)));
+    coinsValueEl.textContent = v;
+    if(p < 1) requestAnimationFrame(frame);
+    else coinsValueEl.textContent = target;
+  };
+  requestAnimationFrame(frame);
+}
+
+/* =========================================================
+   STREAK — серия дней захода (реальный подсчёт по датам)
+   ========================================================= */
+const streakDaysEl = document.getElementById('streakDays');
+const streakBonusEl = document.getElementById('streakBonus');
+const STREAK_DAILY_BONUS = 25;
+
+function ensureStreak(){
+  const today = todayKey();
+  const s = state.streak;
+  if(s.lastDate === today) return false; // уже засчитан сегодняшний день
+  let gained = false;
+  if(s.lastDate){
+    const prev = new Date(s.lastDate + 'T00:00:00');
+    const now = new Date(today + 'T00:00:00');
+    const diffDays = Math.round((now - prev) / 86400000);
+    s.count = diffDays === 1 ? s.count + 1 : 1;
+  }else{
+    s.count = 1;
+  }
+  s.lastDate = today;
+  saveState();
+  gained = true;
+  return gained;
+}
+
+function renderStreak(){
+  if(!streakDaysEl) return;
+  const n = state.streak.count || 0;
+  streakDaysEl.textContent = `${n} ${n === 1 ? 'день' : (n >= 2 && n <= 4 ? 'дня' : 'дней')}`;
+  if(streakBonusEl) streakBonusEl.textContent = `+${STREAK_DAILY_BONUS}`;
+}
+
+/* =========================================================
+   ЗАДАНИЯ — временная логика (7 простых целей на текущих данных)
+   ========================================================= */
+const TASKS = [
+  { id: 'first_card', title: 'Собери первую карточку', desc: 'Забери любую карточку с «Главного» в инвентарь', reward: 20,
+    check: () => state.inventory.length >= 1 },
+  { id: 'five_cards', title: 'Собери 5 карточек', desc: 'Накопи 5 карточек в инвентаре', reward: 60,
+    check: () => state.inventory.length >= 5 },
+  { id: 'streak3', title: 'Заходи 3 дня подряд', desc: 'Не пропускай ежедневные карточки', reward: 40,
+    check: () => (state.streak.count || 0) >= 3 },
+  { id: 'stake_one', title: 'Отправь карточку в стейкинг', desc: 'Застейкай любую карточку в инвентаре', reward: 30,
+    check: () => state.inventory.some(c => c.status === 'staking') },
+  { id: 'invite_friend', title: 'Пригласи друга', desc: 'Поделись реферальной ссылкой', reward: 50,
+    check: () => (REFERRALS.count || 0) >= 1 },
+  { id: 'change_bg', title: 'Смени фон карточки', desc: 'Выбери другой фон во «Внешнем виде»', reward: 15,
+    check: () => !!state.bgChanged },
+  { id: 'balance500', title: 'Накопи 500 Robux', desc: 'Дойди до отметки 500 Robux на балансе', reward: 80,
+    check: () => state.balance >= 500 },
+];
+
+function tasksCompletedCount(){ return TASKS.filter(t => t.check()).length; }
+function tasksAllDone(){ return tasksCompletedCount() === TASKS.length; }
+
+const tasksListEl = document.getElementById('tasksList');
+const tasksProgressTextEl = document.getElementById('tasksProgressText');
+const taskBtnProgressEl = document.getElementById('taskBtnProgress');
+const promoProgressFillEl = document.getElementById('promoProgressFill');
+const promoProgressTextEl = document.getElementById('promoProgressText');
+const promoClaimBtn = document.getElementById('promoClaimBtn');
+const promoGoBtn = document.getElementById('promoGoBtn');
+
+function renderTasks(){
+  const done = tasksCompletedCount();
+  if(tasksProgressTextEl) tasksProgressTextEl.textContent = `${done} / ${TASKS.length} выполнено`;
+  if(taskBtnProgressEl) taskBtnProgressEl.textContent = `${done} / ${TASKS.length} выполнено`;
+  if(tasksListEl){
+    tasksListEl.innerHTML = TASKS.map(t => {
+      const ok = t.check();
+      const claimed = !!(state.tasks[t.id] && state.tasks[t.id].claimed);
+      const status = claimed ? 'claimed' : (ok ? 'ready' : 'locked');
+      return `<div class="task-row ${status}">
+        <div class="task-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            ${claimed ? '<path d="M5 13l4 4L19 7"/>' : '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'}
+          </svg>
+        </div>
+        <div class="task-mid">
+          <div class="task-title">${t.title}</div>
+          <div class="task-desc">${t.desc}</div>
+        </div>
+        <div class="task-act">
+          ${claimed
+            ? `<span class="task-done-chip">Готово</span>`
+            : ok
+              ? `<button class="task-claim-btn" data-task="${t.id}">+${t.reward}</button>`
+              : `<span class="task-lock-chip">+${t.reward}</span>`}
+        </div>
+      </div>`;
+    }).join('');
+    tasksListEl.querySelectorAll('.task-claim-btn').forEach(b =>
+      b.addEventListener('click', () => claimTask(b.dataset.task)));
+  }
+  renderPromo();
+}
+
+function claimTask(id){
+  const t = TASKS.find(x => x.id === id);
+  if(!t || !t.check()) return;
+  if(state.tasks[id] && state.tasks[id].claimed) return;
+  state.tasks[id] = { claimed: true };
+  saveState();
+  addCoins(t.reward);
+  addNotification('win', 'Задание выполнено', `«${t.title}» — начислено +${t.reward} Coins`);
+  showToast(`+${t.reward} Coins за задание`, true, 'win');
+  renderTasks();
+}
+
+function renderPromo(){
+  const done = tasksCompletedCount();
+  const total = TASKS.length;
+  const pct = Math.round((done / total) * 100);
+  if(promoProgressFillEl) promoProgressFillEl.style.width = pct + '%';
+  if(promoProgressTextEl) promoProgressTextEl.textContent = `${done} / ${total}`;
+  const bonusClaimed = !!state.tasksBonusClaimed;
+  if(promoClaimBtn){
+    promoClaimBtn.classList.toggle('hidden', !(done === total && !bonusClaimed));
+  }
+  if(promoGoBtn){
+    promoGoBtn.classList.toggle('hidden', !!(done === total && !bonusClaimed));
+  }
+}
+
+function claimTasksBonus(){
+  if(state.tasksBonusClaimed || !tasksAllDone()) return;
+  const rarity = rollRarity();
+  const reward = Math.round(tierCfg(rarity).reward);
+  state.inventory.push({
+    id: `bonus-${Date.now()}`,
+    type: 'bonus',
+    rarity, reward,
+    status: 'available',
+    until: 0,
+    img: TIER_STYLE[rarity].img,
+  });
+  state.tasksBonusClaimed = true;
+  saveState();
+  renderInventory();
+  renderPromo();
+  addNotification('win', 'Бонусная карточка', `Ты выполнил все задания — получена карточка ${rarity}!`);
+  showToast('Бонусная карточка в инвентаре!', true, 'win');
+}
+
+/* =========================================================
+   РЕФЕРАЛЫ
+   ========================================================= */
+let REFERRALS = { count: 0, list: [], link: '' };
+const refCountEl = document.getElementById('refCount');
+const refLinkTextEl = document.getElementById('refLinkText');
+const refListEl = document.getElementById('refList');
+const refEmptyEl = document.getElementById('refEmpty');
+
+async function loadReferrals(){
+  try{
+    const init = tgInitData();
+    if(!init) return;
+    const res = await fetch('/api/referrals?initData=' + encodeURIComponent(init) + '&ts=' + Date.now());
+    const data = await res.json();
+    if(data.ok){
+      const prevCount = REFERRALS.count || 0;
+      REFERRALS = { count: data.count || 0, list: data.list || [], link: data.link || '' };
+      if(prevCount && REFERRALS.count > prevCount){
+        addNotification('win', 'Новый реферал', 'К тебе присоединился новый игрок по твоей ссылке!');
+      }
+      renderReferrals();
+    }
+  }catch(e){}
+}
+
+async function claimPendingCoins(){
+  try{
+    const init = tgInitData();
+    if(!init) return;
+    const res = await fetch('/api/claim-pending', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: init }),
+    });
+    const data = await res.json();
+    if(data.ok && data.amount > 0){
+      addCoins(data.amount);
+      addNotification('win', 'Награда за рефералов', `Начислено +${data.amount} Coins`);
+    }
+  }catch(e){}
+}
+
+function renderReferrals(){
+  if(refCountEl) refCountEl.textContent = REFERRALS.count;
+  if(refLinkTextEl) refLinkTextEl.textContent = REFERRALS.link || '—';
+  if(refListEl){
+    refListEl.innerHTML = REFERRALS.list.map(r => {
+      const name = r.name || 'Игрок';
+      const uname = r.username ? '@' + r.username : `ID: ${r.id}`;
+      return `<div class="ref-row">
+        <div class="ref-avatar">${(name.trim()[0] || '?').toUpperCase()}</div>
+        <div class="ref-mid">
+          <div class="ref-name">${name}</div>
+          <div class="ref-sub">${uname}</div>
+        </div>
+        <div class="ref-date">${r.date || ''}</div>
+      </div>`;
+    }).join('');
+    if(refEmptyEl) refEmptyEl.classList.toggle('hidden', REFERRALS.list.length > 0);
+  }
+}
+
+function copyRefLink(){
+  if(!REFERRALS.link) return;
+  const done = ok => showToast(ok ? 'Ссылка скопирована' : 'Не удалось скопировать', ok, 'win');
+  try{
+    if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(REFERRALS.link).then(() => done(true), () => fallbackCopy(REFERRALS.link, done));
+    }else{
+      fallbackCopy(REFERRALS.link, done);
+    }
+  }catch(e){ fallbackCopy(REFERRALS.link, done); }
+}
+
+/* =========================================================
+   ВЫВОД — временная витрина прогресса (порог для наглядности)
+   ========================================================= */
+const WITHDRAW_GOAL = 40;
+const wdProgressFillEl = document.getElementById('wdProgressFill');
+const wdProgressTextEl = document.getElementById('wdProgressText');
+const wdBalanceEl = document.getElementById('wdBalance');
+const withdrawSubEl = document.getElementById('withdrawSub');
+
+function renderWithdraw(){
+  const cur = Math.min(state.balance, WITHDRAW_GOAL);
+  const pct = Math.round((cur / WITHDRAW_GOAL) * 100);
+  if(wdProgressFillEl) wdProgressFillEl.style.width = pct + '%';
+  if(wdProgressTextEl) wdProgressTextEl.textContent = `${Math.round(cur * 100) / 100} / ${WITHDRAW_GOAL} Robux`;
+  if(wdBalanceEl) wdBalanceEl.textContent = state.balance;
+  if(withdrawSubEl) withdrawSubEl.textContent = `${Math.round(state.balance * 100) / 100} / ${WITHDRAW_GOAL} Robux`;
+}
+
+/* =========================================================
+   СТЕЙКИНГ — обзор (переход к реальному инвентарю)
+   ========================================================= */
+const stakeOvCountEl = document.getElementById('stakeOvCount');
+const stakeOvListEl = document.getElementById('stakeOvList');
+const stakeOvEmptyEl = document.getElementById('stakeOvEmpty');
+const stakingSubEl = document.getElementById('stakingSub');
+
+function renderStakingOverview(){
+  const staking = state.inventory.filter(c => c.status === 'staking');
+  if(stakingSubEl) stakingSubEl.textContent = `${staking.length} ${staking.length === 1 ? 'карточка' : 'карточки'}`;
+  if(stakeOvCountEl) stakeOvCountEl.textContent = staking.length;
+  if(stakeOvListEl){
+    stakeOvListEl.innerHTML = staking.map(c => {
+      const st = TIER_STYLE[c.rarity] || TIER_STYLE.Basic;
+      return `<div class="so-row" style="--t1:${st.colors[0]};--t2:${st.colors[1]}">
+        <img class="so-row-img" src="${c.img}" alt="${c.rarity}">
+        <div class="so-row-mid">
+          <div class="so-row-title">${c.rarity}</div>
+          <div class="so-row-left">осталось ${fmtLeft(c.until)}</div>
+        </div>
+        <div class="so-row-reward">+${c.reward}</div>
+      </div>`;
+    }).join('');
+    if(stakeOvEmptyEl) stakeOvEmptyEl.classList.toggle('hidden', staking.length > 0);
+  }
+}
+
+/* =========================================================
+   УВЕДОМЛЕНИЯ
+   ========================================================= */
+const notifBellBtn = document.getElementById('notifBellBtn');
+const notifBadgeEl = document.getElementById('notifBadge');
+const notifListEl = document.getElementById('notifList');
+const notifEmptyEl = document.getElementById('notifEmpty');
+
+function addNotification(icon, title, text){
+  state.notifications.unshift({ id: `n${Date.now()}${Math.random().toString(16).slice(2, 6)}`, icon, title, text, ts: Date.now(), read: false });
+  if(state.notifications.length > 40) state.notifications.length = 40;
+  saveState();
+  updateNotifBadge();
+  if(notifSheet && notifSheet.classList.contains('open')) renderNotifications();
+}
+
+function updateNotifBadge(){
+  if(!notifBadgeEl) return;
+  const unread = state.notifications.filter(n => !n.read).length;
+  notifBadgeEl.textContent = unread > 9 ? '9+' : String(unread);
+  notifBadgeEl.classList.toggle('hidden', unread === 0);
+}
+
+function notifIconSvg(icon){
+  const map = {
+    win: '<path d="M8 21h8M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v1a4 4 0 0 0 4 4M17 6h3v1a4 4 0 0 1-4 4"/>',
+    refresh: '<path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>',
+    gem: '<path d="M7 3h10l4 6-9 12L3 9z"/>',
+  };
+  return map[icon] || map.refresh;
+}
+
+function renderNotifications(){
+  if(!notifListEl) return;
+  notifListEl.innerHTML = state.notifications.map(n => {
+    const d = new Date(n.ts);
+    const time = d.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    return `<div class="notif-row ${n.read ? '' : 'unread'}">
+      <div class="notif-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${notifIconSvg(n.icon)}</svg></div>
+      <div class="notif-mid">
+        <div class="notif-title">${n.title}</div>
+        <div class="notif-text">${n.text}</div>
+        <div class="notif-time">${time}</div>
+      </div>
+    </div>`;
+  }).join('');
+  if(notifEmptyEl) notifEmptyEl.classList.toggle('hidden', state.notifications.length > 0);
+  state.notifications.forEach(n => n.read = true);
+  saveState();
+  updateNotifBadge();
 }
 
 /* =========================================================
@@ -991,6 +1360,8 @@ function confirmStake(period){
   saveState();
   closeModal(stakeSheet, stakeBackdrop);
   renderInventory();
+  if(typeof renderTasks === 'function') renderTasks();
+  if(typeof renderStakingOverview === 'function') renderStakingOverview();
   showToast('Карточка отправлена в стейкинг', true, 'win');
 }
 
@@ -1004,6 +1375,7 @@ function withdrawStake(card){
   card.status = 'used';
   saveState();
   renderInventory();
+  if(typeof renderStakingOverview === 'function') renderStakingOverview();
   if(bonus > 0){
     addBalance(bonus);
     showToast(`Стейкинг завершён: +${bonus} Robux`, true, 'win');
@@ -1172,6 +1544,7 @@ async function loadDailyPointer(){
         saveState();
         renderDaily();
         showToast('Карточки обновлены администратором', true, 'refresh');
+        addNotification('refresh', 'Карточки обновлены', 'Администратор сбросил твои ежедневные карточки — можно выбирать заново');
       }
     }
   }catch(e){}
@@ -1381,6 +1754,64 @@ function backToAdmin(){
 }
 
 /* =========================================================
+   НОВЫЕ ОКНА ГЛАВНОЙ: уведомления / задания / рефералы /
+   стейкинг-обзор / вывод
+   ========================================================= */
+const notifSheet = document.getElementById('notifSheet');
+const notifBackdrop = document.getElementById('notifBackdrop');
+const notifCloseBtn = document.getElementById('notifClose');
+
+const tasksSheet = document.getElementById('tasksSheet');
+const tasksBackdrop = document.getElementById('tasksBackdrop');
+const tasksCloseBtn = document.getElementById('tasksClose');
+const tasksBtnMain = document.getElementById('tasksBtn');
+
+const refsSheet = document.getElementById('refsSheet');
+const refsBackdrop = document.getElementById('refsBackdrop');
+const refsCloseBtn = document.getElementById('refsClose');
+const refsBtnMain = document.getElementById('refsBtnMain');
+const refCountBigEl = document.getElementById('refCountBig');
+const refCopyBtn = document.getElementById('refCopyBtn');
+
+const stakeOvSheet = document.getElementById('stakeOvSheet');
+const stakeOvBackdrop = document.getElementById('stakeOvBackdrop');
+const stakeOvCloseBtn = document.getElementById('stakeOvClose');
+const stakingBtnMain = document.getElementById('stakingBtn');
+
+const withdrawSheet = document.getElementById('withdrawSheet');
+const withdrawBackdrop = document.getElementById('withdrawBackdrop');
+const withdrawCloseBtn = document.getElementById('withdrawClose');
+const withdrawBtnMain = document.getElementById('withdrawBtn');
+
+notifBellBtn.addEventListener('click', () => { renderNotifications(); openModal(notifSheet, notifBackdrop); });
+notifCloseBtn.addEventListener('click', () => closeModal(notifSheet, notifBackdrop));
+notifBackdrop.addEventListener('click', () => closeModal(notifSheet, notifBackdrop));
+
+tasksBtnMain.addEventListener('click', () => { renderTasks(); openModal(tasksSheet, tasksBackdrop); });
+tasksCloseBtn.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
+tasksBackdrop.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
+if(promoGoBtn) promoGoBtn.addEventListener('click', () => { renderTasks(); openModal(tasksSheet, tasksBackdrop); });
+if(promoClaimBtn) promoClaimBtn.addEventListener('click', claimTasksBonus);
+
+refsBtnMain.addEventListener('click', () => {
+  if(refCountBigEl) refCountBigEl.textContent = REFERRALS.count;
+  renderReferrals();
+  openModal(refsSheet, refsBackdrop);
+  loadReferrals();
+});
+refsCloseBtn.addEventListener('click', () => closeModal(refsSheet, refsBackdrop));
+refsBackdrop.addEventListener('click', () => closeModal(refsSheet, refsBackdrop));
+refCopyBtn.addEventListener('click', copyRefLink);
+
+stakingBtnMain.addEventListener('click', () => { renderStakingOverview(); openModal(stakeOvSheet, stakeOvBackdrop); });
+stakeOvCloseBtn.addEventListener('click', () => closeModal(stakeOvSheet, stakeOvBackdrop));
+stakeOvBackdrop.addEventListener('click', () => closeModal(stakeOvSheet, stakeOvBackdrop));
+
+withdrawBtnMain.addEventListener('click', () => { renderWithdraw(); openModal(withdrawSheet, withdrawBackdrop); });
+withdrawCloseBtn.addEventListener('click', () => closeModal(withdrawSheet, withdrawBackdrop));
+withdrawBackdrop.addEventListener('click', () => closeModal(withdrawSheet, withdrawBackdrop));
+
+/* =========================================================
    РЕАЛТАЙМ: если админ сбросил карточки — обновимся сами,
    без перезахода в мини-апп (опрос + при фокусе вкладки)
    ========================================================= */
@@ -1503,6 +1934,7 @@ adminBtn.addEventListener('click', openAdmin);
 
 applySelected();
 balanceValueEl.textContent = state.balance;
+if(coinsValueEl) coinsValueEl.textContent = state.coins;
 
 /* ---- экран загрузки: ждём все данные, затем красиво уходим ---- */
 const splashEl = document.getElementById('splash');
@@ -1515,6 +1947,7 @@ Promise.allSettled([
   preloadPNGs(),
   loadAdmins(),
   loadDailyPointer(),
+  loadReferrals(),
 ]).then(() => {
   if(PROFILE && OWNER_IDS.includes(PROFILE.id)){
     adminBtn.classList.remove('hidden');
@@ -1523,11 +1956,23 @@ Promise.allSettled([
     dailyResetBtn.classList.remove('hidden');
     adminGear.classList.remove('hidden');
   }
+  if(PROFILE) setupTabs(); // ADMINS уже точно загружены — пересчитать видимость кнопки удаления
+  const streakGained = ensureStreak();
+  if(streakGained && state.streak.count > 1){
+    addCoins(STREAK_DAILY_BONUS);
+    showToast(`Серия ${state.streak.count} дней! +${STREAK_DAILY_BONUS} Coins`, true, 'win');
+  }
   renderHero();
   renderDaily();
   renderInventory();
+  renderStreak();
+  renderTasks();
+  renderStakingOverview();
+  renderWithdraw();
+  updateNotifBadge();
   document.body.classList.add('preloaded');
   reportBalance();
+  claimPendingCoins();
   startRealtime();
   const wait = Math.max(0, 1400 - (performance.now() - bootStart));
   setTimeout(() => splashEl.classList.add('done'), wait);

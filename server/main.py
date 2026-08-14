@@ -34,6 +34,8 @@ DATA_DIR = Path(os.environ.get("DATA_DIR") or BASE_DIR / "data")
 UPLOADS_DIR = DATA_DIR / "uploads"
 USERS_FILE = DATA_DIR / "users.json"
 USERS_BACKUP = DATA_DIR / "users.json.bak"
+REFERRALS_FILE = DATA_DIR / "referrals.json"
+REFERRAL_REWARD_COINS = 50
 
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
@@ -87,6 +89,41 @@ def save_users(users):
     USERS_FILE.write_text(json.dumps(users, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
+# ---------- рефералы: {"<owner_id>": [{"id":int,"date":"YYYY-MM-DD","rewarded":bool}, ...]} ----------
+def load_referrals():
+    try:
+        return json.loads(REFERRALS_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def save_referrals(data):
+    REFERRALS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def register_referral(owner_id, new_user_id):
+    """Записывает нового реферала и начисляет владельцу ссылки +REFERRAL_REWARD_COINS монет
+    (временная логика — начисление хранится как pending_coins в users.json,
+    клиент подберёт их при следующем входе через /api/init)."""
+    data = load_referrals()
+    key = str(owner_id)
+    lst = data.get(key) or []
+    if any(r.get("id") == new_user_id for r in lst):
+        return
+    lst.append({"id": new_user_id, "date": time.strftime("%Y-%m-%d"), "rewarded": True})
+    data[key] = lst
+    save_referrals(data)
+
+    users = load_users()
+    owner_key = str(owner_id)
+    if owner_key in users:
+        users[owner_key]["pending_coins"] = int(users[owner_key].get("pending_coins") or 0) + REFERRAL_REWARD_COINS
+        save_users(users)
+        log.info("реферал: %s пригласил %s, +%s coins в очереди", owner_id, new_user_id, REFERRAL_REWARD_COINS)
+    else:
+        log.info("реферал: владелец %s ещё не заходил в мини-апп, награда не начислена", owner_id)
+
+
 # ---------- команды ----------
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
@@ -105,6 +142,17 @@ async def cmd_start(message: Message):
         reply_markup=keyboard,
     )
 
+    # реферальный payload: /start ref_<id>
+    ref_id = None
+    try:
+        parts = (message.text or "").split(maxsplit=1)
+        if len(parts) == 2 and parts[1].startswith("ref_"):
+            candidate = int(parts[1][4:])
+            if candidate > 0 and candidate != message.chat.id:
+                ref_id = candidate
+    except (ValueError, IndexError):
+        ref_id = None
+
     # подтягиваем "О себе" из профиля Telegram и создаём/обновляем запись
     try:
         chat = await bot.get_chat(message.chat.id)
@@ -112,7 +160,8 @@ async def cmd_start(message: Message):
         bio = (getattr(chat, "bio", None) or "").strip()[:200]
 
         users = load_users()
-        if uid not in users:
+        is_new = uid not in users
+        if is_new:
             users[uid] = {
                 "id": message.chat.id,
                 "first_name": message.from_user.first_name or "",
@@ -125,15 +174,20 @@ async def cmd_start(message: Message):
                 "first_login": time.strftime("%Y-%m-%d"),
                 "bio": bio,
                 "birthday": "",
+                "referred_by": ref_id,
             }
             save_users(users)
-            log.info("юзёр создан при /start: %s (bio=%r)", uid, bio)
+            log.info("юзёр создан при /start: %s (bio=%r, ref=%s)", uid, bio, ref_id)
         elif bio and users[uid].get("bio") != bio:
             users[uid]["bio"] = bio
             save_users(users)
             log.info("bio обновлён для %s: %r", uid, bio)
         else:
             log.info("bio %s: уже актуально (users=%s)", uid, uid in users)
+
+        # регистрируем реферала (только для нового пользователя, если передан валидный ref_id)
+        if is_new and ref_id is not None:
+            register_referral(ref_id, message.chat.id)
     except Exception as exc:
         log.warning("get_chat bio: %s", exc)
 

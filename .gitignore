@@ -5,3 +5,5 @@ server/data/*
 # зависимости
 node_modules/
 server/node_modules/
+__pycache__/
+*.pyc
