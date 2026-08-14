@@ -1336,8 +1336,9 @@
   /* =========================================================
      ВЬЮХИ (экраны нижней навигации)
      ========================================================= */
-  .view{ width:100%; max-width:460px; padding-bottom:calc(120px + env(safe-area-inset-bottom)); animation:viewIn .35s var(--ease) both; }
+  .view{ width:100%; max-width:460px; padding:0 16px calc(120px + env(safe-area-inset-bottom)); animation:viewIn .35s var(--ease) both; overflow-x:hidden; }
   #viewProfile{ padding-bottom:0; }
+  #viewCards{ padding-left:0; padding-right:0; }
   .view.hidden{ display:none; }
   @keyframes viewIn{
     from{ opacity:0; transform:translateY(12px); }
@@ -1999,15 +2000,9 @@
     display:flex; align-items:center; justify-content:center;
     filter:drop-shadow(0 0 10px rgba(35,151,255,.5)) drop-shadow(0 4px 10px rgba(0,0,0,.5));
   }
-  .mh-logo img{ width:100%; height:100%; object-fit:contain; }
-  .mh-titles{ min-width:0; }
-  .mh-name{
-    color:#F1F5FA;
-    font-size:15.5px; font-weight:800;
-    letter-spacing:1px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    text-shadow:0 0 18px rgba(35,151,255,.3);
-  }
+  .mh-logo img{ width:100%; height:100%; object-fit:contain; transform:translateY(5px); }
+  .mh-titles{ min-width:0; display:flex; flex-direction:column; align-items:flex-start; }
+  .mh-name{ display:block; line-height:1.1; white-space:nowrap; color:#F1F5FA; font-size:15.5px; font-weight:800; letter-spacing:1px; text-shadow:0 0 18px rgba(35,151,255,.3); }
   .mh-live{
     display:flex; align-items:center; gap:6px;
     color:#7C8998;
@@ -2378,4 +2373,49 @@
     box-shadow:0 0 12px 1px rgba(255,150,20,.8);
     transition:width .5s var(--ease);
   }
-  .wd-progress-text{ color:var(--lilac-light); font-size:11px; font-weight:700; flex-shrink:0; white-space:nowrap; }
+  .mh-header{ margin:0; }
+  .mh-profile, .mh-streak, .daily-panel, .mh-grid, .mh-promo{ width:100%; min-width:0; }
+  .mh-balances{ min-width:0; }
+  .bal-box{ min-width:0; }
+  .bal-mid{ min-width:0; overflow:hidden; }
+  .bal-num, .mh-tile-title, .mh-tile-sub{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .mh-tile{ min-width:0; }
+  .mh-promo{ min-width:0; }
+  .promo-text, .promo-title{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .category-view{ min-height:60vh; }
+  .category-head{ display:flex; align-items:center; justify-content:space-between; padding:18px 0 16px; }
+  .category-head h1{ color:#F1F5FA; font-size:24px; line-height:1.1; }
+  .category-kicker{ color:#2397FF; font-size:9px; font-weight:800; letter-spacing:1.5px; margin-bottom:5px; }
+  .category-count{ color:#9BA7B6; font-size:12px; font-weight:800; padding:8px 11px; border-radius:999px; background:rgba(10,25,43,.65); border:1px solid #183450; }
+  #viewTasks .task-list{ margin-top:0; }
+  #viewRefs .ref-link-box{ margin-top:0; }
+  #viewRefs .ref-list{ margin-top:14px; }
+  .ref-copy-btn{ color:#DCE8F5; background:rgba(10,25,43,.65); border:1px solid rgba(35,151,255,.34); backdrop-filter:blur(14px) saturate(1.5); -webkit-backdrop-filter:blur(14px) saturate(1.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 20px -12px rgba(35,151,255,.8); }
+  .ref-copy-btn:hover{ border-color:rgba(35,151,255,.7); box-shadow:0 0 18px -6px rgba(35,151,255,.8); }
+  .sheet, .sheet-backdrop{ max-width:calc(100vw - 20px); }
+  .sheet{ max-height:calc(100vh - 28px); overflow:hidden; }
+  .sheet-body, .admin-panel-body{ min-height:0; }
+  .sheet-title, .ap-note, .task-title, .task-desc, .notif-title, .notif-text{ overflow-wrap:break-word; word-break:normal; }
+  @media (max-width:380px){
+    .view{ padding-left:12px; padding-right:12px; }
+    .mh-header{ gap:6px; }
+    .mh-brand{ gap:7px; }
+    .mh-logo{ width:38px; height:38px; }
+    .mh-name{ font-size:13px; letter-spacing:.7px; }
+    .mh-live{ font-size:8px; letter-spacing:.35px; }
+    .mh-profile{ padding:12px; }
+    .mh-balances{ gap:7px; }
+    .bal-box{ gap:5px; padding:9px 8px; }
+    .bal-ico{ width:31px; height:31px; }
+    .bal-num{ font-size:15px; }
+    .mh-grid{ gap:8px; }
+    .mh-tile{ gap:7px; padding:9px 7px; }
+    .mh-tile-ico{ width:29px; height:29px; }
+    .mh-tile-title{ font-size:12px; }
+    .mh-tile-sub{ font-size:9px; }
+    .mh-promo{ grid-template-columns:auto 1fr; gap:9px; padding:11px; }
+    .promo-gift{ width:43px; height:43px; }
+    .promo-text{ font-size:9px; }
+    .promo-title{ font-size:13px; }
+    .promo-btn{ grid-column:1 / -1; width:100%; margin-top:4px; }
+  }

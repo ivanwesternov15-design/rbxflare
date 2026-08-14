@@ -1095,6 +1095,7 @@ async function loadReferrals(){
         addNotification('win', 'Новый реферал', 'К тебе присоединился новый игрок по твоей ссылке!');
       }
       renderReferrals();
+      renderRefsNav();
     }
   }catch(e){}
 }
@@ -1787,23 +1788,18 @@ notifBellBtn.addEventListener('click', () => { renderNotifications(); openModal(
 notifCloseBtn.addEventListener('click', () => closeModal(notifSheet, notifBackdrop));
 notifBackdrop.addEventListener('click', () => closeModal(notifSheet, notifBackdrop));
 
-tasksBtnMain.addEventListener('click', () => { renderTasks(); openModal(tasksSheet, tasksBackdrop); });
+tasksBtnMain.addEventListener('click', () => goToNav('tasks'));
 tasksCloseBtn.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
 tasksBackdrop.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
-if(promoGoBtn) promoGoBtn.addEventListener('click', () => { renderTasks(); openModal(tasksSheet, tasksBackdrop); });
+if(promoGoBtn) promoGoBtn.addEventListener('click', () => goToNav('tasks'));
 if(promoClaimBtn) promoClaimBtn.addEventListener('click', claimTasksBonus);
 
-refsBtnMain.addEventListener('click', () => {
-  if(refCountBigEl) refCountBigEl.textContent = REFERRALS.count;
-  renderReferrals();
-  openModal(refsSheet, refsBackdrop);
-  loadReferrals();
-});
+refsBtnMain.addEventListener('click', () => goToNav('refs'));
 refsCloseBtn.addEventListener('click', () => closeModal(refsSheet, refsBackdrop));
 refsBackdrop.addEventListener('click', () => closeModal(refsSheet, refsBackdrop));
 refCopyBtn.addEventListener('click', copyRefLink);
 
-stakingBtnMain.addEventListener('click', () => { renderStakingOverview(); openModal(stakeOvSheet, stakeOvBackdrop); });
+stakingBtnMain.addEventListener('click', () => goToNav('cards'));
 stakeOvCloseBtn.addEventListener('click', () => closeModal(stakeOvSheet, stakeOvBackdrop));
 stakeOvBackdrop.addEventListener('click', () => closeModal(stakeOvSheet, stakeOvBackdrop));
 
@@ -1818,7 +1814,7 @@ withdrawBackdrop.addEventListener('click', () => closeModal(withdrawSheet, withd
 let realtimeTimer = null;
 function startRealtime(){
   stopRealtime();
-  realtimeTimer = setInterval(loadDailyPointer, 10000);
+  realtimeTimer = setInterval(() => { loadDailyPointer(); loadReferrals(); }, 10000);
 }
 function stopRealtime(){
   if(realtimeTimer){ clearInterval(realtimeTimer); realtimeTimer = null; }
@@ -1850,8 +1846,11 @@ function preloadPNGs(){
 /* ---- переключение экранов нижней навигации (контент рендерится один раз) ---- */
 function switchView(view){
   document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
-  const map = { main: 'viewMain', cards: 'viewCards', refs: 'viewSoon', tasks: 'viewSoon', profile: 'viewProfile' };
-  document.getElementById(map[view] || 'viewMain').classList.remove('hidden');
+  const map = { main: 'viewMain', cards: 'viewCards', refs: 'viewRefs', tasks: 'viewTasks', profile: 'viewProfile' };
+  const target = document.getElementById(map[view] || 'viewMain');
+  if(target) target.classList.remove('hidden');
+  if(view === 'tasks'){ renderTasks(); renderTasksNav(); }
+  if(view === 'refs'){ renderReferrals(); renderRefsNav(); loadReferrals(); }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1903,6 +1902,33 @@ navPos = activeIdx;
 setNavIndicatorX(activeIdx, 1, 1);
 
 tabPosIdx = Math.max(0, tabBtns.findIndex(b => b.classList.contains('active')));
+
+function renderTasksNav(){
+  const list = document.getElementById('tasksListNav');
+  if(!list) return;
+  const done = tasksCompletedCount();
+  const p = document.getElementById('tasksProgressNav'); if(p) p.textContent = `${done} / ${TASKS.length}`;
+  list.innerHTML = tasksListEl ? tasksListEl.innerHTML : '';
+  list.querySelectorAll('.task-claim-btn').forEach(b => b.addEventListener('click', () => { claimTask(b.dataset.task); renderTasksNav(); }));
+}
+function renderRefsNav(){
+  const count = document.getElementById('refCountNav'); if(count) count.textContent = REFERRALS.count;
+  const link = document.getElementById('refLinkTextNav'); if(link) link.textContent = REFERRALS.link || '—';
+  const list = document.getElementById('refListNav'); if(list) list.innerHTML = REFERRALS.list.map(r => `<div class="ref-row"><div class="ref-avatar">${(r.name || '?').trim()[0].toUpperCase()}</div><div class="ref-mid"><div class="ref-name">${r.name || 'Игрок'}</div><div class="ref-sub">${r.username ? '@' + r.username : 'ID: ' + r.id}</div></div><div class="ref-date">${r.date || ''}</div></div>`).join('');
+  const empty = document.getElementById('refEmptyNav'); if(empty) empty.classList.toggle('hidden', REFERRALS.list.length > 0);
+}
+function goToNav(view){
+  const idx = navBtns.findIndex(b => b.dataset.view === view);
+  if(idx < 0) return;
+  activeIdx = idx;
+  navBtns.forEach(b => b.classList.toggle('active', b === navBtns[idx]));
+  moveNavIndicator(idx, true);
+  switchView(view);
+  if(view === 'tasks') renderTasksNav();
+  if(view === 'refs') renderRefsNav();
+}
+
+document.getElementById('refCopyBtnNav')?.addEventListener('click', copyRefLink);
 
 navBtns.forEach((btn, idx) => {
   btn.addEventListener('click', () => {
@@ -1958,9 +1984,9 @@ Promise.allSettled([
   }
   if(PROFILE) setupTabs(); // ADMINS уже точно загружены — пересчитать видимость кнопки удаления
   const streakGained = ensureStreak();
-  if(streakGained && state.streak.count > 1){
+  if(streakGained){
     addCoins(STREAK_DAILY_BONUS);
-    showToast(`Серия ${state.streak.count} дней! +${STREAK_DAILY_BONUS} Coins`, true, 'win');
+    showToast(`Серия ${state.streak.count} ${state.streak.count === 1 ? 'день' : 'дней'}! +${STREAK_DAILY_BONUS} Coins`, true, 'win');
   }
   renderHero();
   renderDaily();

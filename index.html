@@ -291,6 +291,17 @@
   </div>
 </main>
 
+<main class="view hidden category-view" id="viewTasks">
+  <div class="category-head"><div><div class="category-kicker">MISSIONS</div><h1>Задания</h1></div><span class="category-count" id="tasksProgressNav">0 / 7</span></div>
+  <div class="task-list" id="tasksListNav"></div>
+</main>
+
+<main class="view hidden category-view" id="viewRefs">
+  <div class="category-head"><div><div class="category-kicker">COMMUNITY</div><h1>Рефералы</h1></div><span class="category-count" id="refCountNav">0</span></div>
+  <div class="ref-link-box"><div class="ref-link-text" id="refLinkTextNav">—</div><button class="ref-copy-btn" id="refCopyBtnNav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Копировать</button></div>
+  <div class="ref-list" id="refListNav"></div><div class="inventory-empty" id="refEmptyNav"><span>Пока никто не присоединился по ссылке</span></div>
+</main>
+
 <main class="view hidden" id="viewSoon">
   <div class="soon-box">Раздел скоро появится</div>
 </main>
@@ -536,9 +547,9 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="5" width="16" height="14" rx="3"/><path d="M6 5V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-1.5"/></svg>
     <span>Карточки</span>
   </button>
-  <button class="nav-btn" data-view="refs" aria-label="Реффералы">
+  <button class="nav-btn" data-view="refs" aria-label="Рефералы">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c2.6.3 5 2.1 5 5.5"/></svg>
-    <span>Реффералы</span>
+    <span>Рефералы</span>
   </button>
   <button class="nav-btn" data-view="tasks" aria-label="Задания">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="17" rx="3.5"/><path d="M8.5 12l2.5 2.5 4.5-4.5"/></svg>
