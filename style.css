@@ -993,21 +993,20 @@
     to{ opacity:1; transform:translateY(0) scale(1); }
   }
   .dp-head{
-    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
   }
   .dp-title{
     display:flex; align-items:center; gap:8px;
     color:var(--lilac-white);
     font-size:16.5px; font-weight:800;
     letter-spacing:.2px;
-    margin-top:-4px;
   }
   .dp-title svg{
     width:21px; height:21px; flex-shrink:0;
     color:#1ED4FF;
     filter:drop-shadow(0 0 8px rgba(30,212,255,.8));
   }
-  .dp-actions{ display:flex; align-items:flex-start; gap:8px; flex-shrink:0; margin-top:-4px; }
+  .dp-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
   .dp-timer{
     display:flex; align-items:center; gap:6px;
     padding:6px 11px;
@@ -1066,6 +1065,8 @@
   .head-actions{ display:flex; align-items:center; gap:8px; }
   .head-actions.left{ flex:1; }
   .admin-btn{ width:40px; height:40px; }
+  .head-actions .reset-btn{ width:40px; height:40px; }
+  .head-actions .reset-btn svg{ width:18px; height:18px; }
 
   /* кнопки-иконки в шапке окна */
   .sheet-icon-btn{
@@ -2161,10 +2162,6 @@
   .streak-bonus{ color:#FFC72C; font-size:13px; font-weight:800; }
 
   /* ---- ПОДСКАЗКА ПОД КАРТОЧКАМИ ---- */
-  .dp-foot{
-    display:flex; align-items:center; justify-content:space-between; gap:8px;
-    margin-top:12px;
-  }
   .dp-hint{
     display:flex; align-items:center; justify-content:center; gap:7px;
     margin-top:12px;

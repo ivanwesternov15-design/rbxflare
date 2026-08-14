@@ -184,17 +184,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M4 9h16M9 9v11"/><path d="M13 20V9h7v11z" opacity=".55"/></svg>
         <span>Твои карточки на сегодня</span>
       </div>
+      <div class="dp-actions">
+        <div class="dp-timer hidden" id="dailyTimer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
+          <span id="dailyTimerText">—</span>
+        </div>
+      </div>
     </div>
     <div class="daily-grid" id="dailyGrid"></div>
-    <div class="dp-foot hidden" id="dailyFoot">
-      <div class="dp-timer hidden" id="dailyTimer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
-        <span id="dailyTimerText">—</span>
-      </div>
-      <button class="reset-btn hidden" id="dailyResetBtn" aria-label="Сбросить ежедневные карточки">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.4 16.6"/><path d="M20 5v6h-6"/></svg>
-      </button>
-    </div>
     <div class="dp-hint">
       <span>Выбери одну карточку</span>
       <svg viewBox="0 0 24 24" fill="none" stroke="#2397FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
@@ -262,6 +259,9 @@
   <div class="cards-top">
     <div class="cards-title">Карточки</div>
     <div class="head-actions">
+      <button class="icon-btn hidden" id="dailyResetBtn" aria-label="Сбросить ежедневные карточки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.4 16.6"/><path d="M20 5v6h-6"/></svg>
+      </button>
       <button class="icon-btn admin-btn hidden" id="adminBtn" aria-label="Настройка карточек">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.2"/><circle cx="8" cy="16" r="2.2"/></svg>
       </button>

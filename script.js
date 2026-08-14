@@ -744,11 +744,9 @@ function renderHero(){
 
 /* таймер «обновление через N」— после того как карточка уже открыта */
 let dailyTimerId = null;
-const dailyFootEl = document.getElementById('dailyFoot');
 function startDailyTimer(show){
   if(dailyTimerId){ clearInterval(dailyTimerId); dailyTimerId = null; }
   dailyTimerEl.classList.toggle('hidden', !show);
-  if(dailyFootEl) dailyFootEl.classList.toggle('hidden', !(show || !dailyResetBtn.classList.contains('hidden')));
   if(!show) return;
   const tick = () => {
     const now = new Date();
