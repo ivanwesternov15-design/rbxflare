@@ -133,9 +133,10 @@
     <div class="mh-balances">
       <div class="bal-box bal-robux">
         <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
-          <path d="M24 4 6 14v20l18 10 18-10V14L24 4z" stroke="#00FFD0" stroke-width="2.3" stroke-linejoin="round"/>
-          <path d="M24 4v40M6 14l18 10 18-10" stroke="#00FFD0" stroke-width="1.3" stroke-linejoin="round" opacity=".45"/>
-          <circle cx="24" cy="24" r="6.5" stroke="#00FFD0" stroke-width="1.6" opacity=".8"/>
+          <path d="M24 4 40 16v16L24 44 8 32V16L24 4z" stroke="#00FFD0" stroke-width="2.4" stroke-linejoin="round"/>
+          <path d="M24 4v40M8 16l16 12 16-12" stroke="#00FFD0" stroke-width="1.4" opacity=".5" stroke-linejoin="round"/>
+          <path d="M24 28 14 20M24 28l10-8" stroke="#00FFD0" stroke-width="1.7" opacity=".9" stroke-linecap="round"/>
+          <circle cx="24" cy="24" r="4.2" fill="#00FFD0" opacity=".95"/>
         </svg>
         <div class="bal-mid">
           <div class="bal-label">Robux</div>
@@ -144,7 +145,10 @@
       </div>
       <div class="bal-box bal-coins">
         <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
-          <path d="M24 4c-6 8-12 12-12 22a12 12 0 0 0 24 0c0-6-3-9-5-12 0 4-2 6-4 6-3 0-4-3-4-6 0-4 1-7 1-10z" fill="#FFB020" stroke="#FF7A1A" stroke-width="1.6" stroke-linejoin="round"/>
+          <circle cx="24" cy="24" r="19" stroke="#FFB020" stroke-width="2.6"/>
+          <circle cx="24" cy="24" r="14" stroke="#FFB020" stroke-width="1.2" opacity=".45"/>
+          <path d="M27 12 16 27h7l-2 9 11-15h-7l2-9z" fill="#FFB020" stroke="#FF7A1A" stroke-width="1.2" stroke-linejoin="round"/>
+          <path d="M41 10a7 7 0 0 1-9 9" stroke="#FFD97A" stroke-width="2.4" stroke-linecap="round"/>
         </svg>
         <div class="bal-mid">
           <div class="bal-label">Coins</div>
@@ -157,7 +161,10 @@
   <!-- ===== STREAK ===== -->
   <div class="mh-streak">
     <div class="streak-left">
-      <svg class="streak-flame" viewBox="0 0 24 24" fill="#FFC72C"><path d="M12 2c1 3-2 4-2 7a4 4 0 0 0 8 0c0-1-.4-2-1-3 1 4-1 5-2 5-1.5 0-2-1.5-1-3 .8-1.6 1-3.4-2-6z" opacity=".9"/><path d="M9 14a5 5 0 0 0 10 0c0-2-1-3.5-2-5 .6 3-.6 4.4-2 4.4-1.7 0-2.4-1.7-1.6-3.4C14.2 8 12.6 6 12 4c.6 4-3 5-3 10z"/></svg>
+      <svg class="streak-flame" viewBox="0 0 24 24" fill="none">
+        <path d="M12 1.5c1 3.1-2.1 4.3-2.8 7.3-.5 2.4.7 4.6 2.8 5.9-3.1 0-5-2-5.3-4.9-1.5 1.4-2.2 3.2-2.2 5A7.5 7.5 0 0 0 19.5 15c0-5.3-3.9-7.4-5.2-10.2-.7 1.9-1.9 3-3.4 3.5.6-3.7 0-6.3 1.1-6.8z" fill="#FF8A1E"/>
+        <path d="M12 5c.9 2.7-1.8 3.8-2.4 6.4-.4 2.1.6 4 2.4 5.1-2.7 0-4.4-1.8-4.7-4.3-1.2 1.2-1.9 2.8-1.9 4.3A6.6 6.6 0 0 0 12 23c3.7 0 6.6-3 6.6-6.7 0-4.7-3.5-6.5-4.6-9-.6 1.7-1.7 2.7-3 3.1.5-3.3 0-5.2 1-5.4z" fill="#FFC72C"/>
+      </svg>
       <span class="streak-title">STREAK</span>
       <span class="streak-days" id="streakDays">0 дней</span>
     </div>
@@ -170,7 +177,10 @@
   <!-- ===== ЕЖЕДНЕВНЫЕ КАРТОЧКИ ===== -->
   <div class="daily-panel">
     <div class="dp-head">
-      <div class="dp-title">Твои карточки на сегодня</div>
+      <div class="dp-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M4 9h16M9 9v11"/><path d="M13 20V9h7v11z" opacity=".55"/></svg>
+        <span>Твои карточки на сегодня</span>
+      </div>
       <div class="dp-actions">
         <div class="dp-timer hidden" id="dailyTimer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
@@ -191,7 +201,7 @@
       <span>Приходи завтра за новой карточкой</span>
     </div>
     <button class="collect-btn hidden" id="collectBtn">
-      <svg class="cb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2.5"/><path d="M12 17v-9"/><path d="M8 12h8"/><path d="M12 8.5 9.5 5.5M12 3v2.5M14.5 5.5 12 8.5"/></svg>
+      <svg class="cb-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 9h4M7 13h7"/><path d="M16.5 9.5v4M14.5 11.5h4"/></svg>
       <span>Забрать карточку</span>
     </button>
   </div>
@@ -200,7 +210,7 @@
   <div class="mh-grid">
     <button class="mh-tile" id="tasksBtn">
       <div class="mh-tile-ico tile-cyan">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 14.4 8.6l6.6.6-5 4.3 1.5 6.4L12 16.7l-5.5 3.2 1.5-6.4-5-4.3 6.6-.6L12 2.5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 6v6c0 5-3.4 8.6-8 9.5C7.4 20.6 4 17 4 12V6l8-3.5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
       </div>
       <div class="mh-tile-mid">
         <div class="mh-tile-title">Задания</div>
@@ -211,7 +221,7 @@
 
     <button class="mh-tile" id="stakingBtn">
       <div class="mh-tile-ico tile-gold">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 14.4 8.6l6.6.6-5 4.3 1.5 6.4L12 16.7l-5.5 3.2 1.5-6.4-5-4.3 6.6-.6L12 2.5z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5z"/><path d="M4 7l8 4.5L20 7M12 11.5V21"/><path d="M8.5 9.5 12 5l3.5 4.5"/></svg>
       </div>
       <div class="mh-tile-mid">
         <div class="mh-tile-title">Стейкинг</div>
@@ -222,7 +232,7 @@
 
     <button class="mh-tile" id="refsBtnMain">
       <div class="mh-tile-ico tile-violet">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.4"/><path d="M2.7 20c0-3.5 2.8-6 6.3-6s6.3 2.5 6.3 6"/><circle cx="17" cy="9" r="2.4"/><path d="M16 14.6c2.5.3 4.8 2 4.8 5.4"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.4 2.8-5.8 6.5-5.8s6.5 2.4 6.5 5.8"/><path d="M16 3.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.5c2.3.7 3.5 2.6 3.5 5.5"/><path d="M22.5 8h-5M20 5.5v5"/></svg>
       </div>
       <div class="mh-tile-mid">
         <div class="mh-tile-title">Рефералы</div>
@@ -233,7 +243,7 @@
 
     <button class="mh-tile" id="withdrawBtn">
       <div class="mh-tile-ico tile-amber">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7.5v9M9.5 9.5c0-1.4 1.2-2 2.5-2s2.5.7 2.5 2c0 3-5 1.7-5 4.5 0 1.3 1.2 2 2.5 2s2.5-.6 2.5-2"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H5"/><circle cx="16.5" cy="14" r="1.3" fill="currentColor" stroke="none"/><path d="M9 18h4"/></svg>
       </div>
       <div class="mh-tile-mid">
         <div class="mh-tile-title">Вывод</div>
@@ -247,11 +257,14 @@
   <div class="mh-promo">
     <div class="promo-gift">
       <svg viewBox="0 0 60 60" fill="none">
-        <rect x="8" y="24" width="44" height="28" rx="4" fill="#0E2C4A" stroke="#2397FF" stroke-width="2"/>
-        <rect x="8" y="24" width="44" height="10" fill="#123A61"/>
-        <rect x="26" y="10" width="8" height="42" fill="#1ED4FF" opacity=".85"/>
-        <path d="M30 10c-6 0-10-4-10-8 4 0 10 3 10 8z" fill="#9B5CFF"/>
-        <path d="M30 10c6 0 10-4 10-8-4 0-10 3-10 8z" fill="#1ED4FF"/>
+        <defs><linearGradient id="gx" x1="0" y1="0" x2="60" y2="60"><stop offset="0" stop-color="#1ED4FF"/><stop offset="1" stop-color="#2397FF"/></linearGradient></defs>
+        <rect x="8" y="24" width="44" height="28" rx="5" fill="#0E2C4A" stroke="url(#gx)" stroke-width="2"/>
+        <rect x="8" y="24" width="44" height="11" fill="#123A61"/>
+        <path d="M26 10v42M34 10v42" stroke="url(#gx)" stroke-width="4"/>
+        <path d="M30 10c-6.5 0-10-3.5-10-7.5 4 0 10 3 10 7.5z" fill="#FFD23A"/>
+        <path d="M30 10c6.5 0 10-3.5 10-7.5-4 0-10 3-10 7.5z" fill="#9B5CFF"/>
+        <circle cx="14" cy="18" r="1.8" fill="#FFD23A" opacity=".9"/>
+        <circle cx="46" cy="45" r="1.5" fill="#1ED4FF" opacity=".9"/>
       </svg>
     </div>
     <div class="promo-mid">

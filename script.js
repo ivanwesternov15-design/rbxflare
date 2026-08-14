@@ -585,7 +585,6 @@ tabBtns.forEach(btn => {
 function openSheet(){
   backdrop.classList.add('open');
   sheet.classList.add('open');
-  bottomNav.classList.add('locked');
   animateModal(sheet, backdrop, true);
   renderGrid(state.tab);
   refreshLibrary();
@@ -598,7 +597,6 @@ function closeSheet(){
   if(deleteMode) exitDeleteMode();
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
-  bottomNav.classList.remove('locked');
   animateModal(sheet, backdrop, false);
   if(window._scanTimer){ clearInterval(window._scanTimer); window._scanTimer = null; }
 }
@@ -627,8 +625,8 @@ function animateModal(modal, bd, open){
     const o = open ? e : rev;
     bd.style.opacity = o;
     modal.style.opacity = o;
-    modal.style.filter = `blur(${rev * 10}px)`;
-    modal.style.transform = `translate(-50%, -50%) scale(${open ? 0.86 + 0.14 * e : 0.9 + 0.1 * rev}) translateY(${rev * (open ? 18 : 10)}px)`;
+    modal.style.filter = `blur(${rev * 8}px)`;
+    modal.style.transform = `translate(-50%, ${rev * 30}px)`;
     if(p < 1){ requestAnimationFrame(frame); }
     else if(!open){
       modal.style.visibility = 'hidden';
@@ -636,7 +634,7 @@ function animateModal(modal, bd, open){
       bd.style.opacity = 0;
     }else{
       modal.style.filter = 'blur(0px)';
-      modal.style.transform = 'translate(-50%, -50%) scale(1)';
+      modal.style.transform = 'translate(-50%, 0)';
     }
   };
   requestAnimationFrame(frame);
@@ -645,17 +643,21 @@ function animateModal(modal, bd, open){
 function openModal(modal, bd){
   bd.classList.add('open');
   modal.classList.add('open');
-  bottomNav.classList.add('locked');
-  document.body.classList.add('modal-lock');
   animateModal(modal, bd, true);
 }
 
 function closeModal(modal, bd){
   bd.classList.remove('open');
   modal.classList.remove('open');
-  bottomNav.classList.remove('locked');
-  document.body.classList.remove('modal-lock');
   animateModal(modal, bd, false);
+}
+
+function closeAllSheets(){
+  document.querySelectorAll('.sheet.open').forEach(m => {
+    const bid = m.id === 'sheet' ? 'backdrop' : m.id.replace(/Sheet$/, 'Backdrop');
+    const bd = document.getElementById(bid);
+    if(bd) closeModal(m, bd);
+  });
 }
 
 menuBtn.addEventListener('click', openSheet);
@@ -1457,14 +1459,34 @@ function renderStakeProgress(){
   }
   if(spPeriodEl) spPeriodEl.textContent = STAKE_LABEL[card.period] || card.period;
   if(spTimeEl){
-    spTimeEl.textContent = done ? 'Готово!' : fmtStakeLeft(card.until - Date.now());
+    const pad = n => String(n).padStart(2, '0');
+    if(done){
+      spTimeEl.innerHTML =
+        `<span class="sp-clock done">` +
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>` +
+        `<b>Стейкинг завершён</b></span>`;
+    }else{
+      const leftMs = Math.max(0, card.until - Date.now());
+      const s = Math.floor(leftMs / 1000);
+      const d = Math.floor(s / 86400); s %= 86400;
+      const h = Math.floor(s / 3600); s %= 3600;
+      const m = Math.floor(s / 60); const sec = s % 60;
+      spTimeEl.innerHTML =
+        `<span class="sp-clock">` +
+        `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>` +
+        (d > 0 ? `<b class="sc-days">${d}<em>дн</em></b><i>:</i>` : '') +
+        `<b>${pad(h)}</b><i>:</i><b>${pad(m)}</b><i>:</i><b>${pad(sec)}</b>` +
+        `</span>`;
+    }
     spTimeEl.classList.toggle('done', done);
   }
   const r = stakeRange(card, card.pct);
   if(spRewardEl) spRewardEl.textContent = `${r.min}–${r.max} Robux`;
   if(spProgressFillEl) spProgressFillEl.style.width = `${Math.round(pct)}%`;
   if(spProgressTextEl) spProgressTextEl.textContent = `${Math.round(pct)}%`;
-  if(spScratchBtn) spScratchBtn.disabled = !done;
+  if(spScratchBtn) spScratchBtn.classList.toggle('hidden', !done);
+  if(spKeepBtn) spKeepBtn.classList.toggle('hidden', done);
+  if(spAbortBtn) spAbortBtn.classList.toggle('hidden', done);
 }
 
 function openStakeProgress(card){
@@ -2073,6 +2095,7 @@ function renderRefsNav(){
 function goToNav(view){
   const idx = navBtns.findIndex(b => b.dataset.view === view);
   if(idx < 0) return;
+  closeAllSheets();
   activeIdx = idx;
   navBtns.forEach(b => b.classList.toggle('active', b === navBtns[idx]));
   moveNavIndicator(idx, true);
@@ -2086,6 +2109,7 @@ document.getElementById('refCopyBtnNav')?.addEventListener('click', copyRefLink)
 navBtns.forEach((btn, idx) => {
   btn.addEventListener('click', () => {
     if(activeIdx === idx) return; // уже в этой категории — повторные клики игнорируем
+    closeAllSheets();
     activeIdx = idx;
     navBtns.forEach(b => b.classList.toggle('active', b === btn));
     moveNavIndicator(idx, true);
