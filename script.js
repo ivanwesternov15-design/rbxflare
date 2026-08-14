@@ -738,9 +738,11 @@ function renderHero(){
 
 /* таймер «обновление через N」— после того как карточка уже открыта */
 let dailyTimerId = null;
+const dailyFootEl = document.getElementById('dailyFoot');
 function startDailyTimer(show){
   if(dailyTimerId){ clearInterval(dailyTimerId); dailyTimerId = null; }
   dailyTimerEl.classList.toggle('hidden', !show);
+  if(dailyFootEl) dailyFootEl.classList.toggle('hidden', !(show || !dailyResetBtn.classList.contains('hidden')));
   if(!show) return;
   const tick = () => {
     const now = new Date();
@@ -847,6 +849,7 @@ function revealDailyCard(id){
     collectBtnEl.classList.remove('hidden');
     startDailyTimer(true);
   }, 420);
+  if(dpHintEl) dpHintEl.classList.add('hidden');
   addBalance(reward);
   if(rarity === 'Diamond' || rarity === 'Mythic'){
     addNotification('gem', `Выпала карта ${rarity}!`, `Тебе повезло — редкая карточка ${rarity} принесла +${reward} Robux`);
@@ -869,6 +872,7 @@ function collectDailyCard(){
   collectBtnEl.classList.add('hidden');
   dailyGridEl.classList.add('hidden');
   dailyDoneEl.classList.remove('hidden');
+  if(dpHintEl) dpHintEl.classList.add('hidden');
   renderInventory();
   if(typeof renderTasks === 'function') renderTasks();
   showToast('Ежедневная карта в инвентаре', true, 'win');
@@ -1146,7 +1150,12 @@ function copyRefLink(){
 function shareRefLink(){
   if(!REFERRALS.link) return;
   if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
-  const text = 'Присоединяйся ко мне в Robux Game — там можно собирать карточки и выводить Robux!';
+  const text = 'Присоединяйся ко мне в Robux Game — собирай карточки и выводи Robux!';
+  if(tg && tg.openTelegramLink){
+    const shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(REFERRALS.link) + '&text=' + encodeURIComponent(text);
+    tg.openTelegramLink(shareUrl);
+    return;
+  }
   if(navigator.share){
     navigator.share({ title: 'Robux Game', text, url: REFERRALS.link })
       .catch(() => {});
