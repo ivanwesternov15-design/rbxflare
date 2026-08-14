@@ -719,6 +719,7 @@ const heroNameEl = document.getElementById('heroName');
 const heroIdEl = document.getElementById('heroId');
 const dailyTimerEl = document.getElementById('dailyTimer');
 const dailyTimerTextEl = document.getElementById('dailyTimerText');
+const dpHintEl = document.querySelector('.dp-hint');
 
 function todayKey(){ return new Date().toISOString().slice(0, 10); }
 
@@ -749,7 +750,7 @@ function startDailyTimer(show){
     s %= 3600;
     const m = String(Math.floor(s / 60)).padStart(2, '0');
     const sec = String(s % 60).padStart(2, '0');
-    dailyTimerTextEl.textContent = `обновление через ${h}:${m}:${sec}`;
+    dailyTimerTextEl.textContent = `Карточки обновятся: ${h}:${m}:${sec}`;
   };
   tick();
   dailyTimerId = setInterval(tick, 1000);
@@ -769,6 +770,7 @@ function renderDaily(){
   dailyGridEl.classList.remove('solo', 'hidden');
   collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
   dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
+  if(dpHintEl) dpHintEl.classList.toggle('hidden', !!(d.revealed || d.collected));
   startDailyTimer(d.revealed);
   if(d.revealed && d.collected){ dailyGridEl.classList.add('hidden'); return; }
   if(d.revealed){
@@ -813,18 +815,7 @@ function selectDailyCard(id){
 
 function dropHTML(rarity, reward){
   const v = tierVars(rarity);
-  const sparks = [0,1,2,3,4,5].map(i => {
-    const ang = i * 60 * Math.PI / 180;
-    const dst = 54 + (i % 3) * 16;
-    return `<i style="--dx:${Math.round(Math.cos(ang) * dst)}px;--dy:${Math.round(Math.sin(ang) * dst)}px"></i>`;
-  }).join('');
-  return `<div class="drop-wrap tier-shine" style="${v}">
-    <div class="drop-flash" style="${v}"></div>
-    <div class="drop-sparks" style="${v}">${sparks}</div>
-    <div class="drop-halo tier-glow" style="${v}"></div>
-    <div class="tier-chip tier-glow" style="${v}">
-      <svg class="dc-gem" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h10l4 6-9 12L3 9z"/></svg>${rarity}
-    </div>
+  return `<div class="drop-wrap" style="${v}">
     <img class="drop-png" src="${TIER_STYLE[rarity].img}" alt="${rarity}">
     <div class="drop-reward-line">
       <svg class="drop-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 11h18M7 6V4a1.5 1.5 0 0 1 1.5-1.5h7A1.5 1.5 0 0 1 17 4v2"/><circle cx="16" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>
@@ -974,6 +965,7 @@ function renderStreak(){
   const n = state.streak.count || 0;
   streakDaysEl.textContent = `${n} ${n === 1 ? 'день' : (n >= 2 && n <= 4 ? 'дня' : 'дней')}`;
   if(streakBonusEl) streakBonusEl.textContent = `+${STREAK_DAILY_BONUS}`;
+  reportProgress();
 }
 
 /* =========================================================
@@ -1002,10 +994,6 @@ function tasksAllDone(){ return tasksCompletedCount() === TASKS.length; }
 const tasksListEl = document.getElementById('tasksList');
 const tasksProgressTextEl = document.getElementById('tasksProgressText');
 const taskBtnProgressEl = document.getElementById('taskBtnProgress');
-const promoProgressFillEl = document.getElementById('promoProgressFill');
-const promoProgressTextEl = document.getElementById('promoProgressText');
-const promoClaimBtn = document.getElementById('promoClaimBtn');
-const promoGoBtn = document.getElementById('promoGoBtn');
 
 function renderTasks(){
   const done = tasksCompletedCount();
@@ -1038,7 +1026,7 @@ function renderTasks(){
     tasksListEl.querySelectorAll('.task-claim-btn').forEach(b =>
       b.addEventListener('click', () => claimTask(b.dataset.task)));
   }
-  renderPromo();
+  reportProgress();
 }
 
 function claimTask(id){
@@ -1051,41 +1039,6 @@ function claimTask(id){
   addNotification('win', 'Задание выполнено', `«${t.title}» — начислено +${t.reward} Coins`);
   showToast(`+${t.reward} Coins за задание`, true, 'win');
   renderTasks();
-}
-
-function renderPromo(){
-  const done = tasksCompletedCount();
-  const total = TASKS.length;
-  const pct = Math.round((done / total) * 100);
-  if(promoProgressFillEl) promoProgressFillEl.style.width = pct + '%';
-  if(promoProgressTextEl) promoProgressTextEl.textContent = `${done} / ${total}`;
-  const bonusClaimed = !!state.tasksBonusClaimed;
-  if(promoClaimBtn){
-    promoClaimBtn.classList.toggle('hidden', !(done === total && !bonusClaimed));
-  }
-  if(promoGoBtn){
-    promoGoBtn.classList.toggle('hidden', !!(done === total && !bonusClaimed));
-  }
-}
-
-function claimTasksBonus(){
-  if(state.tasksBonusClaimed || !tasksAllDone()) return;
-  const rarity = rollRarity();
-  const reward = Math.round(tierCfg(rarity).reward);
-  state.inventory.push({
-    id: `bonus-${Date.now()}`,
-    type: 'bonus',
-    rarity, reward,
-    status: 'available',
-    until: 0,
-    img: TIER_STYLE[rarity].img,
-  });
-  state.tasksBonusClaimed = true;
-  saveState();
-  renderInventory();
-  renderPromo();
-  addNotification('win', 'Бонусная карточка', `Ты выполнил все задания — получена карточка ${rarity}!`);
-  showToast('Бонусная карточка в инвентаре!', true, 'win');
 }
 
 /* =========================================================
@@ -1132,22 +1085,47 @@ async function claimPendingCoins(){
   }catch(e){}
 }
 
+function streakPlural(n){
+  const d = Math.abs(n) % 100, d1 = d % 10;
+  if(d > 10 && d < 20) return 'дней';
+  if(d1 === 1) return 'день';
+  if(d1 > 1 && d1 < 5) return 'дня';
+  return 'дней';
+}
+
+function refRowHTML(r){
+  const name = r.name || 'Игрок';
+  const avatar = r.avatar
+    ? `<img src="${r.avatar}" alt="" referrerpolicy="no-referrer">`
+    : (name.trim()[0] || '?').toUpperCase();
+  const total = 7;
+  const tasks = Math.min(r.tasks || 0, total);
+  const pct = Math.round((tasks / total) * 100);
+  const streak = r.streak || 0;
+  return `<div class="ref-row">
+    <div class="ref-avatar">${avatar}</div>
+    <div class="ref-mid">
+      <div class="ref-name">${name}</div>
+      <div class="ref-progress-track"><div class="ref-progress-fill" style="width:${pct}%"></div></div>
+      <div class="ref-meta">
+        <span class="ref-meta-chip chip-task">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 6v6c0 5-3.4 8.6-8 9.5C7.4 20.6 4 17 4 12V6l8-3.5z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></svg>
+          ${tasks} / ${total} заданий
+        </span>
+        <span class="ref-meta-chip chip-streak">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 1.5c1 3.1-2.1 4.3-2.8 7.3-.5 2.4.7 4.6 2.8 5.9-3.1 0-5-2-5.3-4.9-1.5 1.4-2.2 3.2-2.2 5A7.5 7.5 0 0 0 19.5 15c0-5.3-3.9-7.4-5.2-10.2-.7 1.9-1.9 3-3.4 3.5.6-3.7 0-6.3 1.1-6.8z" fill="#FF8A1E"/><path d="M12 5c.9 2.7-1.8 3.8-2.4 6.4-.4 2.1.6 4 2.4 5.1-2.7 0-4.4-1.8-4.7-4.3-1.2 1.2-1.9 2.8-1.9 4.3A6.6 6.6 0 0 0 12 23c3.7 0 6.6-3 6.6-6.7 0-4.7-3.5-6.5-4.6-9-.6 1.7-1.7 2.7-3 3.1.5-3.3 0-5.2 1-5.4z" fill="#FFC72C"/></svg>
+          ${streak} ${streakPlural(streak)}
+        </span>
+      </div>
+    </div>
+  </div>`;
+}
+
 function renderReferrals(){
   if(refCountEl) refCountEl.textContent = REFERRALS.count;
   if(refLinkTextEl) refLinkTextEl.textContent = REFERRALS.link || '—';
   if(refListEl){
-    refListEl.innerHTML = REFERRALS.list.map(r => {
-      const name = r.name || 'Игрок';
-      const uname = r.username ? '@' + r.username : `ID: ${r.id}`;
-      return `<div class="ref-row">
-        <div class="ref-avatar">${(name.trim()[0] || '?').toUpperCase()}</div>
-        <div class="ref-mid">
-          <div class="ref-name">${name}</div>
-          <div class="ref-sub">${uname}</div>
-        </div>
-        <div class="ref-date">${r.date || ''}</div>
-      </div>`;
-    }).join('');
+    refListEl.innerHTML = REFERRALS.list.map(refRowHTML).join('');
     if(refEmptyEl) refEmptyEl.classList.toggle('hidden', REFERRALS.list.length > 0);
   }
 }
@@ -1163,6 +1141,39 @@ function copyRefLink(){
       fallbackCopy(REFERRALS.link, done);
     }
   }catch(e){ fallbackCopy(REFERRALS.link, done); }
+}
+
+function shareRefLink(){
+  if(!REFERRALS.link) return;
+  if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+  const text = 'Присоединяйся ко мне в Robux Game — там можно собирать карточки и выводить Robux!';
+  if(navigator.share){
+    navigator.share({ title: 'Robux Game', text, url: REFERRALS.link })
+      .catch(() => {});
+    return;
+  }
+  const done = ok => showToast(ok ? 'Ссылка скопирована' : 'Не удалось скопировать', ok, 'win');
+  try{
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(REFERRALS.link).then(() => done(true), () => fallbackCopy(REFERRALS.link, done));
+    }else{
+      fallbackCopy(REFERRALS.link, done);
+    }
+  }catch(e){ fallbackCopy(REFERRALS.link, done); }
+}
+
+let progressSentAt = 0;
+function reportProgress(){
+  const init = tgInitData();
+  if(!init) return;
+  const now = Date.now();
+  if(now - progressSentAt < 10000) return;
+  progressSentAt = now;
+  fetch('/api/progress', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: init, tasks: tasksCompletedCount(), streak: state.streak.count || 0 }),
+  }).catch(() => {});
 }
 
 /* =========================================================
@@ -1321,16 +1332,23 @@ function renderInventory(){
       `</div>` +
       `<div class="inv-act">` +
         (card.status === 'available'
-          ? `<button class="stake-btn" data-i="${i}">Стейкинг</button>`
+          ? `<button class="stake-btn" data-id="${card.id}">Стейкинг</button>`
           : card.status === 'staking'
-            ? `<button class="stake-btn off" data-i="${i}">Прогресс</button>`
+            ? `<button class="stake-btn off" data-id="${card.id}">Прогресс</button>`
             : '') +
       `</div>`;
-    const btn = el.querySelector('.stake-btn');
-    if(btn) btn.addEventListener('click', () => card.status === 'staking' ? withdrawStake(card) : openStake(card));
     inventoryListEl.appendChild(el);
   });
 }
+
+inventoryListEl.addEventListener('click', e => {
+  const btn = e.target.closest('.stake-btn');
+  if(!btn || !btn.dataset.id) return;
+  const card = state.inventory.find(c => c.id === btn.dataset.id);
+  if(!card) return;
+  if(card.status === 'staking') openStakeProgress(card);
+  else openStake(card);
+});
 
 function resetDaily(){
   state.daily = { date: todayKey(), selectedId: null, revealed: false, collected: false, rarity: null, reward: 0 };
@@ -1959,8 +1977,7 @@ notifBackdrop.addEventListener('click', () => closeModal(notifSheet, notifBackdr
 tasksBtnMain.addEventListener('click', () => goToNav('tasks'));
 tasksCloseBtn.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
 tasksBackdrop.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
-if(promoGoBtn) promoGoBtn.addEventListener('click', () => goToNav('tasks'));
-if(promoClaimBtn) promoClaimBtn.addEventListener('click', claimTasksBonus);
+if(refShareBtnNav) refShareBtnNav.addEventListener('click', shareRefLink);
 
 refsBtnMain.addEventListener('click', () => goToNav('refs'));
 refsCloseBtn.addEventListener('click', () => closeModal(refsSheet, refsBackdrop));
@@ -2089,7 +2106,7 @@ function renderTasksNav(){
 function renderRefsNav(){
   const count = document.getElementById('refCountNav'); if(count) count.textContent = REFERRALS.count;
   const link = document.getElementById('refLinkTextNav'); if(link) link.textContent = REFERRALS.link || '—';
-  const list = document.getElementById('refListNav'); if(list) list.innerHTML = REFERRALS.list.map(r => `<div class="ref-row"><div class="ref-avatar">${(r.name || '?').trim()[0].toUpperCase()}</div><div class="ref-mid"><div class="ref-name">${r.name || 'Игрок'}</div><div class="ref-sub">${r.username ? '@' + r.username : 'ID: ' + r.id}</div></div><div class="ref-date">${r.date || ''}</div></div>`).join('');
+  const list = document.getElementById('refListNav'); if(list) list.innerHTML = REFERRALS.list.map(refRowHTML).join('');
   const empty = document.getElementById('refEmptyNav'); if(empty) empty.classList.toggle('hidden', REFERRALS.list.length > 0);
 }
 function goToNav(view){
@@ -2104,6 +2121,8 @@ function goToNav(view){
   if(view === 'refs') renderRefsNav();
 }
 
+const refShareBtnNav = document.getElementById('refShareBtnNav');
+if(refShareBtnNav) refShareBtnNav.addEventListener('click', shareRefLink);
 document.getElementById('refCopyBtnNav')?.addEventListener('click', copyRefLink);
 
 navBtns.forEach((btn, idx) => {

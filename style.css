@@ -358,13 +358,13 @@
 
   .sheet{
     position:fixed;
-    left:50%;
     top:auto;
-    bottom:calc(88px + env(safe-area-inset-bottom));
+    left:50%;
+    bottom:14px;
     width:calc(100% - 24px);
     max-width:400px;
-    max-height:calc(100vh - 130px);
-    z-index:11;
+    max-height:calc(100vh - 28px);
+    z-index:30;
     border-radius:28px;
     padding:16px;
     background:linear-gradient(160deg, rgba(74,92,106,.42) 0%, rgba(10,25,34,.68) 100%);
@@ -993,20 +993,21 @@
     to{ opacity:1; transform:translateY(0) scale(1); }
   }
   .dp-head{
-    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
   }
   .dp-title{
     display:flex; align-items:center; gap:8px;
     color:var(--lilac-white);
     font-size:16.5px; font-weight:800;
     letter-spacing:.2px;
+    margin-top:-4px;
   }
   .dp-title svg{
     width:21px; height:21px; flex-shrink:0;
     color:#1ED4FF;
     filter:drop-shadow(0 0 8px rgba(30,212,255,.8));
   }
-  .dp-actions{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  .dp-actions{ display:flex; align-items:flex-start; gap:8px; flex-shrink:0; margin-top:-4px; }
   .dp-timer{
     display:flex; align-items:center; gap:6px;
     padding:6px 11px;
@@ -1910,7 +1911,8 @@
      ОКНО ПОЛЬЗОВАТЕЛЕЙ (аватар, имя, ID, баланс)
      ========================================================= */
   .users-sheet{ max-width:440px; max-height:82vh; }
-  .notif-sheet, .tasks-sheet, .refs-sheet, .stake-ov-sheet, .withdraw-sheet{ max-width:440px; max-height:82vh; }
+  .notif-sheet, .tasks-sheet, .refs-sheet, .stake-ov-sheet, .withdraw-sheet{ max-width:440px; max-height:min(68vh, 480px); }
+  .notif-sheet .sheet-body, .refs-sheet .sheet-body{ max-height:min(48vh, 320px); }
   .users-list{ margin-top:4px; }
   .us-item{
     display:flex; align-items:center; gap:12px;
@@ -2330,54 +2332,144 @@
   }
 
   /* рефералы */
-  .ref-summary{ text-align:center; padding:14px 0 6px; }
-  .ref-summary-num{
-    color:#fff; font-size:38px; font-weight:800;
-    text-shadow:0 0 24px rgba(182,155,255,.6);
-    font-variant-numeric:tabular-nums;
+  .ref-label{
+    color:var(--lilac-pale);
+    font-size:12.5px; font-weight:800;
+    letter-spacing:.4px;
+    margin-bottom:8px;
   }
-  .ref-summary-label{ color:var(--lilac-light); font-size:12px; font-weight:600; margin-top:2px; }
   .ref-link-box{
-    display:flex; align-items:center; gap:8px;
-    padding:10px 10px 10px 14px;
-    margin:10px 0;
-    border-radius:14px;
-    background:rgba(6,20,27,.5);
-    border:1px solid rgba(182,155,255,.3);
+    display:flex; align-items:center; gap:10px;
+    padding:12px 14px;
+    margin:0 0 12px;
+    border-radius:16px;
+    background:
+      radial-gradient(130% 160% at 0% 0%, rgba(182,155,255,.12) 0%, rgba(6,20,27,0) 55%),
+      linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.56) 100%);
+    border:1px solid rgba(255,255,255,.16);
+    backdrop-filter:blur(20px) saturate(1.6);
+    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 14px 30px -18px rgba(0,0,0,.75);
   }
+  .ref-link-ico{
+    width:34px; height:34px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:10px;
+    color:#B69BFF;
+    background:rgba(182,155,255,.12);
+    box-shadow:inset 0 0 0 1px rgba(182,155,255,.35), 0 0 14px -4px rgba(182,155,255,.8);
+  }
+  .ref-link-ico svg{ width:17px; height:17px; }
   .ref-link-text{
     flex:1; min-width:0;
-    color:var(--lilac-pale); font-size:11.5px; font-weight:600;
+    color:var(--lilac-white); font-size:12px; font-weight:700;
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    text-shadow:0 0 14px rgba(182,155,255,.35);
+  }
+  .ref-perks{ display:flex; flex-direction:column; gap:8px; margin:2px 0 14px; }
+  .ref-perk{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 13px;
+    border-radius:14px;
+    background:linear-gradient(160deg, rgba(74,92,106,.28) 0%, rgba(17,33,45,.5) 100%);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+    animation:stepIn .45s var(--ease) both;
+  }
+  .ref-perk:nth-child(2){ animation-delay:.08s; }
+  .ref-perk-ico{
+    width:32px; height:32px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:10px;
+  }
+  .ref-perk-ico svg{ width:17px; height:17px; }
+  .perk-gold{ color:#FFD23A; background:rgba(255,210,58,.1); box-shadow:inset 0 0 0 1px rgba(255,210,58,.35); }
+  .perk-diamond{ color:#4DE1FF; background:rgba(77,225,255,.1); box-shadow:inset 0 0 0 1px rgba(77,225,255,.35); }
+  .ref-perk-text{
+    flex:1; min-width:0;
+    color:var(--lilac-pale); font-size:11.5px; font-weight:600; line-height:1.45;
+  }
+  .ref-perk-text b{ color:var(--lilac-white); }
+  .ref-actions{ display:flex; gap:10px; margin-bottom:16px; }
+  .ref-share-btn, .ref-copy-btn{
+    flex:1;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px;
+    border-radius:14px; border:none; cursor:pointer;
+    font-family:var(--font-body); font-size:12.5px; font-weight:800;
+    color:#fff;
+    transition:transform .18s var(--ease), filter .2s var(--ease), box-shadow .2s var(--ease);
+  }
+  .ref-share-btn svg, .ref-copy-btn svg{ width:15px; height:15px; }
+  .ref-share-btn{
+    background:linear-gradient(135deg, rgba(94,116,134,.95) 0%, rgba(46,67,85,.98) 100%);
+    border:1px solid rgba(255,255,255,.22);
+    box-shadow:0 10px 24px -10px rgba(94,116,134,.7), inset 0 1px 0 rgba(255,255,255,.28);
   }
   .ref-copy-btn{
-    flex-shrink:0;
-    display:flex; align-items:center; gap:6px;
-    padding:9px 13px; border:none; border-radius:11px; cursor:pointer;
-    font-family:var(--font-body); font-size:11px; font-weight:800;
-    color:#fff;
-    background:linear-gradient(135deg, #9B5CFF 0%, #6A2FD9 100%);
-    box-shadow:0 8px 18px -8px rgba(155,92,255,.8);
+    background:linear-gradient(135deg, rgba(155,92,255,.9) 0%, rgba(106,47,217,.95) 100%);
+    border:1px solid rgba(255,255,255,.22);
+    box-shadow:0 10px 24px -10px rgba(155,92,255,.75), inset 0 1px 0 rgba(255,255,255,.28);
   }
-  .ref-copy-btn svg{ width:14px; height:14px; }
-  .ref-copy-btn:active{ transform:scale(.93); }
+  .ref-share-btn:active, .ref-copy-btn:active{ transform:scale(.94); }
+  .ref-share-btn:hover, .ref-copy-btn:hover{ filter:brightness(1.12); }
+  .ref-friends-title{
+    display:flex; align-items:center; gap:8px;
+    color:var(--lilac-white);
+    font-size:13.5px; font-weight:800;
+    margin-bottom:10px;
+  }
+  .ref-friends-title svg{ width:16px; height:16px; color:#B69BFF; filter:drop-shadow(0 0 8px rgba(182,155,255,.6)); }
   .ref-row{
     display:flex; align-items:center; gap:11px;
-    padding:10px 12px;
-    border-radius:14px;
-    background:linear-gradient(165deg, rgba(74,92,106,.2) 0%, rgba(17,33,45,.5) 100%);
-    border:1px solid rgba(255,255,255,.1);
+    padding:11px 13px;
+    border-radius:16px;
+    background:linear-gradient(165deg, rgba(74,92,106,.3) 0%, rgba(17,33,45,.55) 100%);
+    border:1px solid rgba(255,255,255,.12);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+    animation:stepIn .4s var(--ease) both;
   }
   .ref-avatar{
-    width:38px; height:38px; flex-shrink:0; border-radius:50%;
+    width:40px; height:40px; flex-shrink:0; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
+    overflow:hidden;
     color:#fff; font-weight:800; font-size:14px;
     background:linear-gradient(135deg, #B69BFF, #6A2FD9);
+    box-shadow:0 0 16px -4px rgba(182,155,255,.6);
   }
+  .ref-avatar img{ width:100%; height:100%; object-fit:cover; }
   .ref-mid{ flex:1; min-width:0; }
-  .ref-name{ color:var(--lilac-white); font-size:12.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .ref-sub{ color:var(--lilac-light); font-size:10.5px; font-weight:600; margin-top:1px; }
-  .ref-date{ color:#5E7486; font-size:10px; font-weight:600; flex-shrink:0; }
+  .ref-name{ color:var(--lilac-white); font-size:12.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ref-progress-track{
+    height:6px;
+    margin:7px 0 6px;
+    border-radius:999px;
+    background:rgba(6,20,27,.5);
+    border:1px solid rgba(255,255,255,.08);
+    overflow:hidden;
+  }
+  .ref-progress-fill{
+    height:100%;
+    width:0;
+    border-radius:999px;
+    background:linear-gradient(90deg, rgba(77,225,255,.8) 0%, rgba(155,92,255,.95) 100%);
+    box-shadow:0 0 10px rgba(77,225,255,.8);
+    transition:width .8s var(--ease);
+  }
+  .ref-meta{
+    display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+  }
+  .ref-meta-chip{
+    display:flex; align-items:center; gap:4px;
+    color:var(--lilac-light); font-size:10px; font-weight:700;
+    padding:3px 8px;
+    border-radius:999px;
+    background:rgba(6,20,27,.4);
+    border:1px solid rgba(255,255,255,.1);
+  }
+  .ref-meta-chip svg{ width:11px; height:11px; }
+  .chip-task{ color:#FFD23A; }
+  .chip-streak{ color:#FF9D4D; }
 
   /* стейкинг-обзор */
   .so-row{
@@ -2422,14 +2514,13 @@
   #viewTasks .task-list{ margin-top:0; }
   #viewRefs .ref-link-box{ margin-top:0; }
   #viewRefs .ref-list{ margin-top:14px; }
-  .ref-copy-btn{ color:#DCE8F5; background:rgba(10,25,43,.65); border:1px solid rgba(35,151,255,.34); backdrop-filter:blur(14px) saturate(1.5); -webkit-backdrop-filter:blur(14px) saturate(1.5); box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 20px -12px rgba(35,151,255,.8); }
-  .ref-copy-btn:hover{ border-color:rgba(35,151,255,.7); box-shadow:0 0 18px -6px rgba(35,151,255,.8); }
+  #viewRefs{ padding-bottom:14px; }
   .sheet, .sheet-backdrop{ max-width:calc(100vw - 20px); }
   .sheet{ max-height:calc(100vh - 28px); overflow:hidden; }
   .sheet-body, .admin-panel-body{ min-height:0; }
   .sheet-title, .ap-note, .task-title, .task-desc, .notif-title, .notif-text{ overflow-wrap:break-word; word-break:normal; }
-  .stake-sheet{ max-height:calc(100vh - 88px); }
-  .notif-sheet, .stake-prog-sheet{ bottom:calc(84px + env(safe-area-inset-bottom)); }
+  .stake-sheet{ max-height:calc(100vh - 28px); }
+  .notif-sheet, .stake-prog-sheet{ bottom:14px; }
 
   /* ---- daily-panel в палитре профиля ---- */
   .daily-panel{

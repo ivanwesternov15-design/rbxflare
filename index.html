@@ -182,13 +182,13 @@
         <span>Твои карточки на сегодня</span>
       </div>
       <div class="dp-actions">
+        <button class="reset-btn hidden" id="dailyResetBtn" aria-label="Сбросить ежедневные карточки">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.4 16.6"/><path d="M20 5v6h-6"/></svg>
+        </button>
         <div class="dp-timer hidden" id="dailyTimer">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>
           <span id="dailyTimerText">—</span>
         </div>
-        <button class="reset-btn hidden" id="dailyResetBtn" aria-label="Сбросить ежедневные карточки">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.4 16.6"/><path d="M20 5v6h-6"/></svg>
-        </button>
       </div>
     </div>
     <div class="daily-grid" id="dailyGrid"></div>
@@ -253,32 +253,6 @@
     </button>
   </div>
 
-  <!-- ===== ПРОМО: выполни задания и получи карточку ===== -->
-  <div class="mh-promo">
-    <div class="promo-gift">
-      <svg viewBox="0 0 60 60" fill="none">
-        <defs><linearGradient id="gx" x1="0" y1="0" x2="60" y2="60"><stop offset="0" stop-color="#1ED4FF"/><stop offset="1" stop-color="#2397FF"/></linearGradient></defs>
-        <rect x="8" y="24" width="44" height="28" rx="5" fill="#0E2C4A" stroke="url(#gx)" stroke-width="2"/>
-        <rect x="8" y="24" width="44" height="11" fill="#123A61"/>
-        <path d="M26 10v42M34 10v42" stroke="url(#gx)" stroke-width="4"/>
-        <path d="M30 10c-6.5 0-10-3.5-10-7.5 4 0 10 3 10 7.5z" fill="#FFD23A"/>
-        <path d="M30 10c6.5 0 10-3.5 10-7.5-4 0-10 3-10 7.5z" fill="#9B5CFF"/>
-        <circle cx="14" cy="18" r="1.8" fill="#FFD23A" opacity=".9"/>
-        <circle cx="46" cy="45" r="1.5" fill="#1ED4FF" opacity=".9"/>
-      </svg>
-    </div>
-    <div class="promo-mid">
-      <div class="promo-text">Выполни все задания и получи</div>
-      <div class="promo-title">+1 карточку!</div>
-      <div class="promo-progress">
-        <div class="promo-progress-track"><div class="promo-progress-fill" id="promoProgressFill" style="width:0%"></div></div>
-        <span class="promo-progress-text" id="promoProgressText">0 / 7</span>
-      </div>
-    </div>
-    <button class="promo-btn" id="promoGoBtn">Смотреть задания</button>
-    <button class="promo-btn promo-claim hidden" id="promoClaimBtn">Забрать награду</button>
-  </div>
-
 </main>
 
 <main class="view hidden" id="viewCards">
@@ -310,9 +284,48 @@
 </main>
 
 <main class="view hidden category-view" id="viewRefs">
-  <div class="category-head"><div><div class="category-kicker">COMMUNITY</div><h1>Рефералы</h1></div><span class="category-count" id="refCountNav">0</span></div>
-  <div class="ref-link-box"><div class="ref-link-text" id="refLinkTextNav">—</div><button class="ref-copy-btn" id="refCopyBtnNav"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Копировать</button></div>
-  <div class="ref-list" id="refListNav"></div><div class="inventory-empty" id="refEmptyNav"><span>Пока никто не присоединился по ссылке</span></div>
+  <div class="category-head"><div><h1>Пригласить друзей</h1></div><span class="category-count" id="refCountNav">0</span></div>
+
+  <div class="ref-label">Твоя реферальная ссылка</div>
+  <div class="ref-link-box">
+    <div class="ref-link-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13.5a4.5 4.5 0 0 1 6.4 0l2.1 2.1a4.5 4.5 0 0 1-6.4 6.4L11 20.7"/><path d="M14 10.5a4.5 4.5 0 0 1-6.4 0l-2.1-2.1a4.5 4.5 0 0 1 6.4-6.4L13 4.3"/></svg>
+    </div>
+    <div class="ref-link-text" id="refLinkTextNav">—</div>
+  </div>
+
+  <div class="ref-perks">
+    <div class="ref-perk">
+      <div class="ref-perk-ico perk-gold">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 4v4M9 5l3-2 3 2"/><path d="M8 14l3 2.5 5-4"/></svg>
+      </div>
+      <div class="ref-perk-text">За 1 задание друга ты получишь <b>Gold Card</b> + 500 coins</div>
+    </div>
+    <div class="ref-perk">
+      <div class="ref-perk-ico perk-diamond">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5z"/><path d="M4 7l8 4.5L20 7M12 11.5V21"/><path d="M8.5 9.5 12 5l3.5 4.5"/></svg>
+      </div>
+      <div class="ref-perk-text">За активность друга 3 и выполнение всех заданий ты получишь <b>Diamond Card</b></div>
+    </div>
+  </div>
+
+  <div class="ref-actions">
+    <button class="ref-share-btn" id="refShareBtnNav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+      Поделиться
+    </button>
+    <button class="ref-copy-btn" id="refCopyBtnNav">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+      Копировать
+    </button>
+  </div>
+
+  <div class="ref-friends-title">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.4 2.8-5.8 6.5-5.8s6.5 2.4 6.5 5.8"/><path d="M16 3.5a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.5c2.3.7 3.5 2.6 3.5 5.5"/></svg>
+    <span>Мои друзья</span>
+  </div>
+  <div class="ref-list" id="refListNav"></div>
+  <div class="inventory-empty" id="refEmptyNav"><span>Пока никто не присоединился по ссылке</span></div>
 </main>
 
 <main class="view hidden" id="viewSoon">

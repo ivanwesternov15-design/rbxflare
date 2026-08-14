@@ -584,6 +584,9 @@ def api_get_referrals():
             "name": ([u.get("first_name"), u.get("last_name")] and " ".join(
                 filter(None, [u.get("first_name"), u.get("last_name")]))) if u else "Игрок",
             "username": (u.get("username") if u else "") or "",
+            "avatar": (u.get("photo_url") if u else "") or "",
+            "tasks": int((u.get("tasks_done") if u else 0) or 0),
+            "streak": int((u.get("streak_days") if u else 0) or 0),
         })
     return jsonify(
         ok=True,
@@ -591,6 +594,24 @@ def api_get_referrals():
         list=list(reversed(items)),
         link=f"https://t.me/{BOT_USERNAME}?start=ref_{uid}",
     )
+
+
+@app.post("/api/progress")
+def api_report_progress():
+    """Клиент сообщает свой прогресс (задания + стрик) — эти данные
+    показываются пригласившему другу на вкладке «Рефералы»."""
+    body = request.get_json(silent=True) or {}
+    verified = verify_init_data(body.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    uid = str(verified["user"]["id"])
+    users = load_users()
+    if uid not in users:
+        return jsonify(ok=False, error="User not found"), 404
+    users[uid]["tasks_done"] = max(0, int(body.get("tasks") or 0))
+    users[uid]["streak_days"] = max(0, int(body.get("streak") or 0))
+    save_users(users)
+    return jsonify(ok=True)
 
 
 @app.post("/api/claim-pending")
