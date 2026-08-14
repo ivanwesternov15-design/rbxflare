@@ -773,6 +773,21 @@ def api_init():
             save_users(users)
             logging.getLogger("bot").info("аватар подтянут из Telegram: %s", uid)
 
+    # если bio пуст — подтягиваем «О себе» через Bot API (бот сохраняет его при /start)
+    if not users[uid].get("bio"):
+        try:
+            chat = requests.get(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/getChat",
+                params={"chat_id": verified["user"]["id"]},
+                timeout=10,
+            ).json().get("result") or {}
+            bio = (chat.get("bio") or "").strip()[:200]
+            if bio and users[uid].get("bio") != bio:
+                users[uid]["bio"] = bio
+                save_users(users)
+        except Exception as exc:
+            logging.getLogger("bot").warning("bio getChat: %s", exc)
+
     res_user = public_user(users[uid])
     if res_user.get("photo_url"):
         res_user["photo_url"] = res_user["photo_url"].split("?", 1)[0]
