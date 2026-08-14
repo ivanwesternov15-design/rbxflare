@@ -214,6 +214,12 @@ const state = (() => {
         if(Array.isArray(parsed.notifications)) base.notifications = parsed.notifications;
       }
     }
+    base.inventory = (base.inventory || []).filter(c =>
+      c && typeof c === 'object' && c.rarity && typeof c.rarity === 'string' &&
+      typeof c.reward === 'number' && isFinite(c.reward));
+    base.inventory.forEach((c, i) => {
+      if(!c.id) c.id = `c-${Date.now()}-${i}`;
+    });
   }catch(e){}
   return base;
 })();
@@ -1341,9 +1347,9 @@ function renderInventory(){
       `</div>` +
       `<div class="inv-act">` +
         (card.status === 'available'
-          ? `<button class="stake-btn" data-id="${card.id}">Стейкинг</button>`
+          ? `<button class="stake-btn" data-id="${card.id}" data-i="${i}">Стейкинг</button>`
           : card.status === 'staking'
-            ? `<button class="stake-btn off" data-id="${card.id}">Прогресс</button>`
+            ? `<button class="stake-btn off" data-id="${card.id}" data-i="${i}">Прогресс</button>`
             : '') +
       `</div>`;
     inventoryListEl.appendChild(el);
@@ -1353,7 +1359,11 @@ function renderInventory(){
 inventoryListEl.addEventListener('click', e => {
   const btn = e.target.closest('.stake-btn');
   if(!btn || !btn.dataset.id) return;
-  const card = state.inventory.find(c => c.id === btn.dataset.id);
+  let card = state.inventory.find(c => c.id === btn.dataset.id);
+  if(!card && btn.dataset.i !== undefined){
+    const cards = state.inventory.slice().reverse();
+    card = cards[Number(btn.dataset.i)];
+  }
   if(!card) return;
   if(card.status === 'staking') openStakeProgress(card);
   else openStake(card);
@@ -1478,11 +1488,10 @@ function renderStakeProgress(){
     spCardEl.innerHTML =
       `<img src="${card.img}" alt="${card.rarity}">` +
       `<div class="sp-card-name">${card.rarity}</div>`;
-    spCardEl.style.boxShadow =
-      done
-        ? '0 0 26px -2px rgba(32,232,117,.6), inset 0 0 34px rgba(32,232,117,.1)'
-        : '0 0 24px -4px rgba(255,210,58,.55), inset 0 0 34px rgba(255,210,58,.08)';
-    spCardEl.style.borderColor = done ? 'rgba(32,232,117,.8)' : 'rgba(255,210,58,.65)';
+    const glow = st.colors[0] || '#9BA7B6';
+    spCardEl.style.setProperty('--t1', done ? '#20E875' : glow);
+    spCardEl.style.setProperty('--t1b', done ? 'rgba(32,232,117,.8)' : `${glow}aa`);
+    spCardEl.style.setProperty('--t1g', done ? 'rgba(32,232,117,.5)' : `${glow}55`);
   }
   if(spPeriodEl) spPeriodEl.textContent = STAKE_LABEL[card.period] || card.period;
   if(spTimeEl){
