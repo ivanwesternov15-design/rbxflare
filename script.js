@@ -1977,7 +1977,6 @@ notifBackdrop.addEventListener('click', () => closeModal(notifSheet, notifBackdr
 tasksBtnMain.addEventListener('click', () => goToNav('tasks'));
 tasksCloseBtn.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
 tasksBackdrop.addEventListener('click', () => closeModal(tasksSheet, tasksBackdrop));
-if(refShareBtnNav) refShareBtnNav.addEventListener('click', shareRefLink);
 
 refsBtnMain.addEventListener('click', () => goToNav('refs'));
 refsCloseBtn.addEventListener('click', () => closeModal(refsSheet, refsBackdrop));
@@ -2122,7 +2121,6 @@ function goToNav(view){
 }
 
 const refShareBtnNav = document.getElementById('refShareBtnNav');
-if(refShareBtnNav) refShareBtnNav.addEventListener('click', shareRefLink);
 document.getElementById('refCopyBtnNav')?.addEventListener('click', copyRefLink);
 
 navBtns.forEach((btn, idx) => {
