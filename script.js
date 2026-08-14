@@ -515,9 +515,16 @@ const tabBtns = [...tabsWrap.querySelectorAll('.tab-btn')];
 let tabAnim = 0;
 let tabPosIdx = 0;
 
+function tabBtnLeft(idx){
+  const b = tabBtns[idx];
+  if(!b) return 0;
+  return b.offsetLeft - tabsWrap.offsetLeft;
+}
+
 function animateTabIndicator(toIdx){
   const token = ++tabAnim;
-  const from = tabPosIdx;
+  const fromLeft = tabPosIdx;
+  const toLeft = tabBtnLeft(toIdx);
   const t0 = performance.now();
   const dur = 360;
   const ease = t => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -525,10 +532,11 @@ function animateTabIndicator(toIdx){
     if(token !== tabAnim) return;
     const p = Math.min(1, (now - t0) / dur);
     const v = ease(p);
-    tabPosIdx = from + (toIdx - from) * v;
-    tabIndicator.style.transform = `translateX(${tabPosIdx * 100}%)`;
+    const cur = fromLeft + (toLeft - fromLeft) * v;
+    tabPosIdx = cur;
+    tabIndicator.style.left = `${cur}px`;
     if(p < 1) requestAnimationFrame(frame);
-    else tabPosIdx = toIdx;
+    else { tabPosIdx = toLeft; tabIndicator.style.left = `${toLeft}px`; }
   };
   requestAnimationFrame(frame);
 }
@@ -596,9 +604,14 @@ function closeSheet(){
 }
 
 /* ---- плавное появление/исчезание модальных окон (rAF) ---- */
-let modalAnim = 0;
+const modalAnimTokens = new WeakMap();
+function modalToken(modal){
+  let t = modalAnimTokens.get(modal) || 0;
+  modalAnimTokens.set(modal, ++t);
+  return t;
+}
 function animateModal(modal, bd, open){
-  const token = ++modalAnim;
+  const token = modalToken(modal);
   const t0 = performance.now();
   const dur = open ? 480 : 300;
   if(open) modal.style.visibility = 'visible';
@@ -607,7 +620,7 @@ function animateModal(modal, bd, open){
     : (t) => 1 - Math.pow(1 - t, 3);
 
   const frame = now => {
-    if(token !== modalAnim) return;
+    if(token !== modalAnimTokens.get(modal)) return;
     const p = Math.min(1, (now - t0) / dur);
     const e = ease(p);
     const rev = 1 - e;
@@ -1183,15 +1196,22 @@ function renderStakingOverview(){
   if(stakeOvListEl){
     stakeOvListEl.innerHTML = staking.map(c => {
       const st = TIER_STYLE[c.rarity] || TIER_STYLE.Basic;
-      return `<div class="so-row" style="--t1:${st.colors[0]};--t2:${st.colors[1]}">
+      const done = c.until <= Date.now();
+      return `<div class="so-row ${done ? 'so-done' : ''}" data-id="${c.id}">
         <img class="so-row-img" src="${c.img}" alt="${c.rarity}">
         <div class="so-row-mid">
           <div class="so-row-title">${c.rarity}</div>
-          <div class="so-row-left">осталось ${fmtLeft(c.until)}</div>
+          <div class="so-row-left">${done ? 'готово к стиранию' : `осталось ${fmtLeft(c.until)}`}</div>
         </div>
-        <div class="so-row-reward">+${c.reward}</div>
+        <div class="so-row-reward">${STAKE_LABEL[c.period] || ''}</div>
       </div>`;
     }).join('');
+    stakeOvListEl.querySelectorAll('.so-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const card = state.inventory.find(c => c.id === row.dataset.id);
+        if(card && card.status === 'staking') openStakeProgress(card);
+      });
+    });
     if(stakeOvEmptyEl) stakeOvEmptyEl.classList.toggle('hidden', staking.length > 0);
   }
 }
@@ -1301,7 +1321,7 @@ function renderInventory(){
         (card.status === 'available'
           ? `<button class="stake-btn" data-i="${i}">Стейкинг</button>`
           : card.status === 'staking'
-            ? `<button class="stake-btn off" data-i="${i}">Забрать</button>`
+            ? `<button class="stake-btn off" data-i="${i}">Прогресс</button>`
             : '') +
       `</div>`;
     const btn = el.querySelector('.stake-btn');
@@ -1357,7 +1377,8 @@ function confirmStake(period){
   card.status = 'staking';
   card.period = period;
   card.pct = (tierCfg(card.rarity).stake || {})[period] || 0;
-  card.until = Date.now() + STAKE_MS[period];
+  card.start = Date.now();
+  card.until = card.start + STAKE_MS[period];
   saveState();
   closeModal(stakeSheet, stakeBackdrop);
   renderInventory();
@@ -1367,23 +1388,148 @@ function confirmStake(period){
 }
 
 function withdrawStake(card){
-  if(!card || card.status !== 'staking') return;
-  if(card.until > Date.now()){
-    showToast(`Стейкинг завершится ${fmtUntil(card.until)}`, false);
-    return;
+  openStakeProgress(card);
+}
+
+/* =========================================================
+   СТЕЙКИНГ — ПРОГРЕСС (08): текущий стейкинг карточки
+   Robux начисляются ТОЛЬКО при стирании карточки
+   ========================================================= */
+const stakeProgSheet = document.getElementById('stakeProgSheet');
+const stakeProgBackdrop = document.getElementById('stakeProgBackdrop');
+const stakeProgClose = document.getElementById('stakeProgClose');
+const spCardEl = document.getElementById('spCard');
+const spPeriodEl = document.getElementById('spPeriod');
+const spTimeEl = document.getElementById('spTime');
+const spProgressFillEl = document.getElementById('spProgressFill');
+const spProgressTextEl = document.getElementById('spProgressText');
+const spRewardEl = document.getElementById('spReward');
+const spScratchBtn = document.getElementById('spScratchBtn');
+const spKeepBtn = document.getElementById('spKeepBtn');
+const spAbortBtn = document.getElementById('spAbortBtn');
+const spConfirm = document.getElementById('spConfirm');
+const spConfirmText = document.getElementById('spConfirmText');
+const spConfirmYes = document.getElementById('spConfirmYes');
+const spConfirmNo = document.getElementById('spConfirmNo');
+
+let stakeProgCard = null;
+let stakeProgTimer = null;
+
+function stakeRange(card, pct){
+  const min = Math.round(card.reward || 0);
+  const bonus = Math.round(min * (pct || 0) / 100);
+  return { min, max: min + bonus };
+}
+
+function stakeElapsed(card){
+  const start = card.start || (card.until - STAKE_MS[card.period]);
+  const total = Math.max(1, card.until - start);
+  const elapsed = Math.min(Math.max(0, Date.now() - start), total);
+  return { start, total, elapsed, pct: total ? (elapsed / total) * 100 : 0 };
+}
+
+function fmtStakeLeft(ms){
+  if(ms <= 0) return 'Стейкинг завершён';
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  const pad = n => String(n).padStart(2, '0');
+  return d ? `${d}д ${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(h)}:${pad(m)}:${pad(sec)}`;
+}
+
+function renderStakeProgress(){
+  const card = stakeProgCard;
+  if(!card) return;
+  const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
+  const { pct } = stakeElapsed(card);
+  const done = pct >= 100;
+  if(spCardEl){
+    spCardEl.innerHTML =
+      `<img src="${card.img}" alt="${card.rarity}">` +
+      `<div class="sp-card-name">${card.rarity}</div>`;
+    spCardEl.style.boxShadow =
+      done
+        ? '0 0 26px -2px rgba(32,232,117,.6), inset 0 0 34px rgba(32,232,117,.1)'
+        : '0 0 24px -4px rgba(255,210,58,.55), inset 0 0 34px rgba(255,210,58,.08)';
+    spCardEl.style.borderColor = done ? 'rgba(32,232,117,.8)' : 'rgba(255,210,58,.65)';
   }
-  const bonus = Math.round(card.reward * (card.pct || 0) / 100);
-  card.status = 'used';
+  if(spPeriodEl) spPeriodEl.textContent = STAKE_LABEL[card.period] || card.period;
+  if(spTimeEl){
+    spTimeEl.textContent = done ? 'Готово!' : fmtStakeLeft(card.until - Date.now());
+    spTimeEl.classList.toggle('done', done);
+  }
+  const r = stakeRange(card, card.pct);
+  if(spRewardEl) spRewardEl.textContent = `${r.min}–${r.max} Robux`;
+  if(spProgressFillEl) spProgressFillEl.style.width = `${Math.round(pct)}%`;
+  if(spProgressTextEl) spProgressTextEl.textContent = `${Math.round(pct)}%`;
+  if(spScratchBtn) spScratchBtn.disabled = !done;
+}
+
+function openStakeProgress(card){
+  if(!card || card.status !== 'staking') return;
+  stakeProgCard = card;
+  spConfirm.classList.add('hidden');
+  renderStakeProgress();
+  openModal(stakeProgSheet, stakeProgBackdrop);
+  if(stakeProgTimer) clearInterval(stakeProgTimer);
+  stakeProgTimer = setInterval(renderStakeProgress, 1000);
+}
+
+function closeStakeProgress(){
+  closeModal(stakeProgSheet, stakeProgBackdrop);
+  if(stakeProgTimer){ clearInterval(stakeProgTimer); stakeProgTimer = null; }
+  stakeProgCard = null;
+}
+
+function destroyStakedCard(value){
+  const idx = state.inventory.findIndex(c => c.id === stakeProgCard.id);
+  if(idx >= 0) state.inventory.splice(idx, 1);
+  stakeProgCard = null;
   saveState();
   renderInventory();
   if(typeof renderStakingOverview === 'function') renderStakingOverview();
-  if(bonus > 0){
-    addBalance(bonus);
-    showToast(`Стейкинг завершён: +${bonus} Robux`, true, 'win');
-  }else{
-    showToast('Стейкинг завершён', true, 'win');
-  }
+  if(typeof renderTasks === 'function') renderTasks();
+  addBalance(value);
+  closeStakeProgress();
+  showToast(`+${value} Robux — карточка стёрта`, true, 'win');
 }
+
+function scratchStake(){
+  const card = stakeProgCard;
+  if(!card || card.status !== 'staking') return;
+  const { pct } = stakeElapsed(card);
+  if(pct < 100) return;
+  const r = stakeRange(card, card.pct);
+  const value = r.min + Math.floor(Math.random() * (r.max - r.min + 1));
+  destroyStakedCard(value);
+}
+
+function abortStake(){
+  const card = stakeProgCard;
+  if(!card || card.status !== 'staking') return;
+  const { pct } = stakeElapsed(card);
+  const partialPct = Math.round((card.pct || 0) * pct / 100);
+  const r = stakeRange(card, partialPct);
+  spConfirmText.textContent = `Прервать стейкинг? Карточка будет стёрта, награда из диапазона ${r.min}–${r.max} Robux. После прерывания стейкинг нельзя восстановить.`;
+  spConfirmYes.dataset.min = r.min;
+  spConfirmYes.dataset.max = r.max;
+  spConfirm.classList.remove('hidden');
+}
+
+spScratchBtn.addEventListener('click', scratchStake);
+spKeepBtn.addEventListener('click', closeStakeProgress);
+spAbortBtn.addEventListener('click', abortStake);
+spConfirmYes.addEventListener('click', () => {
+  const min = Number(spConfirmYes.dataset.min || 0);
+  const max = Number(spConfirmYes.dataset.max || 0);
+  const value = min + Math.floor(Math.random() * (Math.max(1, max - min) + 1));
+  destroyStakedCard(value);
+});
+spConfirmNo.addEventListener('click', () => spConfirm.classList.add('hidden'));
+stakeProgClose.addEventListener('click', closeStakeProgress);
+stakeProgBackdrop.addEventListener('click', closeStakeProgress);
 
 /* =========================================================
    АДМИН-ПАНЕЛЬ: суммы выпадения и проценты стейкинга
@@ -1902,6 +2048,13 @@ navPos = activeIdx;
 setNavIndicatorX(activeIdx, 1, 1);
 
 tabPosIdx = Math.max(0, tabBtns.findIndex(b => b.classList.contains('active')));
+tabIndicator.style.left = `${tabBtnLeft(Math.round(tabPosIdx))}px`;
+tabIndicator.style.transform = 'none';
+window.addEventListener('resize', () => {
+  const idx = Math.round(tabPosIdx);
+  tabPosIdx = tabBtnLeft(idx);
+  tabIndicator.style.left = `${tabPosIdx}px`;
+});
 
 function renderTasksNav(){
   const list = document.getElementById('tasksListNav');

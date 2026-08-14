@@ -162,7 +162,7 @@
       <span class="streak-days" id="streakDays">0 дней</span>
     </div>
     <div class="streak-right">
-      <svg class="streak-coin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#FFC72C" stroke="#B8860B" stroke-width="1"/><text x="12" y="16" font-size="11" font-weight="800" fill="#7a4e00" text-anchor="middle">R</text></svg>
+      <svg class="streak-coin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#FFC72C" stroke="#B8860B" stroke-width="1"/><path d="M12 15.2c-2.6 0-3.6-1.4-3.6-3.2 0-1.9 1-3.2 3.6-3.2s3.6 1.3 3.6 3.2c0 1.8-1 3.2-3.6 3.2zm0-5.6c-1.2 0-1.9.7-1.9 2.4s.7 2.4 1.9 2.4 1.9-.7 1.9-2.4-.7-2.4-1.9-2.4z" fill="#7a4e00"/></svg>
       <span class="streak-bonus" id="streakBonus">+25</span>
     </div>
   </div>
@@ -352,6 +352,46 @@
   </div>
   <div class="stake-preview" id="stakePreview"></div>
   <div class="stake-options" id="stakeOptions"></div>
+</div>
+
+<!-- ============ ОКНО СТЕЙКИНГ — ПРОГРЕСС (08) ============ -->
+<div class="sheet-backdrop" id="stakeProgBackdrop"></div>
+<div class="sheet stake-prog-sheet" id="stakeProgSheet" role="dialog" aria-modal="true">
+  <div class="sheet-head">
+    <div class="sp-title"><span class="sp-num">08.</span> СТЕЙКИНГ — ПРОГРЕСС</div>
+    <button class="sheet-close" id="stakeProgClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg>
+    </button>
+  </div>
+  <div class="sp-body">
+    <div class="sp-level">Уровень повышается</div>
+    <div class="sp-main">
+      <div class="sp-card" id="spCard"></div>
+      <div class="sp-info">
+        <div class="sp-stake"><span class="sp-stake-label">Стейкинг</span><span class="sp-stake-value" id="spPeriod">—</span></div>
+        <div class="sp-time-label">Осталось</div>
+        <div class="sp-time" id="spTime">—</div>
+      </div>
+    </div>
+    <div class="sp-progress">
+      <div class="sp-progress-track"><div class="sp-progress-fill" id="spProgressFill" style="width:0%"></div></div>
+      <span class="sp-progress-text" id="spProgressText">0%</span>
+    </div>
+    <div class="sp-reward">
+      <div class="sp-reward-label">Награда</div>
+      <div class="sp-reward-value" id="spReward">—</div>
+    </div>
+    <button class="sp-btn sp-btn-main" id="spScratchBtn">Забрать и стереть</button>
+    <button class="sp-btn sp-btn-ghost" id="spKeepBtn">Оставить в стейкинге</button>
+    <button class="sp-btn sp-btn-abort" id="spAbortBtn">Прервать стейкинг</button>
+    <div class="sp-confirm hidden" id="spConfirm">
+      <div class="sp-confirm-text" id="spConfirmText">—</div>
+      <div class="sp-confirm-actions">
+        <button class="sp-btn sp-btn-main" id="spConfirmYes">Стереть и получить</button>
+        <button class="sp-btn sp-btn-ghost" id="spConfirmNo">Отмена</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ============ АДМИН-ПАНЕЛЬ НАСТРОЙКИ КАРТОЧЕК (только владелец) ============ -->
