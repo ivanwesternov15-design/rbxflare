@@ -2783,9 +2783,10 @@
   }
   .rr-title{
     text-align:center;
-    color:#E6E6E6;
-    font-size:16px; font-weight:600;
-    letter-spacing:.2px;
+    color:#FFFFFF;
+    font-size:17px; font-weight:700;
+    letter-spacing:.3px;
+    text-shadow:0 0 22px rgba(139,92,246,.5);
   }
   .rr-stage{
     position:relative;
@@ -2796,8 +2797,8 @@
   .rr-rays{
     position:absolute;
     top:50%; left:50%;
-    width:220px; height:220px;
-    margin:-110px 0 0 -110px;
+    width:200px; height:200px;
+    margin:-100px 0 0 -100px;
     pointer-events:none;
     opacity:.5;
   }
@@ -2819,9 +2820,9 @@
   }
   .rr-main-card{
     position:relative;
-    width:120px; height:140px;
+    width:112px; height:136px;
     display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
-    padding:12px 8px 14px;
+    padding:12px 8px 12px;
     border-radius:16px;
     background:
       radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 55%),
@@ -2840,9 +2841,9 @@
     pointer-events:none;
   }
   .rr-main-card img{
-    position:absolute; top:-4px; left:50%;
+    position:absolute; top:-6px; left:50%;
     transform:translateX(-50%);
-    width:112px; height:112px;
+    width:104px; height:104px;
     object-fit:contain;
     filter:drop-shadow(0 6px 14px rgba(0,0,0,.55));
     pointer-events:none;
@@ -2850,7 +2851,7 @@
   .rr-main-num{
     position:relative;
     color:#FFFFFF;
-    font-size:48px; font-weight:700;
+    font-size:44px; font-weight:700;
     line-height:1.05;
     font-variant-numeric:tabular-nums;
     text-shadow:0 0 18px var(--t1, rgba(139,92,246,.8));
@@ -2858,7 +2859,7 @@
   .rr-main-sub{
     position:relative;
     color:#E6E6E6;
-    font-size:16px; font-weight:600;
+    font-size:14px; font-weight:600;
   }
   @keyframes rrPop{
     from{ opacity:0; transform:translateY(18px) scale(.82); }
@@ -2882,7 +2883,7 @@
   }
   .rr-other-card{
     position:relative;
-    width:110px; height:110px;
+    width:112px; height:112px;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     gap:2px;
     border-radius:16px;
@@ -2910,18 +2911,18 @@
   .rr-other-num{
     position:relative;
     color:#FFFFFF;
-    font-size:40px; font-weight:700;
+    font-size:36px; font-weight:700;
     line-height:1.05;
     font-variant-numeric:tabular-nums;
   }
   .rr-other-sub{
     position:relative;
     color:#E6E6E6;
-    font-size:14px; font-weight:600;
+    font-size:13px; font-weight:600;
   }
   .rr-btn{
-    width:280px; height:48px;
-    margin:14px auto 0;
+    width:100%; height:48px;
+    margin:14px 0 0;
     display:flex; align-items:center; justify-content:center;
     border:none; border-radius:12px;
     cursor:pointer;
