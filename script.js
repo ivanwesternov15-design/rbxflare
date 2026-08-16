@@ -886,6 +886,7 @@ function randInt(min, max){
 
 function showResultWindow(rarity, reward, others){
   const st = TIER_STYLE[rarity] || TIER_STYLE.Basic;
+  rrSheet.classList.remove('hidden');
   rrMainCard.style.setProperty('--t1', st.colors[0]);
   rrMainCard.style.setProperty('--t2', st.colors[1]);
   rrMainImg.src = st.img;

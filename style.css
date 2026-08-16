@@ -2761,11 +2761,17 @@
      ========================================================= */
   .rr-sheet{
     max-width:344px;
+    max-height:calc(100vh - 24px);
     border-radius:16px;
+    padding:0;
     background:rgba(13,20,34,.97);
     border:1px solid rgba(255,255,255,.05);
     box-shadow:0 24px 60px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    overflow-y:auto;
   }
+  .rr-sheet::-webkit-scrollbar{ width:0; }
   .rr-inner{
     display:flex; flex-direction:column;
     padding:24px 20px 16px;
@@ -2779,16 +2785,16 @@
   .rr-stage{
     position:relative;
     display:flex; align-items:center; justify-content:center;
-    margin:16px 0;
-    padding:14px 0;
+    margin:14px 0;
+    padding:6px 0;
   }
   .rr-rays{
     position:absolute;
     top:50%; left:50%;
-    width:250px; height:250px;
-    margin:-125px 0 0 -125px;
+    width:220px; height:220px;
+    margin:-110px 0 0 -110px;
     pointer-events:none;
-    opacity:.55;
+    opacity:.5;
   }
   .rr-rays-a{ animation:rrSpin 18s linear infinite; }
   .rr-rays-b{ animation:rrSpin 26s linear infinite reverse; }
@@ -2829,9 +2835,9 @@
     pointer-events:none;
   }
   .rr-main-card img{
-    position:absolute; top:-14px; left:50%;
+    position:absolute; top:-4px; left:50%;
     transform:translateX(-50%);
-    width:128px; height:128px;
+    width:112px; height:112px;
     object-fit:contain;
     filter:drop-shadow(0 6px 14px rgba(0,0,0,.55));
     pointer-events:none;
@@ -2855,7 +2861,7 @@
   }
   .rr-others{
     margin-top:2px;
-    padding:16px;
+    padding:13px;
     border-radius:16px;
     background:#121A2B;
     border:1px solid rgba(255,255,255,.05);
@@ -2864,7 +2870,7 @@
     text-align:center;
     color:#8B93A6;
     font-size:14px; font-weight:600;
-    margin-bottom:12px;
+    margin-bottom:10px;
   }
   .rr-others-row{
     display:flex; justify-content:center; gap:12px;
@@ -2910,7 +2916,7 @@
   }
   .rr-btn{
     width:280px; height:48px;
-    margin:16px auto 0;
+    margin:14px auto 0;
     display:flex; align-items:center; justify-content:center;
     border:none; border-radius:12px;
     cursor:pointer;
