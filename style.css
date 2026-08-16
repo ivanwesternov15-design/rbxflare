@@ -1,8 +1,8 @@
   /* =========================================================
-     ТОКЕНЫ ДИЗАЙНА
+     РўРћРљР•РќР« Р”РР—РђР™РќРђ
      ========================================================= */
   :root{
-    /* палитра: #06141B / #11212D / #253745 / #4A5C6A / #9BA8AB (яркие вариации) */
+    /* РїР°Р»РёС‚СЂР°: #06141B / #11212D / #253745 / #4A5C6A / #9BA8AB (СЏСЂРєРёРµ РІР°СЂРёР°С†РёРё) */
     --plum-deep:#1A2E3C;
     --plum-mid:#2E4355;
     --lilac:#5E7486;
@@ -48,7 +48,7 @@
     overflow-x:hidden;
   }
 
-  /* фон всего приложения ("подложка") */
+  /* С„РѕРЅ РІСЃРµРіРѕ РїСЂРёР»РѕР¶РµРЅРёСЏ ("РїРѕРґР»РѕР¶РєР°") */
   #app-wallpaper{
     position:fixed;
     inset:0;
@@ -75,15 +75,15 @@
   }
 
   /* =========================================================
-     КАРТОЧКА ПРОФИЛЯ
+     РљРђР РўРћР§РљРђ РџР РћР¤РР›РЇ
      ========================================================= */
   .card{
     position:relative;
     background:linear-gradient(160deg, rgba(74,92,106,.38) 0%, rgba(17,33,45,.62) 100%);
     border:1px solid rgba(255,255,255,.16);
     border-radius:var(--radius-card);
-    backdrop-filter:blur(22px) saturate(1.7);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    backdrop-filter:blur(15px) saturate(1.3);
+    -webkit-backdrop-filter:blur(15px) saturate(1.3);
     box-shadow:0 24px 48px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.05), 0 0 44px -10px rgba(94,116,134,.4);
     padding:12px 14px 18px;
     opacity:0;
@@ -101,7 +101,7 @@
   }
   @keyframes cardIn{to{opacity:1; transform:translateY(0);}}
 
-  /* каскадное появление блоков карточки */
+  /* РєР°СЃРєР°РґРЅРѕРµ РїРѕСЏРІР»РµРЅРёРµ Р±Р»РѕРєРѕРІ РєР°СЂС‚РѕС‡РєРё */
   .banner{ animation:bannerIn .8s var(--ease) .16s both; }
   @keyframes bannerIn{
     from{ opacity:0; transform:scale(1.07); }
@@ -119,7 +119,7 @@
     to{ opacity:1; transform:translateY(0); }
   }
 
-  /* верхняя панель — кнопка «Внешний вид» поверх баннера */
+  /* РІРµСЂС…РЅСЏСЏ РїР°РЅРµР»СЊ вЂ” РєРЅРѕРїРєР° В«Р’РЅРµС€РЅРёР№ РІРёРґВ» РїРѕРІРµСЂС… Р±Р°РЅРЅРµСЂР° */
   .top-bar{
     position:absolute;
     top:8px; right:8px;
@@ -135,8 +135,6 @@
     border-radius:50%;
     border:1px solid rgba(255,255,255,.28);
     background:rgba(255,255,255,.1);
-    backdrop-filter:blur(10px);
-    -webkit-backdrop-filter:blur(10px);
     box-shadow:0 6px 18px -6px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.15);
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
@@ -147,7 +145,7 @@
   .icon-btn:hover{ transform:translateY(-2px) scale(1.06); background:rgba(255,255,255,.14); }
   .icon-btn svg{ width:20px; height:20px; }
 
-  /* баннер / "фон" карточки */
+  /* Р±Р°РЅРЅРµСЂ / "С„РѕРЅ" РєР°СЂС‚РѕС‡РєРё */
   .banner{
     position:relative;
     z-index:1;
@@ -166,7 +164,7 @@
     background:linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(6,20,27,.55) 100%);
   }
 
-  /* аватар */
+  /* Р°РІР°С‚Р°СЂ */
   .avatar-wrap{
     position:relative;
     width:96px; height:96px;
@@ -204,7 +202,7 @@
   }
   .avatar-photo .swap-fade{ border-radius:50%; }
 
-  /* имя / бейджи */
+  /* РёРјСЏ / Р±РµР№РґР¶Рё */
   .identity{
     text-align:center;
     margin-top:10px;
@@ -265,7 +263,7 @@
     border-radius:var(--radius-pill);
   }
 
-  /* инфо-панели */
+  /* РёРЅС„Рѕ-РїР°РЅРµР»Рё */
   .panel{
     margin-top:10px;
     background:rgba(46,67,85,.32);
@@ -301,7 +299,7 @@
     opacity:.92;
   }
 
-  /* inline-редактирование "О себе" и дня рождения */
+  /* inline-СЂРµРґР°РєС‚РёСЂРѕРІР°РЅРёРµ "Рћ СЃРµР±Рµ" Рё РґРЅСЏ СЂРѕР¶РґРµРЅРёСЏ */
   .edit-row{
     display:flex;
     gap:8px;
@@ -344,12 +342,11 @@
   }
 
   /* =========================================================
-     МОДАЛЬНОЕ ОКНО НАСТРОЙКИ ВНЕШНЕГО ВИДА
+     РњРћР”РђР›Р¬РќРћР• РћРљРќРћ РќРђРЎРўР РћР™РљР Р’РќР•РЁРќР•Р“Рћ Р’РР”Рђ
      ========================================================= */
   .sheet-backdrop{
     position:fixed; inset:0;
     background:rgba(6,20,27,.6);
-    backdrop-filter:blur(4px);
     z-index:10;
     opacity:0;
     pointer-events:none;
@@ -369,8 +366,8 @@
     padding:16px;
     background:linear-gradient(160deg, rgba(74,92,106,.42) 0%, rgba(10,25,34,.68) 100%);
     border:1px solid rgba(255,255,255,.18);
-    backdrop-filter:blur(24px) saturate(1.7);
-    -webkit-backdrop-filter:blur(24px) saturate(1.7);
+    backdrop-filter:blur(18px) saturate(1.3);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
     box-shadow:0 24px 64px -16px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.16), 0 0 44px -10px rgba(94,116,134,.4);
     opacity:0;
     transform:translate(-50%, 30px);
@@ -465,7 +462,6 @@
     width:calc(50% - 6px);
     background:linear-gradient(135deg, var(--accent-2), var(--accent-1), var(--accent-2));
     background-size:220% 220%;
-    animation:tabGlow 3.5s ease-in-out infinite;
     border-radius:var(--radius-pill);
     z-index:0;
     transition:transform .32s var(--ease);
@@ -499,7 +495,7 @@
   }
   .thumb:active{ transform:scale(.94); }
   .thumb:hover{ transform:translateY(-3px); box-shadow:0 10px 24px -10px rgba(0,0,0,.5); }
-  /* режим удаления (владелец) */
+  /* СЂРµР¶РёРј СѓРґР°Р»РµРЅРёСЏ (РІР»Р°РґРµР»РµС†) */
   .sheet.delete-on .thumb{ cursor:pointer; }
   .sheet.delete-on .thumb::after{
     content:"\2715";
@@ -525,8 +521,8 @@
     animation:delPulse 1.2s ease-in-out infinite;
   }
   @keyframes delPulse{
-    0%,100%{ filter:brightness(1); }
-    50%{ filter:brightness(1.18); }
+    0%,100%{ opacity:1; }
+    50%{ opacity:.65; }
   }
   .thumb.cell-in{ animation:cellIn .45s var(--ease) both; }
   .grid.tab-switching .thumb.cell-in{ animation:none; }
@@ -560,7 +556,7 @@
     to{opacity:1; transform:translateY(0);}
   }
 
-  /* плавная смена изображения (overlay crossfade) */
+  /* РїР»Р°РІРЅР°СЏ СЃРјРµРЅР° РёР·РѕР±СЂР°Р¶РµРЅРёСЏ (overlay crossfade) */
   .swap-fade{
     position:absolute;
     inset:0;
@@ -577,7 +573,7 @@
   }
   .banner .swap-fade{ border-radius:18px; }
 
-  /* лёгкая пульсация при смене изображения */
+  /* Р»С‘РіРєР°СЏ РїСѓР»СЊСЃР°С†РёСЏ РїСЂРё СЃРјРµРЅРµ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ */
   @keyframes flashPulse{
     0%{ filter:brightness(1); }
     35%{ filter:brightness(1.35) saturate(1.2); }
@@ -586,7 +582,7 @@
   .pulse{ animation:flashPulse .5s var(--ease); }
 
   /* =========================================================
-     НИЖНЯЯ НАВИГАЦИЯ
+     РќРР–РќРЇРЇ РќРђР’РР“РђР¦РРЇ
      ========================================================= */
   .bottom-nav{
     position:fixed;
@@ -604,8 +600,6 @@
     border-radius:24px;
     background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.6) 100%);
     border:1px solid rgba(255,255,255,.16);
-    backdrop-filter:blur(22px) saturate(1.7);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);
     box-shadow:0 12px 32px -10px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.16), 0 0 30px -8px rgba(94,116,134,.35);
     animation:navIn .6s var(--ease) .5s both;
     transition:filter .35s var(--ease), box-shadow .35s var(--ease);
@@ -667,8 +661,6 @@
     border-radius:18px;
     background:linear-gradient(135deg, rgba(94,116,134,.85) 0%, rgba(46,67,85,.92) 100%);
     border:1px solid rgba(255,255,255,.25);
-    backdrop-filter:blur(10px) saturate(1.5);
-    -webkit-backdrop-filter:blur(10px) saturate(1.5);
     box-shadow:0 8px 22px -6px rgba(94,116,134,.7), 0 0 20px -4px rgba(94,116,134,.45), inset 0 1px 0 rgba(255,255,255,.3);
   }
   @keyframes navPop{
@@ -677,7 +669,7 @@
     100%{ transform:scale(1); }
   }
 
-  /* панель удаления (ниже окна, только владелец) */
+  /* РїР°РЅРµР»СЊ СѓРґР°Р»РµРЅРёСЏ (РЅРёР¶Рµ РѕРєРЅР°, С‚РѕР»СЊРєРѕ РІР»Р°РґРµР»РµС†) */
   .del-bar{
     position:fixed;
     left:50%;
@@ -694,8 +686,6 @@
     border-radius:20px;
     background:linear-gradient(160deg, rgba(255,95,107,.18) 0%, rgba(17,33,45,.78) 100%);
     border:1px solid rgba(255,95,107,.4);
-    backdrop-filter:blur(18px) saturate(1.5);
-    -webkit-backdrop-filter:blur(18px) saturate(1.5);
     box-shadow:0 16px 40px -14px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.15);
     opacity:0;
     visibility:hidden;
@@ -742,7 +732,7 @@
   .tabs-single{ padding:0; background:transparent; border:none; margin-bottom:12px; }
 
   /* =========================================================
-     ТОСТ-УВЕДОМЛЕНИЕ (изменение/удаление фонов)
+     РўРћРЎРў-РЈР’Р•Р”РћРњР›Р•РќРР• (РёР·РјРµРЅРµРЅРёРµ/СѓРґР°Р»РµРЅРёРµ С„РѕРЅРѕРІ)
      ========================================================= */
   .app-toast{
     position:fixed;
@@ -760,8 +750,6 @@
     border-radius:16px;
     background:linear-gradient(160deg, rgba(94,116,134,.30) 0%, rgba(17,33,45,.72) 100%);
     border:1px solid rgba(94,116,134,.45);
-    backdrop-filter:blur(24px) saturate(1.6);
-    -webkit-backdrop-filter:blur(24px) saturate(1.6);
     box-shadow:0 14px 36px -12px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.16), 0 0 26px -8px rgba(94,116,134,.5);
     color:var(--lilac-white);
     font-family:var(--font-body);
@@ -784,7 +772,7 @@
   }
 
   /* =========================================================
-     ЭКРАН ЗАГРУЗКИ (сплэш)
+     Р­РљР РђРќ Р—РђР“Р РЈР—РљР (СЃРїР»СЌС€)
      ========================================================= */
   .splash{
     position:fixed; inset:0; z-index:100;
@@ -904,8 +892,8 @@
   }
 
   /* =========================================================
-     ГЛАВНОЕ 2.0: профиль-шапка (аватар/имя/id + баланс)
-     и панель ежедневных карточек с таймером обновления
+     Р“Р›РђР’РќРћР• 2.0: РїСЂРѕС„РёР»СЊ-С€Р°РїРєР° (Р°РІР°С‚Р°СЂ/РёРјСЏ/id + Р±Р°Р»Р°РЅСЃ)
+     Рё РїР°РЅРµР»СЊ РµР¶РµРґРЅРµРІРЅС‹С… РєР°СЂС‚РѕС‡РµРє СЃ С‚Р°Р№РјРµСЂРѕРј РѕР±РЅРѕРІР»РµРЅРёСЏ
      ========================================================= */
   .hero{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -946,8 +934,6 @@
       radial-gradient(120% 150% at 10% -20%, rgba(94,116,134,.55) 0%, rgba(6,20,27,0) 60%),
       linear-gradient(160deg, rgba(74,92,106,.4) 0%, rgba(17,33,45,.8) 100%);
     border:1px solid rgba(255,255,255,.18);
-    backdrop-filter:blur(20px) saturate(1.6);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 14px 30px -14px rgba(0,0,0,.8), 0 0 26px -10px rgba(94,116,134,.5);
     animation:heroIn .6s var(--ease) both;
   }
@@ -980,8 +966,8 @@
       radial-gradient(140% 120% at 50% -20%, rgba(94,116,134,.24) 0%, rgba(6,20,27,0) 60%),
       linear-gradient(165deg, rgba(74,92,106,.34) 0%, rgba(17,33,45,.7) 100%);
     border:1px solid rgba(255,255,255,.15);
-    backdrop-filter:blur(22px) saturate(1.6);
-    -webkit-backdrop-filter:blur(22px) saturate(1.6);
+    backdrop-filter:blur(15px) saturate(1.3);
+    -webkit-backdrop-filter:blur(15px) saturate(1.3);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.15),
       0 24px 56px -20px rgba(0,0,0,.85),
@@ -1068,7 +1054,7 @@
   .head-actions .reset-btn{ width:40px; height:40px; }
   .head-actions .reset-btn svg{ width:18px; height:18px; }
 
-  /* кнопки-иконки в шапке окна */
+  /* РєРЅРѕРїРєРё-РёРєРѕРЅРєРё РІ С€Р°РїРєРµ РѕРєРЅР° */
   .sheet-icon-btn{
     width:34px; height:34px;
     display:flex; align-items:center; justify-content:center;
@@ -1083,7 +1069,7 @@
   .sheet-icon-btn:active{ transform:scale(.9); }
 
   /* =========================================================
-     РЕДКОСТИ: анимированный градиент + блик (универсально через --t1..--t3)
+     Р Р•Р”РљРћРЎРўР: Р°РЅРёРјРёСЂРѕРІР°РЅРЅС‹Р№ РіСЂР°РґРёРµРЅС‚ + Р±Р»РёРє (СѓРЅРёРІРµСЂСЃР°Р»СЊРЅРѕ С‡РµСЂРµР· --t1..--t3)
      ========================================================= */
   .tier-glow{
     background:linear-gradient(135deg, var(--t1), var(--t2), var(--t3, var(--t2)), var(--t1));
@@ -1109,8 +1095,8 @@
   }
 
   /* =========================================================
-     ДРОП-РАСКРЫТИЕ: только PNG карточка — без панели,
-     обводки и тени (картинка живёт прямо на фоне приложения)
+     Р”Р РћРџ-Р РђРЎРљР Р«РўРР•: С‚РѕР»СЊРєРѕ PNG РєР°СЂС‚РѕС‡РєР° вЂ” Р±РµР· РїР°РЅРµР»Рё,
+     РѕР±РІРѕРґРєРё Рё С‚РµРЅРё (РєР°СЂС‚РёРЅРєР° Р¶РёРІС‘С‚ РїСЂСЏРјРѕ РЅР° С„РѕРЅРµ РїСЂРёР»РѕР¶РµРЅРёСЏ)
      ========================================================= */
   .drop-wrap{
     position:relative;
@@ -1188,8 +1174,6 @@
     border-radius:999px;
     background:rgba(6,20,27,.38);
     border:1px solid rgba(255,255,255,.14);
-    backdrop-filter:blur(14px) saturate(1.4);
-    -webkit-backdrop-filter:blur(14px) saturate(1.4);
     animation:lineUp .5s var(--ease) .3s both;
   }
   @keyframes lineUp{
@@ -1219,7 +1203,7 @@
   }
 
   /* =========================================================
-     ОКНО СТЕЙКИНГА
+     РћРљРќРћ РЎРўР•Р™РљРРќР“Рђ
      ========================================================= */
   .stake-sheet, .admin-sheet{ z-index:70; }
   .stake-sheet{ max-height:78vh; overflow-y:auto; }
@@ -1276,7 +1260,7 @@
   .so-plus{ color:var(--lilac-white); font-size:11px; font-weight:800; }
 
   /* =========================================================
-     АДМИН-ПАНЕЛЬ НАСТРОЙКИ КАРТОЧЕК
+     РђР”РњРРќ-РџРђРќР•Р›Р¬ РќРђРЎРўР РћР™РљР РљРђР РўРћР§Р•Рљ
      ========================================================= */
   .admin-sheet{ max-width:440px; }
   .admin-body{ overflow-y:auto; padding:2px 2px 4px; }
@@ -1344,7 +1328,7 @@
   .admin-save.done{ background:linear-gradient(135deg, rgba(61,220,106,.8) 0%, rgba(35,140,80,.95) 100%); }
 
   /* =========================================================
-     ВЬЮХИ (экраны нижней навигации)
+     Р’Р¬Р®РҐР (СЌРєСЂР°РЅС‹ РЅРёР¶РЅРµР№ РЅР°РІРёРіР°С†РёРё)
      ========================================================= */
   .view{ width:100%; max-width:460px; padding:0 16px calc(120px + env(safe-area-inset-bottom)); animation:viewIn .35s var(--ease) both; overflow-x:hidden; }
   #viewProfile{ padding-bottom:0; }
@@ -1364,12 +1348,10 @@
     border:1px dashed rgba(255,255,255,.14);
     border-radius:18px;
     background:rgba(17,33,45,.35);
-    backdrop-filter:blur(14px) saturate(1.4);
-    -webkit-backdrop-filter:blur(14px) saturate(1.4);
   }
 
   /* =========================================================
-     ЭКРАН «КАРТОЧКИ» — шапка и баланс
+     Р­РљР РђРќ В«РљРђР РўРћР§РљРВ» вЂ” С€Р°РїРєР° Рё Р±Р°Р»Р°РЅСЃ
      ========================================================= */
   .cards-top{
     display:flex; align-items:center; justify-content:space-between;
@@ -1388,8 +1370,6 @@
     border-radius:14px;
     background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.6) 100%);
     border:1px solid rgba(255,255,255,.14);
-    backdrop-filter:blur(18px) saturate(1.6);
-    -webkit-backdrop-filter:blur(18px) saturate(1.6);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 8px 20px -10px rgba(0,0,0,.6);
   }
   .bal-ico{ width:15px; height:15px; color:var(--lilac); }
@@ -1412,7 +1392,7 @@
   }
 
   /* =========================================================
-     ЕЖЕДНЕВНЫЕ КАРТОЧКИ (выбор 1 из 3 + скретч)
+     Р•Р–Р•Р”РќР•Р’РќР«Р• РљРђР РўРћР§РљР (РІС‹Р±РѕСЂ 1 РёР· 3 + СЃРєСЂРµС‚С‡)
      ========================================================= */
   .daily-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; }
   .daily-grid.solo{ display:flex; justify-content:center; }
@@ -1577,7 +1557,7 @@
     font-size:9px; font-weight:700; letter-spacing:1.4px; text-transform:uppercase;
   }
 
-  /* выбивание: выбранный пак трясётся и вспыхивает */
+  /* РІС‹Р±РёРІР°РЅРёРµ: РІС‹Р±СЂР°РЅРЅС‹Р№ РїР°Рє С‚СЂСЏСЃС‘С‚СЃСЏ Рё РІСЃРїС‹С…РёРІР°РµС‚ */
   .d-card.pack.burst{
     border-color:rgba(255,255,255,.5);
     animation:packBurst .8s cubic-bezier(.36,.07,.19,.97) both;
@@ -1607,7 +1587,7 @@
   }
   .dd-ico{ width:20px; height:20px; flex-shrink:0; color:var(--lilac); opacity:.8; }
 
-  /* кнопка «Забрать карточку» */
+  /* РєРЅРѕРїРєР° В«Р—Р°Р±СЂР°С‚СЊ РєР°СЂС‚РѕС‡РєСѓВ» */
   .collect-btn{
     display:flex; align-items:center; justify-content:center; gap:8px;
     margin:16px auto 4px;
@@ -1620,7 +1600,7 @@
     color:#fff;
     background:linear-gradient(135deg, #1ED4FF 0%, #2397FF 50%, #1A6BD8 100%);
     background-size:200% 200%;
-    animation:collectFlow 3.5s ease-in-out infinite, collectIn .5s var(--ease) .15s both;
+    animation:collectIn .5s var(--ease) .15s both;
     border:1px solid rgba(255,255,255,.24);
     box-shadow:0 0 26px -4px rgba(30,212,255,.8), inset 0 1px 0 rgba(255,255,255,.35);
     transition:transform .18s var(--ease), box-shadow .2s var(--ease);
@@ -1661,7 +1641,7 @@
   }
 
   /* =========================================================
-     ИНВЕНТАРЬ КАРТОЧЕК (строки: миниатюра + инфо + действие)
+     РРќР’Р•РќРўРђР Р¬ РљРђР РўРћР§Р•Рљ (СЃС‚СЂРѕРєРё: РјРёРЅРёР°С‚СЋСЂР° + РёРЅС„Рѕ + РґРµР№СЃС‚РІРёРµ)
      ========================================================= */
   .inventory{ display:flex; flex-direction:column; gap:12px; }
   .inv-row{
@@ -1674,8 +1654,8 @@
       radial-gradient(120% 140% at 0% -20%, rgba(94,116,134,.28) 0%, rgba(6,20,27,0) 55%),
       linear-gradient(160deg, rgba(74,92,106,.3) 0%, rgba(17,33,45,.7) 100%);
     border:1px solid rgba(255,255,255,.13);
-    backdrop-filter:blur(20px) saturate(1.6);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(14px) saturate(1.3);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.12),
       0 14px 30px -14px rgba(0,0,0,.75),
@@ -1818,7 +1798,7 @@
   }
 
   /* =========================================================
-     ОКНО АДМИНКИ (владелец + админы)
+     РћРљРќРћ РђР”РњРРќРљР (РІР»Р°РґРµР»РµС† + Р°РґРјРёРЅС‹)
      ========================================================= */
   .admin-panel-sheet{ max-width:440px; max-height:82vh; }
   .admin-panel-body{
@@ -1909,7 +1889,7 @@
   .ap-btn.saving{ opacity:.55; pointer-events:none; }
 
   /* =========================================================
-     ОКНО ПОЛЬЗОВАТЕЛЕЙ (аватар, имя, ID, баланс)
+     РћРљРќРћ РџРћР›Р¬Р—РћР’РђРўР•Р›Р•Р™ (Р°РІР°С‚Р°СЂ, РёРјСЏ, ID, Р±Р°Р»Р°РЅСЃ)
      ========================================================= */
   .users-sheet{ max-width:440px; max-height:82vh; }
   .notif-sheet, .tasks-sheet, .refs-sheet, .stake-ov-sheet, .withdraw-sheet{ max-width:440px; max-height:min(68vh, 480px); }
@@ -1974,9 +1954,9 @@
   }
 
   /* =========================================================
-     ПОСЛЕ ЗАГРУЗКИ (сплэш скрыт): всё уже на своих местах,
-     каскадные анимации появления не перезапускаются при
-     переключении вкладок
+     РџРћРЎР›Р• Р—РђР“Р РЈР—РљР (СЃРїР»СЌС€ СЃРєСЂС‹С‚): РІСЃС‘ СѓР¶Рµ РЅР° СЃРІРѕРёС… РјРµСЃС‚Р°С…,
+     РєР°СЃРєР°РґРЅС‹Рµ Р°РЅРёРјР°С†РёРё РїРѕСЏРІР»РµРЅРёСЏ РЅРµ РїРµСЂРµР·Р°РїСѓСЃРєР°СЋС‚СЃСЏ РїСЂРё
+     РїРµСЂРµРєР»СЋС‡РµРЅРёРё РІРєР»Р°РґРѕРє
      ========================================================= */
   .preloaded .view{ animation:none; }
   .preloaded .card{
@@ -1997,7 +1977,7 @@
   .preloaded .mh-grid,
   .preloaded .mh-promo{ animation:none; }
 
-  /* плавный вход контента после ухода сплэша */
+  /* РїР»Р°РІРЅС‹Р№ РІС…РѕРґ РєРѕРЅС‚РµРЅС‚Р° РїРѕСЃР»Рµ СѓС…РѕРґР° СЃРїР»СЌС€Р° */
   body:not(.ready) .view{
     opacity:0;
     transform:translateY(14px) scale(.985);
@@ -2010,8 +1990,8 @@
   }
 
   /* =========================================================
-     ГЛАВНАЯ 3.0 — neon dark futuristic
-     header / профиль+балансы / streak / карточки / сетка / промо
+     Р“Р›РђР’РќРђРЇ 3.0 вЂ” neon dark futuristic
+     header / РїСЂРѕС„РёР»СЊ+Р±Р°Р»Р°РЅСЃС‹ / streak / РєР°СЂС‚РѕС‡РєРё / СЃРµС‚РєР° / РїСЂРѕРјРѕ
      ========================================================= */
 
   /* ---- HEADER ---- */
@@ -2055,8 +2035,6 @@
     background:rgba(10,25,43,.65);
     border:1px solid rgba(35,151,255,.28);
     cursor:pointer;
-    backdrop-filter:blur(14px) saturate(1.5);
-    -webkit-backdrop-filter:blur(14px) saturate(1.5);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 10px 22px -12px rgba(0,0,0,.7);
     transition:transform .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease);
   }
@@ -2079,7 +2057,7 @@
     to{ transform:scale(1); }
   }
 
-  /* ---- ПРОФИЛЬ + БАЛАНСЫ ---- */
+  /* ---- РџР РћР¤РР›Р¬ + Р‘РђР›РђРќРЎР« ---- */
   .mh-profile{
     display:flex; flex-direction:column; gap:14px;
     padding:16px 16px 18px;
@@ -2089,8 +2067,8 @@
       radial-gradient(120% 100% at 0% 0%, rgba(94,116,134,.18) 0%, rgba(2,13,26,0) 55%),
       linear-gradient(160deg, rgba(74,92,106,.38) 0%, rgba(17,33,45,.62) 100%);
     border:1px solid rgba(255,255,255,.16);
-    backdrop-filter:blur(22px) saturate(1.7);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    backdrop-filter:blur(15px) saturate(1.3);
+    -webkit-backdrop-filter:blur(15px) saturate(1.3);
     box-shadow:0 24px 48px -20px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.18), inset 0 -1px 0 rgba(255,255,255,.05), 0 0 44px -10px rgba(94,116,134,.4);
     animation:panelIn .6s var(--ease) .06s both;
   }
@@ -2102,8 +2080,6 @@
     border-radius:14px;
     background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.5) 100%);
     border:1px solid rgba(94,116,134,.38);
-    backdrop-filter:blur(20px) saturate(1.6);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 -8px 16px -12px rgba(0,0,0,.6);
   }
   .bal-ico{ width:40px; height:40px; flex-shrink:0; }
@@ -2133,8 +2109,8 @@
     margin-bottom:14px;
     background:linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.5) 100%);
     border:1px solid rgba(255,255,255,.14);
-    backdrop-filter:blur(20px) saturate(1.6);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(14px) saturate(1.3);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.12), 0 10px 24px -14px rgba(0,0,0,.7);
     animation:stepIn .4s var(--ease) .1s both;
   }
@@ -2161,7 +2137,7 @@
   .streak-coin{ width:21px; height:21px; filter:drop-shadow(0 0 6px rgba(255,199,44,.7)); }
   .streak-bonus{ color:#FFC72C; font-size:13px; font-weight:800; }
 
-  /* ---- ПОДСКАЗКА ПОД КАРТОЧКАМИ ---- */
+  /* ---- РџРћР”РЎРљРђР—РљРђ РџРћР” РљРђР РўРћР§РљРђРњР ---- */
   .dp-hint{
     display:flex; align-items:center; justify-content:center; gap:7px;
     margin-top:12px;
@@ -2174,7 +2150,7 @@
     50%{ transform:translate(3px,-3px); opacity:1; }
   }
 
-  /* ---- СЕТКА 2×2: Задания / Стейкинг / Рефералы / Вывод ---- */
+  /* ---- РЎР•РўРљРђ 2Г—2: Р—Р°РґР°РЅРёСЏ / РЎС‚РµР№РєРёРЅРі / Р РµС„РµСЂР°Р»С‹ / Р’С‹РІРѕРґ ---- */
   .mh-grid{
     display:grid; grid-template-columns:1fr 1fr; gap:12px;
     margin-top:16px;
@@ -2190,8 +2166,8 @@
       radial-gradient(120% 140% at 0% -10%, rgba(94,116,134,.18) 0%, rgba(6,20,27,0) 55%),
       linear-gradient(160deg, rgba(74,92,106,.34) 0%, rgba(17,33,45,.55) 100%);
     border:1px solid rgba(94,116,134,.32);
-    backdrop-filter:blur(20px) saturate(1.6);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
+    backdrop-filter:blur(14px) saturate(1.3);
+    -webkit-backdrop-filter:blur(14px) saturate(1.3);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 14px 28px -18px rgba(0,0,0,.75);
     transition:transform .2s var(--ease), border-color .2s var(--ease), box-shadow .2s var(--ease);
     animation:stepIn .4s var(--ease) both;
@@ -2222,7 +2198,7 @@
   }
   .mh-chevron{ width:16px; height:16px; flex-shrink:0; color:var(--lilac-light); }
 
-  /* ---- ПРОМО: выполни задания получи карточку ---- */
+  /* ---- РџР РћРњРћ: РІС‹РїРѕР»РЅРё Р·Р°РґР°РЅРёСЏ РїРѕР»СѓС‡Рё РєР°СЂС‚РѕС‡РєСѓ ---- */
   .mh-promo{
     position:relative;
     display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px;
@@ -2233,8 +2209,8 @@
       radial-gradient(140% 120% at 100% 0%, rgba(94,116,134,.16) 0%, rgba(2,13,26,0) 60%),
       linear-gradient(160deg, rgba(74,92,106,.38) 0%, rgba(17,33,45,.6) 100%);
     border:1px solid rgba(94,116,134,.36);
-    backdrop-filter:blur(22px) saturate(1.7);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    backdrop-filter:blur(15px) saturate(1.3);
+    -webkit-backdrop-filter:blur(15px) saturate(1.3);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 20px 40px -22px rgba(0,0,0,.8), 0 0 34px -12px rgba(94,116,134,.4);
     animation:panelIn .6s var(--ease) .16s both;
     overflow:hidden;
@@ -2280,7 +2256,7 @@
   }
 
   /* =========================================================
-     СПИСКИ В НОВЫХ ОКНАХ: Задания / Рефералы / Стейкинг / Вывод / Уведомления
+     РЎРџРРЎРљР Р’ РќРћР’Р«РҐ РћРљРќРђРҐ: Р—Р°РґР°РЅРёСЏ / Р РµС„РµСЂР°Р»С‹ / РЎС‚РµР№РєРёРЅРі / Р’С‹РІРѕРґ / РЈРІРµРґРѕРјР»РµРЅРёСЏ
      ========================================================= */
   .task-list, .ref-list, .so-list, .notif-list{
     display:flex; flex-direction:column; gap:10px;
@@ -2332,7 +2308,7 @@
     border:1px solid rgba(255,255,255,.14); background:rgba(6,20,27,.4);
   }
 
-  /* рефералы */
+  /* СЂРµС„РµСЂР°Р»С‹ */
   .ref-label{
     color:var(--lilac-pale);
     font-size:12.5px; font-weight:800;
@@ -2348,8 +2324,6 @@
       radial-gradient(130% 160% at 0% 0%, rgba(182,155,255,.12) 0%, rgba(6,20,27,0) 55%),
       linear-gradient(160deg, rgba(74,92,106,.32) 0%, rgba(17,33,45,.56) 100%);
     border:1px solid rgba(255,255,255,.16);
-    backdrop-filter:blur(20px) saturate(1.6);
-    -webkit-backdrop-filter:blur(20px) saturate(1.6);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.14), 0 14px 30px -18px rgba(0,0,0,.75);
   }
   .ref-link-ico{
@@ -2472,7 +2446,7 @@
   .chip-task{ color:#FFD23A; }
   .chip-streak{ color:#FF9D4D; }
 
-  /* стейкинг-обзор */
+  /* СЃС‚РµР№РєРёРЅРі-РѕР±Р·РѕСЂ */
   .so-row{
     display:flex; align-items:center; gap:11px;
     padding:9px 12px;
@@ -2486,7 +2460,7 @@
   .so-row-left{ color:var(--lilac-light); font-size:10.5px; font-weight:600; margin-top:1px; }
   .so-row-reward{ color:#fff; font-size:12.5px; font-weight:800; flex-shrink:0; text-shadow:0 0 10px rgba(94,116,134,.7); }
 
-  /* вывод */
+  /* РІС‹РІРѕРґ */
   .wd-balance-box{ text-align:center; padding:16px 0 8px; }
   .wd-balance-label{ color:var(--lilac-light); font-size:11.5px; font-weight:600; }
   .wd-balance-num{ color:#fff; font-size:30px; font-weight:800; margin-top:3px; text-shadow:0 0 20px rgba(255,176,32,.5); }
@@ -2519,8 +2493,8 @@
       radial-gradient(140% 120% at 50% -20%, rgba(94,116,134,.22) 0%, rgba(6,20,27,0) 60%),
       linear-gradient(160deg, rgba(74,92,106,.38) 0%, rgba(17,33,45,.62) 100%);
     border:1px solid rgba(94,116,134,.36);
-    backdrop-filter:blur(22px) saturate(1.7);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    backdrop-filter:blur(15px) saturate(1.3);
+    -webkit-backdrop-filter:blur(15px) saturate(1.3);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 24px 56px -20px rgba(0,0,0,.85), 0 0 44px -14px rgba(94,116,134,.45);
     border-radius:24px;
     padding:18px 16px 16px;
@@ -2536,20 +2510,20 @@
   .stake-sheet{ max-height:calc(100vh - 28px); }
   .notif-sheet, .stake-prog-sheet{ bottom:14px; }
 
-  /* ---- daily-panel в палитре профиля ---- */
+  /* ---- daily-panel РІ РїР°Р»РёС‚СЂРµ РїСЂРѕС„РёР»СЏ ---- */
   .daily-panel{
     background:
       radial-gradient(140% 120% at 50% -20%, rgba(94,116,134,.2) 0%, rgba(6,20,27,0) 60%),
       linear-gradient(160deg, rgba(74,92,106,.38) 0%, rgba(17,33,45,.62) 100%);
     border:1px solid rgba(94,116,134,.36);
-    backdrop-filter:blur(22px) saturate(1.7);
-    -webkit-backdrop-filter:blur(22px) saturate(1.7);
+    backdrop-filter:blur(15px) saturate(1.3);
+    -webkit-backdrop-filter:blur(15px) saturate(1.3);
     box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 24px 56px -20px rgba(0,0,0,.85), 0 0 44px -14px rgba(94,116,134,.45);
   }
   .mh-bell{ margin-top:4px; margin-right:2px; }
   .mh-titles{ transform:translateY(2px); }
 
-  /* ---- окно «Твои карточки на сегодня»: компактные рамки ---- */
+  /* ---- РѕРєРЅРѕ В«РўРІРѕРё РєР°СЂС‚РѕС‡РєРё РЅР° СЃРµРіРѕРґРЅСЏВ»: РєРѕРјРїР°РєС‚РЅС‹Рµ СЂР°РјРєРё ---- */
   .daily-panel{ padding:16px 14px 18px; }
   .dp-head{ flex-wrap:wrap; gap:8px; }
   .dp-title{ font-size:15.5px; }
@@ -2561,7 +2535,7 @@
   .daily-done{ margin-top:10px; padding:12px 14px; }
 
   /* =========================================================
-     ОКНО «СТЕЙКИНГ — ПРОГРЕСС» (08)
+     РћРљРќРћ В«РЎРўР•Р™РљРРќР“ вЂ” РџР РћР“Р Р•РЎРЎВ» (08)
      ========================================================= */
   .sp-title{
     display:flex; align-items:center; gap:6px;
@@ -2586,8 +2560,6 @@
       radial-gradient(140% 120% at 0% -10%, rgba(35,151,255,.12) 0%, rgba(2,13,26,0) 60%),
       linear-gradient(165deg, rgba(15,35,58,.55) 0%, rgba(4,15,28,.85) 100%);
     border:1px solid rgba(35,151,255,.2);
-    backdrop-filter:blur(18px) saturate(1.5);
-    -webkit-backdrop-filter:blur(18px) saturate(1.5);
   }
   .sp-card{
     position:relative; flex-shrink:0;

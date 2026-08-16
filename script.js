@@ -1476,22 +1476,35 @@ function fmtStakeLeft(ms){
   return d ? `${d}д ${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(h)}:${pad(m)}:${pad(sec)}`;
 }
 
+let spRenderSig = null;
 function renderStakeProgress(){
   const card = stakeProgCard;
   if(!card) return;
   const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
   const { pct } = stakeElapsed(card);
   const done = pct >= 100;
-  if(spCardEl){
-    spCardEl.innerHTML =
-      `<img src="${card.img}" alt="${card.rarity}">` +
-      `<div class="sp-card-name">${card.rarity}</div>`;
-    const glow = st.colors[0] || '#9BA7B6';
-    spCardEl.style.setProperty('--t1', done ? '#20E875' : glow);
-    spCardEl.style.setProperty('--t1b', done ? 'rgba(32,232,117,.8)' : `${glow}aa`);
-    spCardEl.style.setProperty('--t1g', done ? 'rgba(32,232,117,.5)' : `${glow}55`);
+  const rp = Math.round(pct);
+  const sig = `${done}|${rp}|${card.period}|${card.rarity}`;
+  if(spRenderSig !== sig){
+    spRenderSig = sig;
+    if(spCardEl){
+      spCardEl.innerHTML =
+        `<img src="${card.img}" alt="${card.rarity}">` +
+        `<div class="sp-card-name">${card.rarity}</div>`;
+      const glow = st.colors[0] || '#9BA7B6';
+      spCardEl.style.setProperty('--t1', done ? '#20E875' : glow);
+      spCardEl.style.setProperty('--t1b', done ? 'rgba(32,232,117,.8)' : `${glow}aa`);
+      spCardEl.style.setProperty('--t1g', done ? 'rgba(32,232,117,.5)' : `${glow}55`);
+    }
+    if(spPeriodEl) spPeriodEl.textContent = STAKE_LABEL[card.period] || card.period;
+    const r = stakeRange(card, card.pct);
+    if(spRewardEl) spRewardEl.textContent = `${r.min}–${r.max} Robux`;
+    if(spProgressFillEl) spProgressFillEl.style.width = `${rp}%`;
+    if(spProgressTextEl) spProgressTextEl.textContent = `${rp}%`;
+    if(spScratchBtn) spScratchBtn.classList.toggle('hidden', !done);
+    if(spKeepBtn) spKeepBtn.classList.toggle('hidden', done);
+    if(spAbortBtn) spAbortBtn.classList.toggle('hidden', done);
   }
-  if(spPeriodEl) spPeriodEl.textContent = STAKE_LABEL[card.period] || card.period;
   if(spTimeEl){
     const pad = n => String(n).padStart(2, '0');
     if(done){
@@ -1514,13 +1527,6 @@ function renderStakeProgress(){
     }
     spTimeEl.classList.toggle('done', done);
   }
-  const r = stakeRange(card, card.pct);
-  if(spRewardEl) spRewardEl.textContent = `${r.min}–${r.max} Robux`;
-  if(spProgressFillEl) spProgressFillEl.style.width = `${Math.round(pct)}%`;
-  if(spProgressTextEl) spProgressTextEl.textContent = `${Math.round(pct)}%`;
-  if(spScratchBtn) spScratchBtn.classList.toggle('hidden', !done);
-  if(spKeepBtn) spKeepBtn.classList.toggle('hidden', done);
-  if(spAbortBtn) spAbortBtn.classList.toggle('hidden', done);
 }
 
 function openStakeProgress(card){
