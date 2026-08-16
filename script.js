@@ -780,7 +780,7 @@ function renderDaily(){
   const d = state.daily;
   dailyGridEl.innerHTML = '';
   dailyGridEl.classList.remove('solo', 'hidden');
-  collectBtnEl.classList.add('hidden');
+  collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
   dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
   if(dpHintEl) dpHintEl.classList.toggle('hidden', !!(d.revealed || d.collected));
   startDailyTimer(d.revealed);
@@ -788,9 +788,6 @@ function renderDaily(){
   if(d.revealed){
     dailyGridEl.classList.add('solo');
     dailyGridEl.innerHTML = dropHTML(d.rarity, d.reward);
-    if(!rrSheet.classList.contains('open')){
-      setTimeout(() => showResultWindow(d.rarity, d.reward, d.others), 350);
-    }
     return;
   }
   [0, 1, 2].forEach(id => {
@@ -896,6 +893,7 @@ function showResultWindow(rarity, reward, others){
 
 function closeResultWindow(){
   closeModal(rrSheet, rrBackdrop);
+  renderDaily();
 }
 
 function collectDailyCard(){
@@ -2219,7 +2217,7 @@ if(tg){
 }
 
 collectBtnEl.addEventListener('click', collectDailyCard);
-rrBtn.addEventListener('click', () => { closeResultWindow(); collectDailyCard(); });
+rrBtn.addEventListener('click', () => { closeModal(rrSheet, rrBackdrop); collectDailyCard(); });
 rrBackdrop.addEventListener('click', () => closeResultWindow());
 
 stakeClose.addEventListener('click', () => closeModal(stakeSheet, stakeBackdrop));
