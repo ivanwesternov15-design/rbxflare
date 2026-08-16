@@ -631,7 +631,6 @@ function animateModal(modal, bd, open){
     const o = open ? e : rev;
     bd.style.opacity = o;
     modal.style.opacity = o;
-    modal.style.filter = `blur(${rev * 8}px)`;
     modal.style.transform = `translate(-50%, ${rev * 30}px)`;
     if(p < 1){ requestAnimationFrame(frame); }
     else if(!open){
@@ -719,6 +718,13 @@ function rollRarity(){
 const dailyGridEl = document.getElementById('dailyGrid');
 const dailyDoneEl = document.getElementById('dailyDone');
 const collectBtnEl = document.getElementById('collectBtn');
+const rrSheet = document.getElementById('rrSheet');
+const rrBackdrop = document.getElementById('rrBackdrop');
+const rrMainCard = document.getElementById('rrMainCard');
+const rrMainImg = document.getElementById('rrMainImg');
+const rrMainNum = document.getElementById('rrMainNum');
+const rrOthersRow = document.getElementById('rrOthersRow');
+const rrBtn = document.getElementById('rrBtn');
 const balanceValueEl = document.getElementById('balanceValue');
 const heroAvatarEl = document.getElementById('heroAvatar');
 const heroNameEl = document.getElementById('heroName');
@@ -774,7 +780,7 @@ function renderDaily(){
   const d = state.daily;
   dailyGridEl.innerHTML = '';
   dailyGridEl.classList.remove('solo', 'hidden');
-  collectBtnEl.classList.toggle('hidden', !(d.revealed && !d.collected));
+  collectBtnEl.classList.add('hidden');
   dailyDoneEl.classList.toggle('hidden', !(d.revealed && d.collected));
   if(dpHintEl) dpHintEl.classList.toggle('hidden', !!(d.revealed || d.collected));
   startDailyTimer(d.revealed);
@@ -782,6 +788,9 @@ function renderDaily(){
   if(d.revealed){
     dailyGridEl.classList.add('solo');
     dailyGridEl.innerHTML = dropHTML(d.rarity, d.reward);
+    if(!rrSheet.classList.contains('open')){
+      setTimeout(() => showResultWindow(d.rarity, d.reward, d.others), 350);
+    }
     return;
   }
   [0, 1, 2].forEach(id => {
@@ -850,7 +859,6 @@ function revealDailyCard(id){
   setTimeout(() => {
     dailyGridEl.classList.add('solo');
     dailyGridEl.innerHTML = dropHTML(rarity, reward);
-    collectBtnEl.classList.remove('hidden');
     startDailyTimer(true);
   }, 420);
   if(dpHintEl) dpHintEl.classList.add('hidden');
@@ -858,6 +866,36 @@ function revealDailyCard(id){
   if(rarity === 'Diamond' || rarity === 'Mythic'){
     addNotification('gem', `Выпала карта ${rarity}!`, `Тебе повезло — редкая карточка ${rarity} принесла +${reward} Robux`);
   }
+  const others = [
+    [randInt(5, Math.max(10, Math.round(reward * .35))), 'gold'],
+    [randInt(5, Math.max(10, Math.round(reward * .7))), 'violet'],
+  ];
+  state.daily.others = others;
+  setTimeout(() => showResultWindow(rarity, reward, others), 520);
+}
+
+function randInt(min, max){
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function showResultWindow(rarity, reward, others){
+  const st = TIER_STYLE[rarity] || TIER_STYLE.Basic;
+  rrMainCard.style.setProperty('--t1', st.colors[0]);
+  rrMainCard.style.setProperty('--t2', st.colors[1]);
+  rrMainImg.src = st.img;
+  rrMainNum.textContent = reward;
+  rrOthersRow.innerHTML = (others || []).map(o => {
+    const n = Math.max(1, Math.round(o[0]));
+    return `<div class="rr-other-card ${o[1] || 'gold'}">
+      <div class="rr-other-num">${n}</div>
+      <div class="rr-other-sub">Robux</div>
+    </div>`;
+  }).join('');
+  openModal(rrSheet, rrBackdrop);
+}
+
+function closeResultWindow(){
+  closeModal(rrSheet, rrBackdrop);
 }
 
 function collectDailyCard(){
@@ -2166,6 +2204,8 @@ if(tg){
 }
 
 collectBtnEl.addEventListener('click', collectDailyCard);
+rrBtn.addEventListener('click', () => { closeResultWindow(); collectDailyCard(); });
+rrBackdrop.addEventListener('click', () => closeResultWindow());
 
 stakeClose.addEventListener('click', () => closeModal(stakeSheet, stakeBackdrop));
 stakeBackdrop.addEventListener('click', () => closeModal(stakeSheet, stakeBackdrop));

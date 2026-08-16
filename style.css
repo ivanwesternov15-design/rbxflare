@@ -371,7 +371,6 @@
     box-shadow:0 24px 64px -16px rgba(0,0,0,.75), inset 0 1px 0 rgba(255,255,255,.16), 0 0 44px -10px rgba(94,116,134,.4);
     opacity:0;
     transform:translate(-50%, 30px);
-    filter:blur(10px);
     pointer-events:none;
     display:flex;
     flex-direction:column;
@@ -381,7 +380,6 @@
     opacity:1;
     visibility:visible;
     transform:translate(-50%, 0);
-    filter:blur(0);
     pointer-events:auto;
   }
   .sheet::before{
@@ -2698,4 +2696,183 @@
     .promo-text{ font-size:9px; }
     .promo-title{ font-size:13px; }
     .promo-btn{ grid-column:1 / -1; width:100%; margin-top:4px; }
+  }
+
+  /* =========================================================
+     ОКНО «ОТКРЫТИЕ КАРТОЧКИ — РЕЗУЛЬТАТ»
+     ========================================================= */
+  .rr-sheet{
+    max-width:344px;
+    border-radius:16px;
+    background:rgba(13,20,34,.96);
+    border:1px solid rgba(255,255,255,.05);
+    box-shadow:0 24px 60px -18px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.05);
+    backdrop-filter:blur(18px) saturate(1.3);
+    -webkit-backdrop-filter:blur(18px) saturate(1.3);
+  }
+  .rr-inner{
+    display:flex; flex-direction:column;
+    padding:24px 20px 16px;
+  }
+  .rr-title{
+    text-align:center;
+    color:#E6E6E6;
+    font-size:16px; font-weight:600;
+    letter-spacing:.2px;
+  }
+  .rr-stage{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+    margin:16px 0;
+    padding:14px 0;
+  }
+  .rr-rays{
+    position:absolute;
+    top:50%; left:50%;
+    width:250px; height:250px;
+    margin:-125px 0 0 -125px;
+    pointer-events:none;
+    opacity:.55;
+  }
+  .rr-rays-a{ animation:rrSpin 18s linear infinite; }
+  .rr-rays-b{ animation:rrSpin 26s linear infinite reverse; }
+  @keyframes rrSpin{
+    to{ transform:rotate(360deg); }
+  }
+  .rr-sp{
+    animation:rrTwinkle 2.8s ease-in-out infinite;
+  }
+  .rr-sp.s2{ animation-delay:.7s; }
+  .rr-sp.s3{ animation-delay:1.4s; }
+  .rr-sp.s4{ animation-delay:.35s; }
+  .rr-sp.s5{ animation-delay:1.05s; }
+  @keyframes rrTwinkle{
+    0%,100%{ opacity:.25; transform:translateY(0) scale(.85); }
+    50%{ opacity:1; transform:translateY(-5px) scale(1.1); }
+  }
+  .rr-main-card{
+    position:relative;
+    width:120px; height:140px;
+    display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
+    padding:12px 8px 14px;
+    border-radius:16px;
+    background:
+      radial-gradient(90% 70% at 50% 18%, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 55%),
+      linear-gradient(175deg, #1A1F3A 0%, #151933 100%);
+    border:1px solid var(--t2, #8B5CF6);
+    box-shadow:0 0 26px -6px var(--t1, rgba(139,92,246,.7)), inset 0 1px 0 rgba(255,255,255,.12);
+    overflow:hidden;
+    animation:rrPop .5s var(--ease) both;
+  }
+  .rr-main-card::before{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      linear-gradient(115deg, transparent 42%, rgba(255,255,255,.16) 50%, transparent 58%),
+      radial-gradient(60% 60% at 50% 42%, rgba(255,255,255,.07) 0%, rgba(255,255,255,0) 70%);
+    pointer-events:none;
+  }
+  .rr-main-card img{
+    position:absolute; top:-14px; left:50%;
+    transform:translateX(-50%);
+    width:128px; height:128px;
+    object-fit:contain;
+    filter:drop-shadow(0 6px 14px rgba(0,0,0,.55));
+    pointer-events:none;
+  }
+  .rr-main-num{
+    position:relative;
+    color:#FFFFFF;
+    font-size:48px; font-weight:700;
+    line-height:1.05;
+    font-variant-numeric:tabular-nums;
+    text-shadow:0 0 18px var(--t1, rgba(139,92,246,.8));
+  }
+  .rr-main-sub{
+    position:relative;
+    color:#E6E6E6;
+    font-size:16px; font-weight:600;
+  }
+  @keyframes rrPop{
+    from{ opacity:0; transform:translateY(18px) scale(.82); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  .rr-others{
+    margin-top:2px;
+    padding:16px;
+    border-radius:16px;
+    background:#121A2B;
+    border:1px solid rgba(255,255,255,.05);
+  }
+  .rr-others-title{
+    text-align:center;
+    color:#8B93A6;
+    font-size:14px; font-weight:600;
+    margin-bottom:12px;
+  }
+  .rr-others-row{
+    display:flex; justify-content:center; gap:12px;
+  }
+  .rr-other-card{
+    position:relative;
+    width:110px; height:110px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:2px;
+    border-radius:16px;
+    overflow:hidden;
+    animation:rrPop .5s var(--ease) both;
+  }
+  .rr-other-card:nth-child(1){ animation-delay:.12s; }
+  .rr-other-card:nth-child(2){ animation-delay:.2s; }
+  .rr-other-card.gold{
+    background:linear-gradient(175deg, #2A240D 0%, #1E1906 100%);
+    border:1px solid rgba(255,216,56,.45);
+    box-shadow:0 0 22px -6px rgba(255,216,56,.55), inset 0 1px 0 rgba(255,255,255,.1);
+  }
+  .rr-other-card.violet{
+    background:linear-gradient(175deg, #221633 0%, #1A1126 100%);
+    border:1px solid rgba(139,92,246,.5);
+    box-shadow:0 0 22px -6px rgba(139,92,246,.6), inset 0 1px 0 rgba(255,255,255,.1);
+  }
+  .rr-other-card::before{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(70% 70% at 50% 30%, rgba(255,255,255,.09) 0%, rgba(255,255,255,0) 70%);
+    pointer-events:none;
+  }
+  .rr-other-num{
+    position:relative;
+    color:#FFFFFF;
+    font-size:40px; font-weight:700;
+    line-height:1.05;
+    font-variant-numeric:tabular-nums;
+  }
+  .rr-other-sub{
+    position:relative;
+    color:#E6E6E6;
+    font-size:14px; font-weight:600;
+  }
+  .rr-btn{
+    width:280px; height:48px;
+    margin:16px auto 0;
+    display:flex; align-items:center; justify-content:center;
+    border:none; border-radius:12px;
+    cursor:pointer;
+    color:#FFFFFF;
+    font-family:var(--font-body);
+    font-size:16px; font-weight:600;
+    background:linear-gradient(160deg, #3686FF 0%, #2166D9 100%);
+    box-shadow:0 10px 26px -8px rgba(54,134,255,.65), inset 0 1px 0 rgba(255,255,255,.28);
+    transition:transform .16s var(--ease), filter .16s var(--ease), box-shadow .2s var(--ease);
+  }
+  .rr-btn:active{
+    transform:scale(.97);
+    filter:brightness(.85);
+    box-shadow:0 6px 16px -8px rgba(54,134,255,.5), inset 0 1px 0 rgba(255,255,255,.2);
+  }
+  .rr-note{
+    margin-top:12px;
+    text-align:center;
+    color:#6F7685;
+    font-size:13px; font-weight:500;
   }
