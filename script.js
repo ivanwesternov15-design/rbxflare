@@ -239,6 +239,50 @@ function saveState(){
       notifications: state.notifications,
     }));
   }catch(e){}
+  scheduleSync();
+}
+
+let syncTimer = null;
+function scheduleSync(){
+  if(syncTimer) return;
+  syncTimer = setTimeout(() => {
+    syncTimer = null;
+    const init = tgInitData();
+    if(!init) return;
+    fetch('/api/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: init, data: {
+        balance: state.balance,
+        coins: state.coins,
+        inventory: state.inventory,
+        tasks: state.tasks,
+        daily: state.daily,
+        streak: state.streak,
+        dailyResetTs: state.dailyResetTs,
+      }}),
+    }).catch(() => {});
+  }, 1200);
+}
+
+async function loadServerState(){
+  try{
+    const init = tgInitData();
+    if(!init) return;
+    const res = await fetch('/api/sync?initData=' + encodeURIComponent(init));
+    const data = await res.json();
+    if(data.ok && data.data){
+      const d = data.data;
+      if(Array.isArray(d.inventory)) state.inventory = d.inventory;
+      if(typeof d.balance === 'number' && d.balance >= 0) state.balance = d.balance;
+      if(typeof d.coins === 'number' && d.coins >= 0) state.coins = d.coins;
+      if(d.tasks && typeof d.tasks === 'object') state.tasks = d.tasks;
+      if(d.daily && typeof d.daily === 'object') state.daily = d.daily;
+      if(d.streak && typeof d.streak === 'object') state.streak = d.streak;
+      if(typeof d.dailyResetTs === 'number') state.dailyResetTs = d.dailyResetTs;
+      saveState();
+    }
+  }catch(e){}
 }
 
 /* =========================================================
@@ -1379,8 +1423,10 @@ function renderInventory(){
   cards.forEach((card, i) => {
     const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
     const bg = INV_BG[card.rarity] || INV_BG.Basic;
+    const staked = card.status === 'staking';
+    const stakedDone = staked && card.until <= Date.now();
     const el = document.createElement('div');
-    el.className = 'inv-tile' + (card.status === 'used' ? ' used' : '') + (card.status === 'staking' ? ' staking' : '');
+    el.className = 'inv-tile' + (card.status === 'used' ? ' used' : '') + (staked ? (stakedDone ? ' done' : ' staking') : '');
     el.style.setProperty('--t1', st.colors[0]);
     el.style.setProperty('--t2', st.colors[1]);
     el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
@@ -1388,7 +1434,8 @@ function renderInventory(){
     el.style.setProperty('--bg1', bg[0]);
     el.style.setProperty('--bg2', bg[1]);
     el.style.animationDelay = `${i * 70}ms`;
-    const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
+    const statusText = staked ? (stakedDone ? 'Стейкинг завершён' : 'В стейкинге') : (card.status === 'used' ? 'Использована' : 'Доступна');
+    const statusCls = stakedDone ? 'done' : (staked ? 'staking' : (card.status === 'used' ? 'used' : ''));
     el.innerHTML =
       `<div class="it-top">` +
         `<div class="it-card">` +
@@ -1402,8 +1449,8 @@ function renderInventory(){
         `</div>` +
       `</div>` +
       `<div class="it-title">${card.rarity}</div>` +
-      `<div class="it-status ${card.status === 'staking' ? 'staking' : card.status === 'used' ? 'used' : ''}">${statusText}</div>` +
-      (card.status === 'staking' ? `<div class="it-until">осталось ${fmtLeft(card.until)}</div>` : '') +
+      `<div class="it-status ${statusCls}">${statusText}</div>` +
+      (staked ? `<div class="it-until">${stakedDone ? 'Можно стереть награду' : 'Осталось ' + fmtLeft(card.until)}</div>` : '') +
       `<div class="it-act">` +
         (card.status === 'available'
           ? `<button class="stake-btn" data-id="${card.id}" data-i="${i}">Стейкинг</button>`
@@ -2245,6 +2292,7 @@ if(coinsValueEl) coinsValueEl.textContent = state.coins;
 const splashEl = document.getElementById('splash');
 const bootStart = performance.now();
 Promise.allSettled([
+  loadServerState(),
   loadProfile(),
   refreshLibrary(),
   loadSettings(),

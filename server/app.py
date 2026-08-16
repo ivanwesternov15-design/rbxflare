@@ -672,6 +672,47 @@ def api_report_progress():
     return jsonify(ok=True)
 
 
+@app.get("/api/sync")
+def api_sync_get():
+    """Загрузить сохранённое состояние игрока (инвентарь, задания, баланс).
+    Клиент применяет его при старте, чтобы данные были одинаковыми на всех устройствах."""
+    verified = verify_init_data(request.args.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    uid = str(verified["user"]["id"])
+    users = load_users()
+    u = users.get(uid)
+    if not u or not isinstance(u.get("app"), dict):
+        return jsonify(ok=True, data=None)
+    return jsonify(ok=True, data=u["app"])
+
+
+@app.post("/api/sync")
+def api_sync_post():
+    """Сохранить состояние игрока (debounced клиентом)."""
+    body = request.get_json(silent=True) or {}
+    verified = verify_init_data(body.get("initData"))
+    if not verified:
+        return jsonify(ok=False, error="Invalid initData"), 401
+    uid = str(verified["user"]["id"])
+    data = body.get("data")
+    if not isinstance(data, dict):
+        return jsonify(ok=False, error="bad data"), 400
+    users = load_users()
+    if uid not in users:
+        users[uid] = {
+            "id": int(uid),
+            "first_name": "", "last_name": "", "username": "",
+            "photo_url": "", "language_code": "", "is_premium": False,
+            "created_at": int(time.time() * 1000),
+            "first_login": time.strftime("%Y-%m-%d"),
+            "bio": "", "birthday": "",
+        }
+    users[uid]["app"] = data
+    save_users(users)
+    return jsonify(ok=True)
+
+
 @app.post("/api/claim-pending")
 def api_claim_pending():
     """Забрать накопленные монеты за рефералов (начисленные ботом при /start).
