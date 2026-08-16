@@ -1355,6 +1355,14 @@ function fmtLeft(ts){
   return `${m} мин`;
 }
 
+const INV_BG = {
+  Basic:   ['#161D31', '#0C1220'],
+  Silver:  ['#232B44', '#12182E'],
+  Gold:    ['#2A240D', '#1E1906'],
+  Diamond: ['#12233F', '#081226'],
+  Mythic:  ['#221633', '#1A1126'],
+};
+
 function renderInventory(){
   invCountEl.textContent = state.inventory.length;
   const cards = state.inventory.slice().reverse();
@@ -1362,20 +1370,27 @@ function renderInventory(){
   inventoryEmptyEl.classList.toggle('hidden', cards.length > 0);
   cards.forEach((card, i) => {
     const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
+    const bg = INV_BG[card.rarity] || INV_BG.Basic;
     const el = document.createElement('div');
-    el.className = 'inv-row' + (card.status === 'used' ? ' used' : '');
+    el.className = 'inv-row' + (card.status === 'used' ? ' used' : '') + (card.status === 'staking' ? ' staking' : '');
     el.style.setProperty('--t1', st.colors[0]);
     el.style.setProperty('--t2', st.colors[1]);
     el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
+    el.style.setProperty('--t1g', `${st.colors[0]}55`);
+    el.style.setProperty('--bg1', bg[0]);
+    el.style.setProperty('--bg2', bg[1]);
     el.style.animationDelay = `${i * 70}ms`;
     const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
     el.innerHTML =
-      `<div class="inv-thumb">` +
+      `<div class="inv-card">` +
+        `<svg class="inv-rays" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 20.5 20.5 3.5"/><path d="M8.5 21.5l3.4-5.6"/><path d="M21.5 8.5l-5.6-3.4"/></svg>` +
+        `<svg class="inv-spark" viewBox="0 0 24 24"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6-5.6-1.9 5.6-1.9z" fill="currentColor"/></svg>` +
         `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
+        `<div class="inv-card-num">${card.reward}</div>` +
+        `<div class="inv-card-sub">Robux</div>` +
       `</div>` +
       `<div class="inv-mid">` +
         `<div class="inv-title">${card.rarity}</div>` +
-        `<div class="inv-reward">+${card.reward} Robux</div>` +
         `<div class="inv-rowfoot">` +
           `<span class="inv-status ${card.status === 'staking' ? 'staking' : card.status === 'used' ? 'used' : ''}">${statusText}</span>` +
           (card.status === 'staking' ? `<span class="inv-until">осталось ${fmtLeft(card.until)}</span>` : '') +
