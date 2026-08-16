@@ -797,7 +797,16 @@ function renderDaily(){
     el.style.animationDelay = `${id * 130}ms`;
     el.innerHTML =
       `<div class="d-card-num">0${id + 1}</div>` +
-      `<div class="pack-q"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9.8 9a2.4 2.4 0 0 1 4.6 1c0 1.6-2.4 2-2.4 3.4"/><circle cx="12" cy="17" r="1.1" fill="currentColor" stroke="none"/></svg></div>` +
+      `<div class="pack-q">` +
+        `<svg viewBox="0 0 48 64" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">` +
+          `<rect x="3" y="3" width="42" height="58" rx="8"/>` +
+          `<path d="M3 14h42"/>` +
+          `<path d="M24 18.5v6M20.5 21.5h7"/>` +
+          `<path d="M13 36l11 17 11-17z"/>` +
+          `<path d="M24 53l-7.5-12M24 53l7.5-12"/>` +
+          `<circle cx="14" cy="48" r="1.4"/><circle cx="34" cy="48" r="1.4"/>` +
+        `</svg>` +
+      `</div>` +
       `<div class="pack-label">Карточка</div>`;
     if(d.selectedId !== null){
       el.classList.toggle('selected', id === d.selectedId);
@@ -1370,7 +1379,7 @@ function renderInventory(){
     const st = TIER_STYLE[card.rarity] || TIER_STYLE.Basic;
     const bg = INV_BG[card.rarity] || INV_BG.Basic;
     const el = document.createElement('div');
-    el.className = 'inv-row' + (card.status === 'used' ? ' used' : '') + (card.status === 'staking' ? ' staking' : '');
+    el.className = 'inv-tile' + (card.status === 'used' ? ' used' : '') + (card.status === 'staking' ? ' staking' : '');
     el.style.setProperty('--t1', st.colors[0]);
     el.style.setProperty('--t2', st.colors[1]);
     el.style.setProperty('--t3', st.colors[2] || st.colors[1]);
@@ -1380,26 +1389,26 @@ function renderInventory(){
     el.style.animationDelay = `${i * 70}ms`;
     const statusText = card.status === 'staking' ? 'В стейкинге' : (card.status === 'used' ? 'Использована' : 'Доступна');
     el.innerHTML =
-      `<div class="inv-card">` +
-        `<svg class="inv-rays" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 20.5 20.5 3.5"/><path d="M8.5 21.5l3.4-5.6"/><path d="M21.5 8.5l-5.6-3.4"/></svg>` +
-        `<svg class="inv-spark" viewBox="0 0 24 24"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6-5.6-1.9 5.6-1.9z" fill="currentColor"/></svg>` +
-        `<img class="inv-png" src="${card.img}" alt="${card.rarity}">` +
-        `<div class="inv-card-num">${card.reward}</div>` +
-        `<div class="inv-card-sub">Robux</div>` +
-      `</div>` +
-      `<div class="inv-mid">` +
-        `<div class="inv-title">${card.rarity}</div>` +
-        `<div class="inv-rowfoot">` +
-          `<span class="inv-status ${card.status === 'staking' ? 'staking' : card.status === 'used' ? 'used' : ''}">${statusText}</span>` +
-          (card.status === 'staking' ? `<span class="inv-until">осталось ${fmtLeft(card.until)}</span>` : '') +
+      `<div class="it-top">` +
+        `<div class="it-card">` +
+          `<svg class="it-rays" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 20.5 20.5 3.5"/><path d="M8.5 21.5l3.4-5.6"/><path d="M21.5 8.5l-5.6-3.4"/></svg>` +
+          `<svg class="it-spark" viewBox="0 0 24 24"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6-5.6-1.9 5.6-1.9z" fill="currentColor"/></svg>` +
+          `<img class="it-png" src="${card.img}" alt="${card.rarity}">` +
+        `</div>` +
+        `<div class="it-reward">` +
+          `<div class="it-num">${card.reward}</div>` +
+          `<div class="it-sub">Robux</div>` +
         `</div>` +
       `</div>` +
-      `<div class="inv-act">` +
+      `<div class="it-title">${card.rarity}</div>` +
+      `<div class="it-status ${card.status === 'staking' ? 'staking' : card.status === 'used' ? 'used' : ''}">${statusText}</div>` +
+      (card.status === 'staking' ? `<div class="it-until">осталось ${fmtLeft(card.until)}</div>` : '') +
+      `<div class="it-act">` +
         (card.status === 'available'
           ? `<button class="stake-btn" data-id="${card.id}" data-i="${i}">Стейкинг</button>`
           : card.status === 'staking'
             ? `<button class="stake-btn off" data-id="${card.id}" data-i="${i}">Прогресс</button>`
-            : '') +
+            : `<span class="it-used-tag">×</span>`) +
       `</div>`;
     inventoryListEl.appendChild(el);
   });
