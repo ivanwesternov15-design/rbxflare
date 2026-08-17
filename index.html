@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6828001">
+<link rel="stylesheet" href="style.css?v=6828002">
 </head>
 <body>
 
@@ -126,8 +126,16 @@
 
 <main class="view" id="viewMain">
 
-  <!-- ===== HEADER: логотип + уведомления ===== -->
+  <!-- ===== HEADER: аватар (тап = профиль) + бренд + уведомления ===== -->
   <div class="mh-header">
+    <button class="mh-user" id="mhUserBtn" aria-label="Профиль">
+      <span class="mh-avatar" id="heroAvatar"><span>?</span></span>
+      <span class="mh-meta">
+        <img class="hero-prefix hidden" id="heroPrefixImg" alt="" src="">
+        <span class="hero-name" id="heroName">—</span>
+        <span class="hero-id" id="heroId">ID: —</span>
+      </span>
+    </button>
     <div class="mh-brand">
       <div class="mh-logo">
         <img src="tgminiapprbx/logo/logo.png" alt="Robux Game">
@@ -143,70 +151,54 @@
     </button>
   </div>
 
-  <!-- ===== ПРОФИЛЬ ===== -->
-  <div class="mh-profile">
-    <div class="hero-user">
-      <div class="hero-avatar" id="heroAvatar"><span>?</span></div>
-      <div class="hero-info">
-        <img class="hero-prefix hidden" id="heroPrefixImg" alt="" src="">
-        <div class="hero-name" id="heroName">—</div>
-        <div class="hero-id" id="heroId">ID: —</div>
+  <!-- ===== СТАТИСТИКА: Robux / Coins / Streak ===== -->
+  <div class="mh-stats">
+    <div class="bal-box bal-robux">
+      <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
+        <defs><linearGradient id="rbxG" x1="8" y1="4" x2="40" y2="44"><stop offset="0" stop-color="#00FFD0"/><stop offset="1" stop-color="#00B8FF"/></linearGradient></defs>
+        <path d="M24 3 41 14.5v19L24 45 7 33.5v-19L24 3z" stroke="url(#rbxG)" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M24 3v42M7 14.5l17 12.25L41 14.5" stroke="url(#rbxG)" stroke-width="1.3" opacity=".5"/>
+        <path d="M24 26.75 11.5 17M24 26.75 36.5 17" stroke="url(#rbxG)" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
+        <path d="M19.5 20h9a4.5 4.5 0 0 1 0 9h-4.5v6" stroke="#00FFD0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M19.5 24.5H28" stroke="#00FFD0" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <div class="bal-mid">
+        <div class="bal-label">Robux</div>
+        <div class="bal-num" id="balanceValue">0</div>
       </div>
     </div>
-
-    <div class="mh-balances">
-      <div class="bal-box bal-robux">
-        <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
-          <defs><linearGradient id="rbxG" x1="8" y1="4" x2="40" y2="44"><stop offset="0" stop-color="#00FFD0"/><stop offset="1" stop-color="#00B8FF"/></linearGradient></defs>
-          <path d="M24 3 41 14.5v19L24 45 7 33.5v-19L24 3z" stroke="url(#rbxG)" stroke-width="2.4" stroke-linejoin="round"/>
-          <path d="M24 3v42M7 14.5l17 12.25L41 14.5" stroke="url(#rbxG)" stroke-width="1.3" opacity=".5"/>
-          <path d="M24 26.75 11.5 17M24 26.75 36.5 17" stroke="url(#rbxG)" stroke-width="1.5" stroke-linecap="round" opacity=".7"/>
-          <path d="M19.5 20h9a4.5 4.5 0 0 1 0 9h-4.5v6" stroke="#00FFD0" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M19.5 24.5H28" stroke="#00FFD0" stroke-width="2.4" stroke-linecap="round"/>
-        </svg>
-        <div class="bal-mid">
-          <div class="bal-label">Robux</div>
-          <div class="bal-num" id="balanceValue">0</div>
-        </div>
-      </div>
-      <div class="bal-box bal-coins">
-        <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
-          <defs><linearGradient id="coinG" x1="10" y1="6" x2="38" y2="42"><stop offset="0" stop-color="#FFD97A"/><stop offset="1" stop-color="#FF9A1E"/></linearGradient></defs>
-          <circle cx="24" cy="24" r="18.5" fill="url(#coinG)" stroke="#FFB020" stroke-width="2"/>
-          <circle cx="24" cy="24" r="13.5" stroke="#FF7A1A" stroke-width="1.4" opacity=".55"/>
-          <path d="M26.5 11 15 26.5h7.5L20 37l11.5-15.5H24l2.5-10.5z" fill="#FFF7E0" stroke="#FF7A1A" stroke-width="1" stroke-linejoin="round"/>
-          <path d="M40 7a6.5 6.5 0 0 1-8 8" stroke="#FFF3C4" stroke-width="2.6" stroke-linecap="round"/>
-        </svg>
-        <div class="bal-mid">
-          <div class="bal-label">Coins</div>
-          <div class="bal-num" id="coinsValue">0</div>
-        </div>
+    <div class="bal-box bal-coins">
+      <svg class="bal-ico" viewBox="0 0 48 48" fill="none">
+        <defs><linearGradient id="coinG" x1="10" y1="6" x2="38" y2="42"><stop offset="0" stop-color="#FFD97A"/><stop offset="1" stop-color="#FF9A1E"/></linearGradient></defs>
+        <circle cx="24" cy="24" r="18.5" fill="url(#coinG)" stroke="#FFB020" stroke-width="2"/>
+        <circle cx="24" cy="24" r="13.5" stroke="#FF7A1A" stroke-width="1.4" opacity=".55"/>
+        <path d="M26.5 11 15 26.5h7.5L20 37l11.5-15.5H24l2.5-10.5z" fill="#FFF7E0" stroke="#FF7A1A" stroke-width="1" stroke-linejoin="round"/>
+        <path d="M40 7a6.5 6.5 0 0 1-8 8" stroke="#FFF3C4" stroke-width="2.6" stroke-linecap="round"/>
+      </svg>
+      <div class="bal-mid">
+        <div class="bal-label">Coins</div>
+        <div class="bal-num" id="coinsValue">0</div>
       </div>
     </div>
-  </div>
-
-  <!-- ===== STREAK ===== -->
-  <div class="mh-streak">
-    <div class="streak-left">
+    <div class="mh-streak">
       <svg class="streak-flame" viewBox="0 0 24 24" fill="none">
         <path d="M12 1.5c1 3.1-2.1 4.3-2.8 7.3-.5 2.4.7 4.6 2.8 5.9-3.1 0-5-2-5.3-4.9-1.5 1.4-2.2 3.2-2.2 5A7.5 7.5 0 0 0 19.5 15c0-5.3-3.9-7.4-5.2-10.2-.7 1.9-1.9 3-3.4 3.5.6-3.7 0-6.3 1.1-6.8z" fill="#FF8A1E"/>
         <path d="M12 5c.9 2.7-1.8 3.8-2.4 6.4-.4 2.1.6 4 2.4 5.1-2.7 0-4.4-1.8-4.7-4.3-1.2 1.2-1.9 2.8-1.9 4.3A6.6 6.6 0 0 0 12 23c3.7 0 6.6-3 6.6-6.7 0-4.7-3.5-6.5-4.6-9-.6 1.7-1.7 2.7-3 3.1.5-3.3 0-5.2 1-5.4z" fill="#FFC72C"/>
       </svg>
-      <span class="streak-title">STREAK</span>
-      <span class="streak-days" id="streakDays">0 дней</span>
-    </div>
-    <div class="streak-right">
-      <svg class="streak-coin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" fill="#FFC72C" stroke="#B8860B" stroke-width="1"/><path d="M12 15.2c-2.6 0-3.6-1.4-3.6-3.2 0-1.9 1-3.2 3.6-3.2s3.6 1.3 3.6 3.2c0 1.8-1 3.2-3.6 3.2zm0-5.6c-1.2 0-1.9.7-1.9 2.4s.7 2.4 1.9 2.4 1.9-.7 1.9-2.4-.7-2.4-1.9-2.4z" fill="#7a4e00"/></svg>
+      <div class="streak-mid">
+        <span class="streak-title">STREAK</span>
+        <span class="streak-days" id="streakDays">0 дней</span>
+      </div>
       <span class="streak-bonus" id="streakBonus">+25</span>
     </div>
   </div>
 
-  <!-- ===== ЕЖЕДНЕВНЫЕ КАРТОЧКИ ===== -->
+  <!-- ===== КАРТОЧКА ДНЯ — главный блок ===== -->
   <div class="daily-panel">
     <div class="dp-head">
       <div class="dp-title">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M4 9h16M9 9v11"/><path d="M13 20V9h7v11z" opacity=".55"/></svg>
-        <span>Твои карточки на сегодня</span>
+        <span>Карточка дня</span>
       </div>
       <div class="dp-actions">
         <div class="dp-timer hidden" id="dailyTimer">
@@ -230,7 +222,7 @@
     </button>
   </div>
 
-  <!-- ===== СЕТКА: ЗАДАНИЯ / СТЕЙКИНГ / РЕФЕРАЛЫ / ВЫВОД ===== -->
+  <!-- ===== МЕНЮ 2×2: ЗАДАНИЯ / СТЕЙКИНГ / РЕФЕРАЛЫ / ВЫВОД ===== -->
   <div class="mh-grid">
     <button class="mh-tile" id="tasksBtn">
       <div class="mh-tile-ico tile-cyan">
@@ -820,6 +812,6 @@
   </div>
 </div>
 
-<script src="script.js?v=6828001"></script>
+<script src="script.js?v=6828002"></script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* =========================================================
+﻿/* =========================================================
    ГАЛЕРЕЯ — авто-сканирование в реальном времени
    При каждом открытии страницы (и шторки) скрипт сам читает
    содержимое папок tgminiapprbx/avatars|fons|podfons через
@@ -735,11 +735,11 @@ const DEFAULT_CONFIG = {
 };
 const TIER_ORDER = ['Basic', 'Silver', 'Gold', 'Diamond', 'Mythic'];
 const TIER_STYLE = {
-  Basic:   { img: 'tgminiapprbx/Cards/Basic.png',   colors: ['#3D5665', '#0B151F'] },
-  Silver:  { img: 'tgminiapprbx/Cards/Silver.png',  colors: ['#C7D4DC', '#2A3B4D'] },
-  Gold:    { img: 'tgminiapprbx/Cards/Gold.png',    colors: ['#EAB765', '#5C4A28'] },
-  Diamond: { img: 'tgminiapprbx/Cards/Diamond.png', colors: ['#67B7F3', '#122B45'] },
-  Mythic:  { img: 'tgminiapprbx/Cards/Mythic.png',  colors: ['#8FA3D0', '#2E3560'] },
+  Basic:   { img: 'tgminiapprbx/Cards/Basic.png',   colors: ['#6C8CA0', '#2E4759'] },
+  Silver:  { img: 'tgminiapprbx/Cards/Silver.png',  colors: ['#DDE7EE', '#5A7186'] },
+  Gold:    { img: 'tgminiapprbx/Cards/Gold.png',    colors: ['#F0C87E', '#8A6A2E'] },
+  Diamond: { img: 'tgminiapprbx/Cards/Diamond.png', colors: ['#8CC6F7', '#2C5C8F'] },
+  Mythic:  { img: 'tgminiapprbx/Cards/Mythic.png',  colors: ['#B9C6E8', '#5A6595'] },
 };
 const STAKE_LABEL = { '12h': '12 часов', '24h': '24 часа', '3d': '3 дня', '7d': '7 дней' };
 const STAKE_MS = { '12h': 12 * 3600e3, '24h': 24 * 3600e3, '3d': 3 * 86400e3, '7d': 7 * 86400e3 };
@@ -2274,6 +2274,10 @@ navBtns.forEach((btn, idx) => {
     switchView(btn.dataset.view);
   });
 });
+
+/* ---- ����� �� ������ � ������: �?�?�� �?�?�?�?�?�� ---- */
+const mhUserBtn = document.getElementById('mhUserBtn');
+if(mhUserBtn) mhUserBtn.addEventListener('click', () => goToNav('profile'));
 
 /* ---- старт ---- */
 if(tg){
