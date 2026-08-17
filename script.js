@@ -735,11 +735,11 @@ const DEFAULT_CONFIG = {
 };
 const TIER_ORDER = ['Basic', 'Silver', 'Gold', 'Diamond', 'Mythic'];
 const TIER_STYLE = {
-  Basic:   { img: 'tgminiapprbx/Cards/Basic.png',   colors: ['#070d17', '#4e5568'] },
-  Silver:  { img: 'tgminiapprbx/Cards/Silver.png',  colors: ['#7680a6', '#212842'] },
-  Gold:    { img: 'tgminiapprbx/Cards/Gold.png',    colors: ['#ffd838', '#b57528'] },
-  Diamond: { img: 'tgminiapprbx/Cards/Diamond.png', colors: ['#188cfe', '#01114c'] },
-  Mythic:  { img: 'tgminiapprbx/Cards/Mythic.png',  colors: ['#bf3cde', '#c64dfa', '#300f47'] },
+  Basic:   { img: 'tgminiapprbx/Cards/Basic.png',   colors: ['#3D5665', '#0B151F'] },
+  Silver:  { img: 'tgminiapprbx/Cards/Silver.png',  colors: ['#C7D4DC', '#2A3B4D'] },
+  Gold:    { img: 'tgminiapprbx/Cards/Gold.png',    colors: ['#EAB765', '#5C4A28'] },
+  Diamond: { img: 'tgminiapprbx/Cards/Diamond.png', colors: ['#67B7F3', '#122B45'] },
+  Mythic:  { img: 'tgminiapprbx/Cards/Mythic.png',  colors: ['#8FA3D0', '#2E3560'] },
 };
 const STAKE_LABEL = { '12h': '12 часов', '24h': '24 часа', '3d': '3 дня', '7d': '7 дней' };
 const STAKE_MS = { '12h': 12 * 3600e3, '24h': 24 * 3600e3, '3d': 3 * 86400e3, '7d': 7 * 86400e3 };
@@ -1609,9 +1609,9 @@ function renderStakeProgress(){
         `<img src="${card.img}" alt="${card.rarity}">` +
         `<div class="sp-card-name">${card.rarity}</div>`;
       const glow = st.colors[0] || '#9BA7B6';
-      spCardEl.style.setProperty('--t1', done ? '#20E875' : glow);
-      spCardEl.style.setProperty('--t1b', done ? 'rgba(32,232,117,.8)' : `${glow}aa`);
-      spCardEl.style.setProperty('--t1g', done ? 'rgba(32,232,117,.5)' : `${glow}55`);
+      spCardEl.style.setProperty('--t1', done ? '#4FD18B' : glow);
+      spCardEl.style.setProperty('--t1b', done ? 'rgba(79,209,139,.8)' : `${glow}aa`);
+      spCardEl.style.setProperty('--t1g', done ? 'rgba(79,209,139,.5)' : `${glow}55`);
     }
     if(spPeriodEl) spPeriodEl.textContent = STAKE_LABEL[card.period] || card.period;
     const r = stakeRange(card, card.pct);
@@ -2012,7 +2012,7 @@ async function renderUsersList(){
       const initials = name.split(' ').slice(0, 2).map(w => (w[0] || '').toUpperCase()).join('');
       const bal = Math.round(u.balance || 0).toLocaleString('ru-RU');
       return `<div class="us-item" data-id="${u.id}">
-        <div class="us-avatar" style="background:linear-gradient(135deg,#22d3ee,#a78bfa)">
+        <div class="us-avatar" style="background:linear-gradient(135deg,#4E9BE0,#9FB0D8)">
           ${u.photo_url ? `<img src="${u.photo_url}" alt="" referrerpolicy="no-referrer">` : `<span>${initials || '—'}</span>`}
         </div>
         <div class="us-info">
@@ -2280,8 +2280,8 @@ if(tg){
   document.documentElement.classList.add('tg-mode');
   tg.ready();
   tg.expand();
-  tg.setHeaderColor('#06141B');
-  tg.setBackgroundColor('#06141B');
+  tg.setHeaderColor('#081018');
+  tg.setBackgroundColor('#081018');
 }
 
 collectBtnEl.addEventListener('click', collectDailyCard);
@@ -2389,7 +2389,7 @@ const ACT_ICONS = {
   streak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.4 0 8-3.6 8-8 0-5.3-3.9-8.2-6.6-11-.7 2.5-2.3 3.9-4.3 4.3C8 6.9 6.6 8.6 6.6 11a5.4 5.4 0 0 0 5.4 5.4c.5 0 1-.1 1.5-.2C12.4 18.4 11 20 9 20.5c.9.9 1.9 1.5 3 1.5z"/></svg>',
 };
 const ACT_COLORS = {
-  card: '#1ED4FF', stake: '#8B5CF6', coins: '#FFD838', ref: '#20E875', streak: '#FF8A1E',
+  card: '#4E9BE0', stake: '#9FB0D8', coins: '#EAB765', ref: '#4FD18B', streak: '#D9A05B',
 };
 
 function fmtAgo(ts){
@@ -2419,7 +2419,7 @@ function renderActivity(){
   if(REFERRALS.list.length){
     REFERRALS.list.forEach(r => {
       const name = r.name || r.first_name || ('ID ' + r.id);
-      items.push(`<div class="ac-item" style="--ac-c:#20E875">
+      items.push(`<div class="ac-item" style="--ac-c:#4FD18B">
         <span class="ac-ico">${ACT_ICONS.ref}</span>
         <div class="ac-body">
           <div class="ac-text">Приглашён: <b>${name}</b></div>
