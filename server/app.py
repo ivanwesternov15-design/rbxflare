@@ -32,7 +32,7 @@ UPLOADS_DIR = DATA_DIR / "uploads"
 USERS_FILE = DATA_DIR / "users.json"
 USERS_BACKUP = DATA_DIR / "users.json.bak"
 
-ALLOWED_KINDS = ("avatars", "fons", "podfons")
+ALLOWED_KINDS = ("avatars", "fons", "podfons", "prefixes")
 OWNER_IDS = (8414792453,)  # только владелец может менять глобальные настройки и удалять фоны
 PORT = int(os.environ.get("PORT", 8080))
 

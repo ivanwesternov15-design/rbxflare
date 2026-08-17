@@ -188,6 +188,8 @@ const state = (() => {
     streak: { count: 0, lastDate: null },
     tasks: {},           // { taskId: { progress, claimed } }
     notifications: [],   // [{ id, icon, title, text, ts, read }]
+    preferences: { fon: '', wallpaper: '', prefix: '' },
+    activity: [],        // [{ ts, type, text }]
   };
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -237,6 +239,8 @@ function saveState(){
       streak: state.streak,
       tasks: state.tasks,
       notifications: state.notifications,
+      preferences: state.preferences,
+      activity: state.activity,
     }));
   }catch(e){}
   scheduleSync();
@@ -260,6 +264,8 @@ function scheduleSync(){
         daily: state.daily,
         streak: state.streak,
         dailyResetTs: state.dailyResetTs,
+        preferences: state.preferences,
+        activity: state.activity,
       }}),
     }).catch(() => {});
   }, 1200);
@@ -280,6 +286,8 @@ async function loadServerState(){
       if(d.daily && typeof d.daily === 'object') state.daily = d.daily;
       if(d.streak && typeof d.streak === 'object') state.streak = d.streak;
       if(typeof d.dailyResetTs === 'number') state.dailyResetTs = d.dailyResetTs;
+      if(d.preferences && typeof d.preferences === 'object') state.preferences = d.preferences;
+      if(Array.isArray(d.activity)) state.activity = d.activity;
       saveState();
     }
   }catch(e){}
@@ -709,7 +717,6 @@ function closeAllSheets(){
   });
 }
 
-menuBtn.addEventListener('click', openSheet);
 sheetClose.addEventListener('click', closeSheet);
 backdrop.addEventListener('click', closeSheet);
 
@@ -963,6 +970,7 @@ function collectDailyCard(){
   });
   state.daily.collected = true;
   saveState();
+  logActivity('card', `Получена карточка: ${state.daily.rarity} (+${state.daily.reward} Robux)`);
   collectBtnEl.classList.add('hidden');
   dailyGridEl.classList.add('hidden');
   dailyDoneEl.classList.remove('hidden');
@@ -1133,6 +1141,7 @@ function claimTask(id){
   if(state.tasks[id] && state.tasks[id].claimed) return;
   state.tasks[id] = { claimed: true };
   saveState();
+  logActivity('coins', `Задание выполнено: ${t.title} (+${t.reward} Coins)`);
   addCoins(t.reward);
   addNotification('win', 'Задание выполнено', `«${t.title}» — начислено +${t.reward} Coins`);
   showToast(`+${t.reward} Coins за задание`, true, 'win');
@@ -1655,9 +1664,11 @@ function closeStakeProgress(){
 
 function destroyStakedCard(value){
   const idx = state.inventory.findIndex(c => c.id === stakeProgCard.id);
+  const rarity = idx >= 0 ? (state.inventory[idx].rarity || '') : '';
   if(idx >= 0) state.inventory.splice(idx, 1);
   stakeProgCard = null;
   saveState();
+  logActivity('stake', rarity ? `Карточка стёрта: ${rarity} (+${value} Robux)` : `Стейкинг: +${value} Robux`);
   renderInventory();
   if(typeof renderStakingOverview === 'function') renderStakingOverview();
   if(typeof renderTasks === 'function') renderTasks();
@@ -1817,7 +1828,7 @@ function openAdmin(){
    и принудительный сброс ежедневных карточек игрокам
    ========================================================= */
 let ADMINS = [];
-const adminGear = document.getElementById('adminGear');
+const stAdminBtn = document.getElementById('stAdminBtn');
 const adminPanelSheet = document.getElementById('adminPanelSheet');
 const adminPanelBackdrop = document.getElementById('adminPanelBackdrop');
 const adminPanelClose = document.getElementById('adminPanelClose');
@@ -1839,7 +1850,7 @@ async function loadAdmins(){
     const data = await res.json();
     if(data.ok && Array.isArray(data.adminIds)){
       ADMINS = data.adminIds;
-      if(isPriv()) adminGear.classList.remove('hidden');
+      if(isPriv() && stAdminBtn) stAdminBtn.classList.remove('hidden');
     }
   }catch(e){}
 }
@@ -1942,7 +1953,7 @@ function openAdminPanel(){
   openModal(adminPanelSheet, adminPanelBackdrop);
 }
 
-adminGear.addEventListener('click', openAdminPanel);
+stAdminBtn.addEventListener('click', openAdminPanel);
 adminAddBtn.addEventListener('click', addAdmin);
 dailyResetUserBtn.addEventListener('click', resetUserDaily);
 
@@ -2288,7 +2299,198 @@ applySelected();
 balanceValueEl.textContent = state.balance;
 if(coinsValueEl) coinsValueEl.textContent = state.coins;
 
-/* ---- экран загрузки: ждём все данные, затем красиво уходим ---- */
+/* =========================================================
+   Профиль-меню: Настройки / История / Поддержка / О приложении
+   ========================================================= */
+const prefixImgEl = document.getElementById('prefixImg');
+const heroPrefixImgEl = document.getElementById('heroPrefixImg');
+const settingsSheetEl = document.getElementById('settingsSheet');
+const settingsBackdropEl = document.getElementById('settingsBackdrop');
+const settingsCloseEl = document.getElementById('settingsClose');
+const activitySheetEl = document.getElementById('activitySheet');
+const activityBackdropEl = document.getElementById('activityBackdrop');
+const activityCloseEl = document.getElementById('activityClose');
+const supportSheetEl = document.getElementById('supportSheet');
+const supportBackdropEl = document.getElementById('supportBackdrop');
+const supportCloseEl = document.getElementById('supportClose');
+const aboutSheetEl = document.getElementById('aboutSheet');
+const aboutBackdropEl = document.getElementById('aboutBackdrop');
+const aboutCloseEl = document.getElementById('aboutClose');
+
+document.querySelectorAll('.pf-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const id = item.dataset.open;
+    if(id === 'settingsSheet'){
+      openModal(settingsSheetEl, settingsBackdropEl);
+      renderSettings();
+    }else if(id === 'activitySheet'){
+      renderActivity();
+      openModal(activitySheetEl, activityBackdropEl);
+    }else if(id === 'supportSheet'){
+      openModal(supportSheetEl, supportBackdropEl);
+    }else if(id === 'aboutSheet'){
+      openModal(aboutSheetEl, aboutBackdropEl);
+    }
+  });
+});
+settingsCloseEl.addEventListener('click', () => closeModal(settingsSheetEl, settingsBackdropEl));
+settingsBackdropEl.addEventListener('click', () => closeModal(settingsSheetEl, settingsBackdropEl));
+activityCloseEl.addEventListener('click', () => closeModal(activitySheetEl, activityBackdropEl));
+activityBackdropEl.addEventListener('click', () => closeModal(activitySheetEl, activityBackdropEl));
+supportCloseEl.addEventListener('click', () => closeModal(supportSheetEl, supportBackdropEl));
+supportBackdropEl.addEventListener('click', () => closeModal(supportSheetEl, supportBackdropEl));
+aboutCloseEl.addEventListener('click', () => closeModal(aboutSheetEl, aboutBackdropEl));
+aboutBackdropEl.addEventListener('click', () => closeModal(aboutSheetEl, aboutBackdropEl));
+
+const SUPPORT_TG = 'https://t.me/darkgeniy';
+document.getElementById('supportWriteBtn').addEventListener('click', e => {
+  e.preventDefault();
+  if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light');
+  if(tg && tg.openTelegramLink) tg.openTelegramLink(SUPPORT_TG);
+});
+
+function applyPreferences(){
+  const p = state.preferences || {};
+  if(p.fon){
+    document.getElementById('banner').style.setProperty('--fon-url', `url('${p.fon}')`);
+  }
+  if(p.wallpaper){
+    document.getElementById('app-wallpaper').style.setProperty('--wallpaper-url', `url('${p.wallpaper}')`);
+  }
+  if(prefixImgEl){
+    if(p.prefix){
+      prefixImgEl.src = p.prefix;
+      prefixImgEl.classList.remove('hidden');
+    }else{
+      prefixImgEl.classList.add('hidden');
+    }
+  }
+  if(heroPrefixImgEl){
+    if(p.prefix){
+      heroPrefixImgEl.src = p.prefix;
+      heroPrefixImgEl.classList.remove('hidden');
+    }else{
+      heroPrefixImgEl.classList.add('hidden');
+    }
+  }
+}
+
+function logActivity(type, text){
+  state.activity.unshift({ ts: Date.now(), type, text });
+  if(state.activity.length > 60) state.activity.length = 60;
+  saveState();
+}
+
+const ACT_ICONS = {
+  card:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M7.5 15h5"/></svg>',
+  stake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4.5"/></svg>',
+  coins: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M14.5 9.5h-3a1.7 1.7 0 0 0 0 3.4h1a1.7 1.7 0 0 1 0 3.4h-3"/></svg>',
+  ref:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>',
+  streak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c4.4 0 8-3.6 8-8 0-5.3-3.9-8.2-6.6-11-.7 2.5-2.3 3.9-4.3 4.3C8 6.9 6.6 8.6 6.6 11a5.4 5.4 0 0 0 5.4 5.4c.5 0 1-.1 1.5-.2C12.4 18.4 11 20 9 20.5c.9.9 1.9 1.5 3 1.5z"/></svg>',
+};
+const ACT_COLORS = {
+  card: '#1ED4FF', stake: '#8B5CF6', coins: '#FFD838', ref: '#20E875', streak: '#FF8A1E',
+};
+
+function fmtAgo(ts){
+  const s = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+  if(s < 60) return 'только что';
+  const m = Math.floor(s / 60);
+  if(m < 60) return `${m} мин назад`;
+  const h = Math.floor(m / 60);
+  if(h < 24) return `${h} ч назад`;
+  const d = Math.floor(h / 24);
+  return `${d} дн назад`;
+}
+
+function renderActivity(){
+  const listEl = document.getElementById('acList');
+  const emptyEl = document.getElementById('acEmpty');
+  const items = [];
+  state.activity.forEach(a => {
+    items.push(`<div class="ac-item" style="--ac-c:${ACT_COLORS[a.type] || '#1ED4FF'}">
+      <span class="ac-ico">${ACT_ICONS[a.type] || ACT_ICONS.coins}</span>
+      <div class="ac-body">
+        <div class="ac-text">${a.text || ''}</div>
+        <div class="ac-time">${fmtAgo(a.ts)}</div>
+      </div>
+    </div>`);
+  });
+  if(REFERRALS.list.length){
+    REFERRALS.list.forEach(r => {
+      const name = r.name || r.first_name || ('ID ' + r.id);
+      items.push(`<div class="ac-item" style="--ac-c:#20E875">
+        <span class="ac-ico">${ACT_ICONS.ref}</span>
+        <div class="ac-body">
+          <div class="ac-text">Приглашён: <b>${name}</b></div>
+          <div class="ac-time">${r.tasks_done || 0} заданий</div>
+        </div>
+      </div>`);
+    });
+  }
+  emptyEl.classList.toggle('hidden', items.length > 0);
+  listEl.innerHTML = items.join('');
+}
+
+const ST_FONTS = { fons: 'stFons', podfons: 'stPodfons', prefixes: 'stPrefixes' };
+const ST_LABELS = { fons: 'Фон профиля', podfons: 'Фон карточек', prefixes: 'Префикс' };
+const ST_STATE = { fons: 'fon', podfons: 'wallpaper', prefixes: 'prefix' };
+let stLists = { fons: null, podfons: null, prefixes: null };
+
+async function loadPrefList(kind){
+  const out = [];
+  try{
+    const res = await fetch('/api/files/' + kind + '?ts=' + Date.now());
+    if(res.ok){
+      const data = await res.json();
+      if(data.ok && Array.isArray(data.files)) out.push(...data.files);
+    }
+  }catch(e){}
+  if(!out.length){
+    try{
+      const res = await fetch('tgminiapprbx/' + kind + '/?ts=' + Date.now());
+      if(res.ok){
+        const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+        const names = [...doc.querySelectorAll('a[href]')]
+          .map(a => a.getAttribute('href').split(/[?#]/)[0])
+          .filter(h => /\.(jpe?g|png)$/i.test(h))
+          .map(h => h.split('/').pop())
+          .filter(Boolean);
+        out.push(...[...new Set(names)].map(n => 'tgminiapprbx/' + kind + '/' + n));
+      }
+    }catch(e){}
+  }
+  return [...new Set(out)];
+}
+
+async function renderSettings(){
+  for(const kind of ['fons', 'podfons', 'prefixes']){
+    const box = document.getElementById(ST_FONTS[kind]);
+    if(!stLists[kind]){
+      stLists[kind] = await loadPrefList(kind);
+    }
+    const cur = state.preferences[ST_STATE[kind]];
+    box.innerHTML = '';
+    if(!stLists[kind].length){
+      box.innerHTML = '<div class="st-none">Нет файлов</div>';
+      continue;
+    }
+    stLists[kind].forEach(url => {
+      const t = document.createElement('button');
+      t.className = 'st-thumb' + (url === cur ? ' sel' : '') + (kind === 'prefixes' ? ' st-pfx' : '');
+      t.style.setProperty('--pv', `url('${url}')`);
+      t.addEventListener('click', () => {
+        state.preferences[ST_STATE[kind]] = url;
+        saveState();
+        applyPreferences();
+        renderSettings();
+      });
+      box.appendChild(t);
+    });
+  }
+}
+
+/* ---- Загрузка при старте: сплеш, затем вся вкладка ---- */
 const splashEl = document.getElementById('splash');
 const bootStart = performance.now();
 Promise.allSettled([
@@ -2307,15 +2509,17 @@ Promise.allSettled([
   }
   if(isPriv()){
     dailyResetBtn.classList.remove('hidden');
-    adminGear.classList.remove('hidden');
+    if(stAdminBtn) stAdminBtn.classList.remove('hidden');
   }
   if(PROFILE) setupTabs(); // ADMINS уже точно загружены — пересчитать видимость кнопки удаления
   const streakGained = ensureStreak();
-  if(streakGained){
+if(streakGained){
     addCoins(STREAK_DAILY_BONUS);
-    showToast(`Серия ${state.streak.count} ${state.streak.count === 1 ? 'день' : 'дней'}! +${STREAK_DAILY_BONUS} Coins`, true, 'win');
+    logActivity('streak', `Стрик: ${state.streak.count} ${state.streak.count === 1 ? 'день' : 'дней'} подряд (+${STREAK_DAILY_BONUS} Coins)`);
+    showToast(`Стрик ${state.streak.count} ${state.streak.count === 1 ? 'день' : 'дней'}! +${STREAK_DAILY_BONUS} Coins`, true, 'win');
   }
   renderHero();
+  applyPreferences();
   renderDaily();
   renderInventory();
   renderStreak();

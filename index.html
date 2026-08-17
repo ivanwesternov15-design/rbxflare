@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6827801">
+<link rel="stylesheet" href="style.css?v=6827901">
 </head>
 <body>
 
@@ -47,17 +47,7 @@
 
 <main class="view hidden" id="viewProfile">
 <div class="page">
-  <div class="card">
-
-    <div class="top-bar">
-      <!-- Кнопка выхода удалена по ТЗ. При необходимости верните её сюда. -->
-      <button class="icon-btn" id="menuBtn" aria-label="Меню">
-        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="5" r="1.8" fill="currentColor"/><circle cx="12" cy="12" r="1.8" fill="currentColor"/><circle cx="12" cy="19" r="1.8" fill="currentColor"/></svg>
-      </button>
-      <button class="icon-btn hidden" id="adminGear" aria-label="Админка" style="margin-left:8px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.08a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03z"/></svg>
-      </button>
-    </div>
+  <div class="card pf-card">
 
     <div class="banner" id="banner"></div>
 
@@ -73,6 +63,7 @@
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 8l4 3 5-6 5 6 4-3-2 11H5L3 8z"/></svg>
           ВЛАДЕЛЕЦ
         </div>
+        <img class="pf-prefix hidden" id="prefixImg" alt="" src="">
         <div class="display-name" id="displayName">—</div>
       </div>
       <div class="handle-row">
@@ -98,6 +89,38 @@
     </div>
 
   </div>
+
+  <div class="card pf-menu">
+    <button class="pf-item" data-open="settingsSheet">
+      <span class="pf-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="15" cy="8" r="2.6"/><circle cx="8" cy="16" r="2.6"/></svg>
+      </span>
+      <span class="pf-label">Настройки</span>
+      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="pf-item" data-open="activitySheet">
+      <span class="pf-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+      </span>
+      <span class="pf-label">История активности</span>
+      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="pf-item" data-open="supportSheet">
+      <span class="pf-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="6" rx="2"/><rect x="17.5" y="13" width="4" height="6" rx="2"/><path d="M20 19a3.5 3.5 0 0 1-3.5 3H14"/></svg>
+      </span>
+      <span class="pf-label">Поддержка</span>
+      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+    <button class="pf-item" data-open="aboutSheet">
+      <span class="pf-ico">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"/></svg>
+      </span>
+      <span class="pf-label">О приложении</span>
+      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
+  </div>
+
 </div>
 </main>
 
@@ -125,6 +148,7 @@
     <div class="hero-user">
       <div class="hero-avatar" id="heroAvatar"><span>?</span></div>
       <div class="hero-info">
+        <img class="hero-prefix hidden" id="heroPrefixImg" alt="" src="">
         <div class="hero-name" id="heroName">—</div>
         <div class="hero-id" id="heroId">ID: —</div>
       </div>
@@ -701,6 +725,101 @@
   </div>
 </div>
 
-<script src="script.js?v=6827801"></script>
+<div class="sheet-backdrop" id="settingsBackdrop"></div>
+<div class="sheet" id="settingsSheet" role="dialog" aria-label="Настройки">
+  <div class="sheet-head">
+    <div class="sheet-title">Настройки</div>
+    <button class="sheet-close" id="settingsClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <div class="st-group">
+      <div class="st-group-title">Фон профиля</div>
+      <div class="st-thumbs" id="stFons"></div>
+    </div>
+    <div class="st-group">
+      <div class="st-group-title">Фон карточек</div>
+      <div class="st-thumbs" id="stPodfons"></div>
+    </div>
+    <div class="st-group">
+      <div class="st-group-title">Префикс</div>
+      <div class="st-thumbs st-prefixes" id="stPrefixes"></div>
+    </div>
+    <div class="st-group">
+      <button class="st-admin-btn hidden" id="stAdminBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.03 1.56V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.56 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.7 1.7 0 0 0 .34-1.87 1.7 1.7 0 0 0-1.56-1.03H3a2 2 0 1 1 0-4h.09a1.7 1.7 0 0 0 1.56-1.11 1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.7 1.7 0 0 0 1.87.34h.08A1.7 1.7 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1.03 1.56h.08a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87v.08a1.7 1.7 0 0 0 1.56 1.03H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1.03z"/></svg>
+        <span>Выдача администраторов</span>
+        <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="activityBackdrop"></div>
+<div class="sheet" id="activitySheet" role="dialog" aria-label="История активности">
+  <div class="sheet-head">
+    <div class="sheet-title">История активности</div>
+    <button class="sheet-close" id="activityClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <div class="ac-list" id="acList"></div>
+    <div class="ac-empty hidden" id="acEmpty">Пока нет событий</div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="supportBackdrop"></div>
+<div class="sheet" id="supportSheet" role="dialog" aria-label="Поддержка">
+  <div class="sheet-head">
+    <div class="sheet-title">Поддержка</div>
+    <button class="sheet-close" id="supportClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <div class="sp-orb">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="6" rx="2"/><rect x="17.5" y="13" width="4" height="6" rx="2"/><path d="M20 19a3.5 3.5 0 0 1-3.5 3H14"/></svg>
+    </div>
+    <div class="sp-title">Нужна помощь?</div>
+    <div class="sp-text">Мы всегда на связи! Если у тебя возникли вопросы, баги или идеи — напиши нашей Тех. Поддержке, и мы поможем разобраться. Обычно отвечаем в течение нескольких минут.</div>
+    <a class="sp-btn" id="supportWriteBtn" href="#">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-8 8H5l4-4a8 8 0 1 1 12-4z"/><path d="M9 11h.01M13 11h.01M17 11h.01"/></svg>
+      <span>Написать Тех. Поддержке</span>
+      <svg class="sp-btn-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+    </a>
+    <div class="sp-note">Переход в Telegram — мини-апп не закроется</div>
+  </div>
+</div>
+
+<div class="sheet-backdrop" id="aboutBackdrop"></div>
+<div class="sheet" id="aboutSheet" role="dialog" aria-label="О приложении">
+  <div class="sheet-head">
+    <div class="sheet-title">О приложении</div>
+    <button class="sheet-close" id="aboutClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body">
+    <div class="ab-hero">
+      <div class="ab-logo">
+        <img src="tgminiapprbx/logo/logo.png" alt="Robux Game">
+      </div>
+      <div class="ab-name">ROBUX GAME</div>
+      <div class="ab-tag">Живая коллекция карточек</div>
+    </div>
+    <div class="ab-steps">
+      <div class="ab-step"><span class="ab-num">1</span><span>Ежедневно получай свои карточки</span></div>
+      <div class="ab-step"><span class="ab-num">2</span><span>Выполняй задания и получай Coins</span></div>
+      <div class="ab-step"><span class="ab-num">3</span><span>Покупай карточки в магазине</span></div>
+      <div class="ab-step"><span class="ab-num">4</span><span>Улучшай карточки в стейкинге</span></div>
+      <div class="ab-step"><span class="ab-num">5</span><span>Выводи свои Robux</span></div>
+    </div>
+    <div class="ab-info">Robux Game — Telegram-мини-апп с ежедневной коллекцией карточек: открывай карточки, выполняй задания, прокачивай их в стейкинге и выводи награду. Все данные автоматически сохраняются на всех твоих устройствах.</div>
+  </div>
+</div>
+
+<script src="script.js?v=6827901"></script>
 </body>
 </html>
