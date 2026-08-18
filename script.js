@@ -2240,6 +2240,9 @@ function renderTasksNav(){
   if(!list) return;
   const done = tasksCompletedCount();
   const p = document.getElementById('tasksProgressNav'); if(p) p.textContent = `${done} / ${TASKS.length}`;
+  const fill = document.getElementById('tasksProgressFill');
+  if(fill) fill.style.width = `${Math.min(100, Math.round(done / TASKS.length * 100))}%`;
+  const pt = document.getElementById('tasksProgressTextMain'); if(pt) pt.textContent = `${done} из ${TASKS.length}`;
   list.innerHTML = tasksListEl ? tasksListEl.innerHTML : '';
   list.querySelectorAll('.task-claim-btn').forEach(b => b.addEventListener('click', () => { claimTask(b.dataset.task); renderTasksNav(); }));
 }

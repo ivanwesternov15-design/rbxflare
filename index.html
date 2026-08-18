@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6828003">
+<link rel="stylesheet" href="style.css?v=6828004">
 </head>
 <body>
 
@@ -96,28 +96,24 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="15" cy="8" r="2.6"/><circle cx="8" cy="16" r="2.6"/></svg>
       </span>
       <span class="pf-label">Настройки</span>
-      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
     </button>
     <button class="pf-item" data-open="activitySheet">
       <span class="pf-ico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
       </span>
-      <span class="pf-label">История активности</span>
-      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+      <span class="pf-label">История</span>
     </button>
     <button class="pf-item" data-open="supportSheet">
       <span class="pf-ico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 13a8 8 0 0 1 16 0"/><rect x="2.5" y="13" width="4" height="6" rx="2"/><rect x="17.5" y="13" width="4" height="6" rx="2"/><path d="M20 19a3.5 3.5 0 0 1-3.5 3H14"/></svg>
       </span>
       <span class="pf-label">Поддержка</span>
-      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
     </button>
     <button class="pf-item" data-open="aboutSheet">
       <span class="pf-ico">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><circle cx="12" cy="7.6" r="1.1" fill="currentColor" stroke="none"/></svg>
       </span>
       <span class="pf-label">О приложении</span>
-      <svg class="pf-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
     </button>
   </div>
 
@@ -306,6 +302,13 @@
 
 <main class="view hidden category-view" id="viewTasks">
   <div class="category-head"><div><div class="category-kicker">MISSIONS</div><h1>Задания</h1></div><span class="category-count" id="tasksProgressNav">0 / 7</span></div>
+  <div class="task-progress">
+    <div class="task-progress-track"><div class="task-progress-fill" id="tasksProgressFill"></div></div>
+    <div class="task-progress-meta">
+      <span class="task-progress-label">Выполнено заданий</span>
+      <span class="task-progress-text" id="tasksProgressTextMain">0 из 7</span>
+    </div>
+  </div>
   <div class="task-list" id="tasksListNav"></div>
 </main>
 
@@ -324,6 +327,19 @@
       <div class="ref-link-text" id="refLinkTextNav">—</div>
     </div>
 
+    <div class="ref-actions">
+      <button class="ref-share-btn" id="refShareBtnNav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
+        Поделиться
+      </button>
+      <button class="ref-copy-btn" id="refCopyBtnNav">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Копировать
+      </button>
+    </div>
+
+    <div class="refs-divider"></div>
+
     <div class="ref-perks">
       <div class="ref-perk">
         <div class="ref-perk-ico perk-gold">
@@ -337,17 +353,6 @@
         </div>
         <div class="ref-perk-text">За активность друга 3 и выполнение всех заданий ты получишь <b>Diamond Card</b></div>
       </div>
-    </div>
-
-    <div class="ref-actions">
-      <button class="ref-share-btn" id="refShareBtnNav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>
-        Поделиться
-      </button>
-      <button class="ref-copy-btn" id="refCopyBtnNav">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Копировать
-      </button>
     </div>
 
     <div class="refs-divider"></div>
@@ -819,6 +824,6 @@
   </div>
 </div>
 
-<script src="script.js?v=6828003"></script>
+<script src="script.js?v=6828004"></script>
 </body>
 </html>

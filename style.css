@@ -523,9 +523,9 @@
   /* =========================================================
      НИЖНЯЯ НАВИГАЦИЯ
      ========================================================= */
-  @keyframes navIn{
-    from{ opacity:0; transform:translateY(100%); }
-    to{ opacity:1; transform:translateY(0); }
+@keyframes navIn{
+    from{ opacity:0; transform:translateX(-50%) translateY(100%); }
+    to{ opacity:1; transform:translateX(-50%) translateY(0); }
   }
   .nav-btn{
     position:relative;
@@ -3221,43 +3221,34 @@
     transform:none;
   }
 /* =========================================================
-   ПАНЕЛИ v6828003: перераспределение модалок
+   ПАНЕЛИ v6828004: все окна по центру, плитки профиля, прогресс заданий
    ========================================================= */
 
-/* ---- 1. НИЖНИЕ шейты: выезжают снизу, ручка сверху, асимметричный радиус ---- */
-#sheet, #notifSheet, #tasksSheet, #refsSheet, #stakeOvSheet, #withdrawSheet, #adminSheet{
-  bottom:10px;
-  border-radius:26px 26px 18px 18px;
-  transform:translate(-50%, 48px);
-  padding-top:18px;
-}
-#sheet.open, #notifSheet.open, #tasksSheet.open, #refsSheet.open, #stakeOvSheet.open, #withdrawSheet.open, #adminSheet.open{
-  transform:translate(-50%, 0);
-}
-#sheet::after, #notifSheet::after, #tasksSheet::after, #refsSheet::after, #stakeOvSheet::after, #withdrawSheet::after, #adminSheet::after{
-  content:"";
-  position:absolute;
-  top:7px; left:50%;
-  width:38px; height:4px;
-  margin-left:-19px;
-  border-radius:999px;
-  background:rgba(145,165,178,.28);
-  pointer-events:none;
-}
-
-/* ---- 2. ЦЕНТРАЛЬНЫЕ шейты: по центру, scale-in, заголовок по центру ---- */
-#settingsSheet, #activitySheet, #supportSheet, #aboutSheet, #stakeSheet, #adminPanelSheet, #usersSheet{
-  top:50%; bottom:auto;
-  transform:translate(-50%, -50%) scale(.92);
+/* ---- ВСЕ модалки по середине: scale-in ---- */
+.sheet{
+  top:50%;
+  bottom:auto;
+  transform:translate(-50%, -50%) scale(.94);
   border-radius:24px;
 }
-#settingsSheet.open, #activitySheet.open, #supportSheet.open, #aboutSheet.open, #stakeSheet.open, #adminPanelSheet.open, #usersSheet.open{
+.sheet.open{
   transform:translate(-50%, -50%) scale(1);
 }
-#settingsSheet, #activitySheet, #supportSheet, #aboutSheet{ width:min(calc(100vw - 72px), 336px); }
+
+/* ---- Индивидуальные ширины ---- */
+#settingsSheet, #activitySheet, #supportSheet, #aboutSheet{ width:min(calc(100vw - 56px), 336px); }
 #stakeSheet{ width:min(calc(100vw - 24px), 396px); }
+#adminSheet{ width:min(calc(100vw - 24px), 440px); }
 #adminPanelSheet{ width:min(calc(100vw - 24px), 440px); }
 #usersSheet{ width:min(calc(100vw - 24px), 408px); }
+#notifSheet{ max-width:376px; }
+#tasksSheet{ max-width:424px; }
+#refsSheet{ max-width:400px; }
+#stakeOvSheet{ max-width:430px; }
+#withdrawSheet{ max-width:380px; }
+#stakeProgSheet{ max-width:400px; }
+
+/* ---- Заголовок по центру у диалогов ---- */
 #settingsSheet .sheet-head, #activitySheet .sheet-head, #supportSheet .sheet-head, #aboutSheet .sheet-head, #stakeSheet .sheet-head, #adminPanelSheet .sheet-head, #usersSheet .sheet-head{
   justify-content:center;
   padding-top:6px;
@@ -3267,19 +3258,72 @@
   top:14px; right:14px;
 }
 
-/* ---- 3. Индивидуальные ширины нижних ---- */
-#notifSheet{ max-width:376px; }
-#tasksSheet{ max-width:424px; }
-#refsSheet{ max-width:400px; }
-#stakeOvSheet{ max-width:430px; }
-#withdrawSheet{ max-width:380px; }
-#adminSheet{ max-width:440px; }
-
-/* ---- 4. stake-prog: компактный низ, без ручки-конфликта ---- */
-#stakeProgSheet{
-  bottom:18px;
-  border-radius:22px;
-  padding:14px 16px 16px;
-  transform:translate(-50%, 44px);
+/* ---- Меню профиля: плитки 2x2 ---- */
+.pf-menu{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
 }
-#stakeProgSheet.open{ transform:translate(-50%, 0); }
+.pf-item{
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:16px 8px 14px;
+  text-align:center;
+}
+.pf-item .pf-arrow{ display:none; }
+.pf-item .pf-ico{
+  width:46px; height:46px;
+  border-radius:14px;
+  display:flex; align-items:center; justify-content:center;
+  background:rgba(59,130,196,.12);
+  border:1px solid rgba(103,183,243,.22);
+  color:var(--blue-3);
+}
+.pf-item .pf-ico svg{ width:22px; height:22px; }
+.pf-item .pf-label{
+  font-size:12px;
+  color:var(--text-80);
+  white-space:nowrap;
+}
+
+/* ---- Прогресс заданий на вкладке ---- */
+.task-progress{
+  padding:12px 14px;
+  margin-bottom:14px;
+  border-radius:16px;
+  background:var(--surface-transparent);
+  border:1px solid var(--border);
+}
+.task-progress-track{
+  height:8px;
+  border-radius:999px;
+  background:rgba(8,16,24,.6);
+  overflow:hidden;
+}
+.task-progress-fill{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:var(--grad-accent);
+  box-shadow:0 0 12px 1px rgba(59,130,196,.45);
+  transition:width .5s var(--ease);
+}
+.task-progress-meta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:7px;
+}
+.task-progress-label{
+  color:var(--text-40);
+  font-size:10px; font-weight:700;
+  letter-spacing:.5px;
+  text-transform:uppercase;
+}
+.task-progress-text{
+  color:var(--blue-3);
+  font-size:12px; font-weight:800;
+  font-variant-numeric:tabular-nums;
+}
