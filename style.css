@@ -3425,3 +3425,200 @@
 @media (min-width:768px){
   .sheet{ border-radius:28px; }
 }
+/* =========================================================
+   v6828006: панель профиля в шапке, декор главной, сплэш-прогресс,
+   фикс нав-индикатора, окна по центру с блокировкой навигации,
+   инфо в карточках
+   ========================================================= */
+
+/* ---- ШАПКА ГЛАВНОЙ: панель аватар | ник+id | колокольчик ---- */
+.mh-header{
+  grid-template-columns:auto 1fr auto;
+  padding:9px 10px;
+  border-radius:18px;
+  background:
+    radial-gradient(120% 130% at 8% -20%, rgba(103,183,243,.14) 0%, rgba(103,183,243,0) 55%),
+    linear-gradient(165deg, rgba(22,40,55,.92) 0%, rgba(13,26,38,.94) 100%);
+  border-color:rgba(103,183,243,.2);
+  border-top-color:rgba(255,255,255,.09);
+  box-shadow:var(--shadow-md), inset 0 1px 0 rgba(255,255,255,.05);
+  margin:0 0 12px;
+}
+.mh-fill{ flex:1; }
+.mh-user{
+  justify-self:stretch;
+  max-width:none;
+  padding:5px 10px 5px 5px;
+  background:rgba(8,16,24,.4);
+  border-color:rgba(145,165,178,.12);
+}
+.mh-meta .hero-name{
+  max-width:150px;
+  font-size:13px;
+}
+.mh-meta .hero-id{
+  max-width:150px;
+  font-size:9.5px;
+}
+.mh-meta .hero-prefix{ height:12px; }
+
+/* ---- ДЕКОР ГЛАВНОЙ: мягкие svg-звёзды ---- */
+.mh-decor{
+  position:absolute;
+  top:0; left:0; right:0;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
+  overflow:hidden;
+}
+.mh-decor svg{ position:absolute; }
+.mh-decor-1{ width:52px; height:52px; top:96px; right:-6px; opacity:.55; animation:splashFloat 5s ease-in-out infinite; }
+.mh-decor-2{ width:26px; height:26px; top:22px; left:-9px; color:#5E91C0; opacity:.4; animation:splashFloat 4.2s ease-in-out 1.2s infinite; }
+.mh-decor-3{ width:24px; height:24px; bottom:16px; left:14px; color:#8FA3D0; opacity:.35; animation:twinkle 3.4s ease-in-out infinite; }
+@keyframes twinkle{
+  0%,100%{ opacity:.18; transform:scale(.9); }
+  50%{ opacity:.5; transform:scale(1.08); }
+}
+#viewMain > *:not(.mh-decor){ position:relative; z-index:1; }
+
+/* ---- СПЛЕШ: живой прогресс ---- */
+.splash-bar{
+  position:relative;
+  width:min(220px, 62vw);
+  height:6px;
+  border-radius:999px;
+  background:rgba(8,16,24,.65);
+  border:1px solid rgba(145,165,178,.14);
+  overflow:hidden;
+  animation:splashRise .55s var(--ease) .22s both;
+}
+.splash-bar-fill{
+  position:relative;
+  width:0%;
+  height:100%;
+  border-radius:999px;
+  background:linear-gradient(90deg, #2D6FA8 0%, #3B82C4 40%, #7FB8E8 60%, #3B82C4 80%, #2D6FA8 100%);
+  background-size:200% 100%;
+  animation:fillSheen 1.6s linear infinite;
+  box-shadow:0 0 14px 1px rgba(59,130,196,.55);
+  transition:width .35s var(--ease);
+}
+@keyframes fillSheen{
+  from{ background-position:200% 0; }
+  to{ background-position:0 0; }
+}
+.splash-pct{
+  margin-left:8px;
+  font-variant-numeric:tabular-nums;
+  color:var(--blue-3);
+  font-weight:800;
+}
+.splash-badge .splash-logo svg{ animation:splashFloat 2.4s ease-in-out infinite; }
+.splash-badge .splash-ring{ animation:ringSpin 9s linear infinite; transform-origin:50% 50%; }
+@keyframes ringSpin{
+  to{ transform:rotate(360deg); }
+}
+
+/* ---- НАВ-ИНДИКАТОР: точное позиционирование по кнопкам ---- */
+.nav-indicator{
+  width:auto;
+  transform-origin:center;
+  transition:none;
+}
+
+/* ---- Рефералы: кнопки на 3px ниже ---- */
+.ref-actions{
+  margin-top:3px;
+}
+
+/* ---- ОКНА: строго по середине, бэкдроп блокирует навигацию ---- */
+.sheet-backdrop{
+  z-index:40;
+}
+.sheet{
+  top:50% !important;
+  bottom:auto !important;
+  z-index:50;
+  padding-top:14px;
+}
+.sheet.open{
+  transform:translate(-50%, -50%) scale(1);
+}
+.stake-sheet, .admin-sheet{ z-index:80; }
+
+/* ---- Контент и крестики выше в центрированных окнах ---- */
+#settingsSheet, #activitySheet, #supportSheet, #aboutSheet, #stakeSheet, #adminPanelSheet, #usersSheet{
+  padding-top:14px;
+}
+#settingsSheet .sheet-head, #activitySheet .sheet-head, #supportSheet .sheet-head, #aboutSheet .sheet-head, #stakeSheet .sheet-head, #adminPanelSheet .sheet-head, #usersSheet .sheet-head{
+  margin-bottom:14px;
+}
+#settingsSheet .sheet-close, #activitySheet .sheet-close, #supportSheet .sheet-close, #aboutSheet .sheet-close, #stakeSheet .sheet-close, #adminPanelSheet .sheet-close, #usersSheet .sheet-close{
+  top:10px; right:12px;
+}
+
+/* ---- Шапки админки/пользователей: назад слева, заголовок по центру ---- */
+#adminPanelSheet .sheet-head{
+  justify-content:space-between;
+  gap:8px;
+}
+#adminPanelSheet .sheet-head::after{ display:none; }
+#adminPanelSheet .sheet-title{
+  position:static;
+}
+#adminPanelSheet .sheet-close{
+  position:static;
+}
+#adminPanelSheet .sheet-head{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+}
+#adminPanelSheet .head-actions{ justify-content:flex-end; }
+#usersSheet .sheet-head{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  justify-content:stretch;
+}
+#usersSheet .head-actions{ justify-content:flex-start; }
+#usersSheet .head-actions:last-child{ justify-content:flex-end; }
+#usersSheet .sheet-close{
+  position:static;
+}
+#usersSheet .sheet-head::after{ display:none; }
+#usersSheet .sheet-title{ order:0; }
+
+/* ---- КАРТОЧКИ: больше информации ---- */
+.it-badge{
+  position:absolute;
+  bottom:5px; left:5px; right:5px;
+  z-index:3;
+  padding:3px 0;
+  border-radius:6px;
+  text-align:center;
+  font-size:7.5px; font-weight:800;
+  letter-spacing:.7px;
+  text-transform:uppercase;
+  color:#fff;
+  background:linear-gradient(90deg, rgba(8,16,24,.72), rgba(8,16,24,.5));
+  border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:none;
+}
+.it-earned{
+  color:var(--text-40);
+  font-size:8.5px;
+  font-weight:600;
+  margin-top:4px;
+}
+.it-stake-meta{
+  position:relative; z-index:1;
+  color:var(--blue-3);
+  font-size:9.5px; font-weight:700;
+  line-height:1.35;
+  opacity:.85;
+}
+.inv-tile.staking .it-card{
+  box-shadow:inset 0 0 18px var(--t1g, rgba(0,0,0,.4)), 0 0 14px -2px var(--t1g, rgba(59,130,196,.35));
+}
+.inv-tile .it-card{
+  border-width:1.5px;
+}

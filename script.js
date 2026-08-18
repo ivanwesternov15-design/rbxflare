@@ -966,6 +966,7 @@ function collectDailyCard(){
     reward: state.daily.reward,
     status: 'available',
     until: 0,
+    earnedAt: Date.now(),
     img: TIER_STYLE[state.daily.rarity].img,
   });
   state.daily.collected = true;
@@ -1445,21 +1446,29 @@ function renderInventory(){
     el.style.animationDelay = `${i * 70}ms`;
     const statusText = staked ? (stakedDone ? 'Стейкинг завершён' : 'В стейкинге') : (card.status === 'used' ? 'Использована' : 'Доступна');
     const statusCls = stakedDone ? 'done' : (staked ? 'staking' : (card.status === 'used' ? 'used' : ''));
+    const stakeInfo = staked
+      ? `Период: ${STAKE_LABEL[card.period] || card.period || '—'} · +${card.pct || 0}% · до +${Math.round(card.reward * (card.pct || 0) / 100)} Robux`
+      : (card.status === 'available' ? 'Готова к стейкингу' : '');
+    const earnedLine = card.earnedAt
+      ? `Получена: ${new Date(card.earnedAt).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: '2-digit' })}`
+      : '';
     el.innerHTML =
       `<div class="it-top">` +
         `<div class="it-card">` +
           `<svg class="it-rays" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M3.5 20.5 20.5 3.5"/><path d="M8.5 21.5l3.4-5.6"/><path d="M21.5 8.5l-5.6-3.4"/></svg>` +
           `<svg class="it-spark" viewBox="0 0 24 24"><path d="M12 2.5l1.9 5.6 5.6 1.9-5.6 1.9L12 17.5l-1.9-5.6-5.6-1.9 5.6-1.9z" fill="currentColor"/></svg>` +
           `<img class="it-png" src="${card.img}" alt="${card.rarity}">` +
+          `<span class="it-badge">${card.rarity}</span>` +
         `</div>` +
         `<div class="it-reward">` +
           `<div class="it-num">${card.reward}</div>` +
           `<div class="it-sub">Robux</div>` +
+          `${earnedLine ? `<div class="it-earned">${earnedLine}</div>` : ''}` +
         `</div>` +
       `</div>` +
       `<div class="it-title">${card.rarity}</div>` +
       `<div class="it-status ${statusCls}">${statusText}</div>` +
-      (staked ? `<div class="it-until">${stakedDone ? 'Можно стереть награду' : 'Осталось ' + fmtLeft(card.until)}</div>` : '') +
+      (staked ? `<div class="it-until">${stakedDone ? 'Можно стереть награду' : 'Осталось ' + fmtLeft(card.until)}</div><div class="it-stake-meta">${stakeInfo}</div>` : (card.status === 'available' ? `<div class="it-stake-meta">${stakeInfo}</div>` : '')) +
       `<div class="it-act">` +
         (card.status === 'available'
           ? `<button class="stake-btn" data-id="${card.id}" data-i="${i}">Стейкинг</button>`
@@ -2179,27 +2188,36 @@ function switchView(view){
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ---- нижняя навигация (пока работает только «Профиль»): плавное скольжение индикатора ---- */
+/* ---- нижняя навигация: плавное скольжение индикатора точно по кнопкам ---- */
 const navIndicator = document.getElementById('navIndicator');
 const navBtns = [...document.querySelectorAll('.nav-btn')];
 let navPos = 0;      // текущая визуальная позиция индикатора
 let navAnim = 0;     // токен текущей анимации
 let activeIdx = 0;   // выбранная категория
 
-function setNavIndicatorX(x, sx, sy){
-  navIndicator.style.transform =
-    `translateX(calc(${x} * 100% + ${x * 2}px)) scale(${sx}, ${sy})`;
+function navBtnRect(i){
+  const nav = navIndicator.parentElement.getBoundingClientRect();
+  const b = navBtns[i].getBoundingClientRect();
+  return { left: b.left - nav.left, w: b.width };
+}
+
+function setNavIndicatorRect(left, w, sx, sy){
+  navIndicator.style.left = `${left}px`;
+  navIndicator.style.width = `${w}px`;
+  navIndicator.style.transform = `scale(${sx}, ${sy})`;
 }
 
 function moveNavIndicator(idx, animate){
   const maxIdx = navBtns.length - 1;
   navAnim++; // новая анимация отменяет предыдущую
+  const to = navBtnRect(idx);
   if(!animate || idx === navPos){
     navPos = idx;
-    setNavIndicatorX(idx, 1, 1);
+    setNavIndicatorRect(to.left, to.w, 1, 1);
     return;
   }
-  const from = navPos;
+  const from = Math.min(Math.max(navPos, 0), maxIdx);
+  const fromR = navBtnRect(Math.round(from));
   const token = navAnim;
   const t0 = performance.now();
   const dur = 520;
@@ -2213,10 +2231,12 @@ function moveNavIndicator(idx, animate){
     const raw = from + (idx - from) * easeOutBack(p);
     const x = Math.min(Math.max(raw, 0), maxIdx);
     navPos = x; // обновляем позицию каждый кадр — новая анимация стартует отсюда
+    const left = fromR.left + (to.left - fromR.left) * easeOutBack(p);
+    const w = fromR.w + (to.w - fromR.w) * easeOutBack(p);
     const jelly = Math.sin(Math.PI * Math.min(1, Math.abs(raw - from) / Math.max(idx - from, 1e-6)));
-    setNavIndicatorX(x, 1 + 0.09 * jelly, 1 - 0.07 * jelly);
+    setNavIndicatorRect(left, w, 1 + 0.09 * jelly, 1 - 0.07 * jelly);
     if(p < 1) requestAnimationFrame(frame);
-    else { navPos = idx; setNavIndicatorX(idx, 1, 1); }
+    else { navPos = idx; setNavIndicatorRect(to.left, to.w, 1, 1); }
   };
   requestAnimationFrame(frame);
 }
@@ -2224,7 +2244,8 @@ function moveNavIndicator(idx, animate){
 const initialIdx = navBtns.findIndex(b => b.classList.contains('active'));
 activeIdx = initialIdx >= 0 ? initialIdx : navBtns.length - 1;
 navPos = activeIdx;
-setNavIndicatorX(activeIdx, 1, 1);
+const initRect = navBtnRect(activeIdx);
+setNavIndicatorRect(initRect.left, initRect.w, 1, 1);
 
 tabPosIdx = Math.max(0, tabBtns.findIndex(b => b.classList.contains('active')));
 tabIndicator.style.left = `${tabBtnLeft(Math.round(tabPosIdx))}px`;
@@ -2497,8 +2518,21 @@ async function renderSettings(){
   }
 }
 
-/* ---- Загрузка при старте: сплеш, затем вся вкладка ---- */
+/* ---- Загрузка при старте: сплеш с прогрессом, затем вся вкладка ---- */
 const splashEl = document.getElementById('splash');
+const splashFill = document.getElementById('splashBarFill');
+const splashPctEl = document.getElementById('splashPct');
+let splashPct = 0;
+const splashTimer = setInterval(() => {
+  splashPct = Math.min(88, splashPct + 6 + Math.random() * 4);
+  if(splashFill) splashFill.style.width = splashPct + '%';
+  if(splashPctEl) splashPctEl.textContent = Math.round(splashPct) + '%';
+}, 110);
+function splashDone(){
+  clearInterval(splashTimer);
+  if(splashFill) splashFill.style.width = '100%';
+  if(splashPctEl) splashPctEl.textContent = '100%';
+}
 const bootStart = performance.now();
 Promise.allSettled([
   loadServerState(),
@@ -2539,6 +2573,7 @@ if(streakGained){
   claimPendingCoins();
   startRealtime();
   const wait = Math.max(0, 1400 - (performance.now() - bootStart));
+  splashDone();
   setTimeout(() => splashEl.classList.add('done'), wait);
   setTimeout(() => document.body.classList.add('ready'), wait + 80);
 });
