@@ -729,8 +729,8 @@ const dailyDoneEl = document.getElementById('dailyDone');
 const collectBtnEl = document.getElementById('collectBtn');
 const rrSheet = document.getElementById('rrSheet');
 const rrBackdrop = document.getElementById('rrBackdrop');
-const rrMainCard = document.getElementById('rrMainCard');
-const rrMainImg = document.getElementById('rrMainImg');
+const rrHeroCoin = document.getElementById('rrHeroCoin');
+const rrRarity = document.getElementById('rrRarity');
 const rrMainNum = document.getElementById('rrMainNum');
 const rrOthersRow = document.getElementById('rrOthersRow');
 const rrBtn = document.getElementById('rrBtn');
@@ -896,15 +896,19 @@ function randInt(min, max){
 function showResultWindow(rarity, reward, others){
   const st = TIER_STYLE[rarity] || TIER_STYLE.Basic;
   rrSheet.classList.remove('hidden');
-  rrMainCard.style.setProperty('--t1', st.colors[0]);
-  rrMainCard.style.setProperty('--t2', st.colors[1]);
-  rrMainImg.src = st.img;
+  rrSheet.classList.remove('collected');
+  rrHeroCoin.style.setProperty('--t1', st.colors[0]);
+  rrHeroCoin.style.setProperty('--t2', st.colors[1]);
+  rrRarity.textContent = rarity;
+  rrRarity.style.setProperty('--t1', st.colors[0]);
+  rrRarity.style.setProperty('--t2', st.colors[1]);
   rrMainNum.textContent = reward;
   rrOthersRow.innerHTML = (others || []).map(o => {
     const n = Math.max(1, Math.round(o[0]));
     return `<div class="rr-other-card ${o[1] || 'gold'}">
-      <div class="rr-other-num">${n}</div>
-      <div class="rr-other-sub">Robux</div>
+      <span class="rr-other-plus">+</span>
+      <span class="rr-other-num">${n}</span>
+      <span class="rr-other-sub">Robux</span>
     </div>`;
   }).join('');
   openModal(rrSheet, rrBackdrop);
@@ -1482,6 +1486,12 @@ function renderInventory(){
             ? `<button class="stake-btn off" data-id="${card.id}" data-i="${i}">Прогресс</button>`
             : `<span class="it-used-tag">×</span>`) +
       `</div>`;
+    const png = el.querySelector('.it-png');
+    if(png){
+      const mark = () => el.classList.add('loaded');
+      if(png.complete) mark();
+      else{ png.addEventListener('load', mark); png.addEventListener('error', mark); }
+    }
     inventoryListEl.appendChild(el);
   });
 }
@@ -2369,7 +2379,12 @@ if(tg){
 }
 
 collectBtnEl.addEventListener('click', collectDailyCard);
-rrBtn.addEventListener('click', () => { closeModal(rrSheet, rrBackdrop); collectDailyCard(); });
+rrBtn.addEventListener('click', () => {
+  if(rrSheet.classList.contains('collected')) return;
+  rrSheet.classList.add('collected');
+  collectDailyCard();
+  setTimeout(() => closeResultWindow(), 1600);
+});
 rrBackdrop.addEventListener('click', () => closeResultWindow());
 
 stakeClose.addEventListener('click', () => closeModal(stakeSheet, stakeBackdrop));

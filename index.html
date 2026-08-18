@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6828008">
+<link rel="stylesheet" href="style.css?v=6828009">
 </head>
 <body>
 
@@ -780,10 +780,24 @@
         <path class="rr-sp s4" d="M150 156l1.8 4.5 4.5 1.8-4.5 1.8-1.8 4.5-1.8-4.5-4.5-1.8 4.5-1.8z" fill="#4E9BE0"/>
         <path class="rr-sp s5" d="M48 168l1.8 4.5 4.5 1.8-4.5 1.8-1.8 4.5-1.8-4.5-4.5-1.8 4.5-1.8z" fill="#8FA3D0"/>
       </svg>
-      <div class="rr-main-card" id="rrMainCard">
-        <img id="rrMainImg" alt="">
-        <div class="rr-main-num" id="rrMainNum">0</div>
-        <div class="rr-main-sub">Robux</div>
+      <div class="rr-hero">
+        <div class="rr-hero-coin" id="rrHeroCoin">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <defs>
+              <linearGradient id="rbxCoin" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#67B7F3"/>
+                <stop offset="1" stop-color="#2D6FA8"/>
+              </linearGradient>
+            </defs>
+            <rect x="5" y="5" width="38" height="38" rx="11" fill="url(#rbxCoin)"/>
+            <rect x="5" y="5" width="38" height="38" rx="11" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.6"/>
+            <path d="M17 13.5h6.2a4.8 4.8 0 1 1 0 9.6H17z" fill="#fff"/>
+            <path d="M17 23.1h6.6l5.4 11.4h-7.2z" fill="#fff"/>
+            <circle cx="15.2" cy="15.2" r="2.4" fill="#fff" opacity=".28"/>
+          </svg>
+        </div>
+        <div class="rr-rarity" id="rrRarity"></div>
+        <div class="rr-hero-num"><span class="rr-num" id="rrMainNum">0</span><span class="rr-hero-cur">Robux</span></div>
       </div>
     </div>
     <div class="rr-others">
@@ -793,7 +807,12 @@
     <button class="rr-btn" id="rrBtn">
       <span>Продолжить</span>
     </button>
-    <div class="rr-note">Награда зачислена на баланс</div>
+    <div class="rr-success" id="rrSuccess">
+      <div class="rr-check">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="rr-success-text">Награда зачислена на баланс</div>
+    </div>
   </div>
 </div>
 
@@ -891,6 +910,6 @@
   </div>
 </div>
 
-<script src="script.js?v=6828008"></script>
+<script src="script.js?v=6828009"></script>
 </body>
 </html>
