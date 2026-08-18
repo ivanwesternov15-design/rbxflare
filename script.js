@@ -643,7 +643,6 @@ tabBtns.forEach(btn => {
 function openSheet(){
   backdrop.classList.add('open');
   sheet.classList.add('open');
-  animateModal(sheet, backdrop, true);
   renderGrid(state.tab);
   refreshLibrary();
   Object.keys(LIBRARY).forEach(t => preloadTab(t));
@@ -655,58 +654,17 @@ function closeSheet(){
   if(deleteMode) exitDeleteMode();
   backdrop.classList.remove('open');
   sheet.classList.remove('open');
-  animateModal(sheet, backdrop, false);
   if(window._scanTimer){ clearInterval(window._scanTimer); window._scanTimer = null; }
-}
-
-/* ---- плавное появление/исчезание модальных окон (rAF) ---- */
-const modalAnimTokens = new WeakMap();
-function modalToken(modal){
-  let t = modalAnimTokens.get(modal) || 0;
-  modalAnimTokens.set(modal, ++t);
-  return t;
-}
-function animateModal(modal, bd, open){
-  const token = modalToken(modal);
-  const t0 = performance.now();
-  const dur = open ? 480 : 300;
-  if(open) modal.style.visibility = 'visible';
-  const ease = open
-    ? (t) => { const c1 = 1.4, c3 = c1 + 1; return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2); }
-    : (t) => 1 - Math.pow(1 - t, 3);
-
-  const frame = now => {
-    if(token !== modalAnimTokens.get(modal)) return;
-    const p = Math.min(1, (now - t0) / dur);
-    const e = ease(p);
-    const rev = 1 - e;
-    const o = open ? e : rev;
-    bd.style.opacity = o;
-    modal.style.opacity = o;
-    modal.style.transform = `translate(-50%, ${rev * 30}px)`;
-    if(p < 1){ requestAnimationFrame(frame); }
-    else if(!open){
-      modal.style.visibility = 'hidden';
-      modal.style.opacity = 0;
-      bd.style.opacity = 0;
-    }else{
-      modal.style.filter = 'blur(0px)';
-      modal.style.transform = 'translate(-50%, 0)';
-    }
-  };
-  requestAnimationFrame(frame);
 }
 
 function openModal(modal, bd){
   bd.classList.add('open');
   modal.classList.add('open');
-  animateModal(modal, bd, true);
 }
 
 function closeModal(modal, bd){
   bd.classList.remove('open');
   modal.classList.remove('open');
-  animateModal(modal, bd, false);
 }
 
 function closeAllSheets(){
@@ -1095,6 +1053,76 @@ const TASKS = [
     check: () => state.balance >= 500 },
 ];
 
+const TASK_META = {
+  first_card:    { type:'cards',   color:'#4E9BE0' },
+  five_cards:    { type:'cards',   color:'#4E9BE0' },
+  streak3:       { type:'streak',  color:'#EAB765' },
+  stake_one:     { type:'stake',   color:'#4FD18B' },
+  invite_friend: { type:'invite',  color:'#8FA3D8' },
+  change_bg:     { type:'style',   color:'#D88AB0' },
+  balance500:    { type:'balance', color:'#67B7F3' },
+};
+const TASK_ICONS = {
+  cards:   '<rect x="4" y="5" width="16" height="14" rx="3"/><path d="M8 9h8M8 13h5"/>',
+  streak:  '<rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 2.5V7M16 2.5V7M3.5 10.5h17"/><path d="M9 15.5l2.2 2.2 4-4.4"/>',
+  stake:   '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.8V12l3 1.9"/>',
+  invite:  '<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M17 10v6M14 13h6"/>',
+  style:   '<path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-.8 2-1.7 0-.9-.7-1.4-.7-2.4 0-1.2 1-2 2.4-2H17a4 4 0 0 0 4-4c0-4.4-4-7.9-9-7.9z"/><circle cx="8.2" cy="11" r="1"/><circle cx="11.6" cy="8.2" r="1"/><circle cx="15.4" cy="10.2" r="1"/>',
+  balance: '<rect x="3.5" y="6" width="17" height="13" rx="3"/><path d="M3.5 10.5h17"/><circle cx="16.2" cy="14.6" r="1.2" fill="currentColor" stroke="none"/>',
+};
+const COIN_ICO = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v4l2.6 1.7"/></svg>';
+
+function hexToRgba(hex, a){
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(x => x + x).join('') : h, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+function taskProgress(t){
+  const s = state;
+  switch(t.id){
+    case 'first_card':    return { cur: Math.min(s.inventory.length, 1), target: 1 };
+    case 'five_cards':    return { cur: Math.min(s.inventory.length, 5), target: 5 };
+    case 'streak3':       return { cur: Math.min(s.streak.count || 0, 3), target: 3 };
+    case 'stake_one':     return { cur: s.inventory.some(c => c.status === 'staking') ? 1 : 0, target: 1 };
+    case 'invite_friend': return { cur: Math.min(REFERRALS.count || 0, 1), target: 1 };
+    case 'change_bg':     return { cur: s.bgChanged ? 1 : 0, target: 1 };
+    case 'balance500':    return { cur: Math.min(s.balance, 500), target: 500 };
+  }
+  return null;
+}
+
+function taskCardHTML(t){
+  const ok = t.check();
+  const claimed = !!(state.tasks[t.id] && state.tasks[t.id].claimed);
+  const meta = TASK_META[t.id] || { type:'cards', color:'#4E9BE0' };
+  const tcs = hexToRgba(meta.color, .12);
+  const tcb = hexToRgba(meta.color, .3);
+  const prog = taskProgress(t);
+  const pct = prog && prog.target > 1 ? Math.round(prog.cur / prog.target * 100) : 0;
+  const isBool = !prog || prog.target === 1;
+  const st = claimed ? 'st-done' : (ok ? 'st-ready' : 'st-prog');
+  const claimBtn = `<button class="tc-claim-btn" data-task="${t.id}">Забрать</button>`;
+  return `<div class="task-card ${st}" data-task="${t.id}" style="--tc:${meta.color};--tcs:${tcs};--tcb:${tcb}">
+    <div class="tc-ico">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TASK_ICONS[meta.type] || TASK_ICONS.cards}</svg>
+    </div>
+    <div class="tc-main">
+      <div class="tc-title">${t.title}</div>
+      <div class="tc-desc">${t.desc}</div>
+    </div>
+    <div class="tc-state">${claimed ? '<span class="tc-chip tc-done">Выполнено</span>' : ok ? '<span class="tc-chip tc-ready">Готово</span>' : '<span class="tc-chip tc-prog">В процессе</span>'}</div>
+    ${!isBool ? `<div class="tc-progress">
+      <div class="tc-prog-track"><i style="width:${pct}%"></i></div>
+      <div class="tc-prog-num">${prog.cur} / ${prog.target}</div>
+    </div>` : ''}
+    <div class="tc-bottom">
+      <span class="tc-reward">${COIN_ICO}${claimed ? '+' + t.reward + ' получено' : '+' + t.reward}</span>
+      ${claimed ? '<span class="tc-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 13l4 4L19 7"/></svg></span>' : ok ? claimBtn : ''}
+    </div>
+  </div>`;
+}
+
 function tasksCompletedCount(){ return TASKS.filter(t => t.check()).length; }
 function tasksAllDone(){ return tasksCompletedCount() === TASKS.length; }
 
@@ -1107,33 +1135,11 @@ function renderTasks(){
   if(tasksProgressTextEl) tasksProgressTextEl.textContent = `${done} / ${TASKS.length} выполнено`;
   if(taskBtnProgressEl) taskBtnProgressEl.textContent = `${done} / ${TASKS.length} выполнено`;
   if(tasksListEl){
-    tasksListEl.innerHTML = TASKS.map(t => {
-      const ok = t.check();
-      const claimed = !!(state.tasks[t.id] && state.tasks[t.id].claimed);
-      const status = claimed ? 'claimed' : (ok ? 'ready' : 'locked');
-      return `<div class="task-row ${status}">
-        <div class="task-ico">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            ${claimed ? '<path d="M5 13l4 4L19 7"/>' : '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'}
-          </svg>
-        </div>
-        <div class="task-mid">
-          <div class="task-title">${t.title}</div>
-          <div class="task-desc">${t.desc}</div>
-        </div>
-        <div class="task-act">
-          ${claimed
-            ? `<span class="task-done-chip">Готово</span>`
-            : ok
-              ? `<button class="task-claim-btn" data-task="${t.id}">+${t.reward}</button>`
-              : `<span class="task-lock-chip">+${t.reward}</span>`}
-        </div>
-      </div>`;
-    }).join('');
-    tasksListEl.querySelectorAll('.task-claim-btn').forEach(b =>
+    tasksListEl.innerHTML = TASKS.map(taskCardHTML).join('');
+    tasksListEl.querySelectorAll('.tc-claim-btn').forEach(b =>
       b.addEventListener('click', () => claimTask(b.dataset.task)));
   }
-  reportProgress();
+  renderTasksNav();
 }
 
 function claimTask(id){
@@ -2288,16 +2294,34 @@ window.addEventListener('resize', () => {
   tabIndicator.style.left = `${tabPosIdx}px`;
 });
 
+const taskFiltersEl = document.getElementById('taskFilters');
+if(taskFiltersEl) taskFiltersEl.addEventListener('click', e => {
+  const btn = e.target.closest('.tf-btn');
+  if(!btn) return;
+  taskFiltersEl.querySelectorAll('.tf-btn').forEach(b => b.classList.toggle('active', b === btn));
+  const list = document.getElementById('tasksListNav');
+  if(list) list.dataset.filter = btn.dataset.tf;
+});
 function renderTasksNav(){
   const list = document.getElementById('tasksListNav');
   if(!list) return;
+  reportProgress();
   const done = tasksCompletedCount();
   const p = document.getElementById('tasksProgressNav'); if(p) p.textContent = `${done} / ${TASKS.length}`;
   const fill = document.getElementById('tasksProgressFill');
   if(fill) fill.style.width = `${Math.min(100, Math.round(done / TASKS.length * 100))}%`;
   const pt = document.getElementById('tasksProgressTextMain'); if(pt) pt.textContent = `${done} из ${TASKS.length}`;
   list.innerHTML = tasksListEl ? tasksListEl.innerHTML : '';
-  list.querySelectorAll('.task-claim-btn').forEach(b => b.addEventListener('click', () => { claimTask(b.dataset.task); renderTasksNav(); }));
+  list.querySelectorAll('.tc-claim-btn').forEach(b => b.addEventListener('click', () => { claimTask(b.dataset.task); renderTasksNav(); }));
+  const f = document.getElementById('taskFilters');
+  if(f && list){
+    list.dataset.filter = f.querySelector('.tf-btn.active') ? f.querySelector('.tf-btn.active').dataset.tf : 'all';
+    f.querySelectorAll('.tf-btn').forEach(b => {
+      b.textContent = b.dataset.tf === 'all' ? `Все · ${TASKS.length}`
+        : b.dataset.tf === 'active' ? `Активные · ${list.querySelectorAll('.task-card:not(.st-done)').length}`
+        : `Выполнено · ${list.querySelectorAll('.task-card.st-done').length}`;
+    });
+  }
 }
 function renderRefsNav(){
   const count = document.getElementById('refCountNav'); if(count) count.textContent = REFERRALS.count;

@@ -361,7 +361,7 @@
   .sheet-backdrop{
     position:fixed; inset:0;
     background:rgba(0,0,0,.6);
-    z-index:10;
+    z-index:40;
     opacity:0;
     pointer-events:none;
     transition:opacity var(--transition-normal) var(--ease);
@@ -370,13 +370,13 @@
 
   .sheet{
     position:fixed;
-    top:50%;
-    left:50%;
-    bottom:auto;
+    inset:0;
+    margin:auto;
     width:calc(100% - 24px);
     max-width:400px;
-    max-height:calc(100vh - 28px);
-    z-index:30;
+    height:fit-content;
+    max-height:calc(100dvh - 32px);
+    z-index:50;
     border-radius:var(--radius-2xl);
     padding:16px;
     background:rgba(17,31,42,.94);
@@ -384,17 +384,19 @@
     border-top-color:rgba(255,255,255,.1);
     box-shadow:var(--shadow-lg), inset 0 1px 0 rgba(255,255,255,.05);
     opacity:0;
-    transform:translate(-50%, -50%) scale(.94);
+    transform:scale(.94) translateY(16px);
     pointer-events:none;
     display:flex;
     flex-direction:column;
     visibility:hidden;
-    transition:opacity var(--transition-normal) var(--ease), transform var(--transition-normal) var(--ease), visibility var(--transition-normal);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    transition:opacity var(--transition-normal) var(--ease), transform var(--transition-normal) cubic-bezier(.34,1.4,.64,1), visibility var(--transition-normal);
   }
   .sheet.open{
     opacity:1;
     visibility:visible;
-    transform:translate(-50%, -50%) scale(1);
+    transform:scale(1) translateY(0);
     pointer-events:auto;
   }
   .sheet::before{
@@ -2166,11 +2168,10 @@
   .refs-panel-head h1{ color:var(--text-100); font-size:22px; line-height:1.1; }
   .refs-divider{ height:1px; margin:16px 0 14px; background:linear-gradient(90deg, transparent, rgba(145,165,178,.2), transparent); }
   .sheet, .sheet-backdrop{ max-width:calc(100vw - 20px); }
-  .sheet{ max-height:calc(100vh - 28px); overflow:hidden; }
+  .sheet{ max-height:calc(100dvh - 32px); overflow-y:auto; }
   .sheet-body, .admin-panel-body{ min-height:0; }
   .sheet-title, .ap-note, .task-title, .task-desc, .notif-title, .notif-text{ overflow-wrap:break-word; word-break:normal; }
-  .stake-sheet{ max-height:calc(100vh - 28px); }
-  .notif-sheet, .stake-prog-sheet{ bottom:14px; }
+  .stake-sheet{ max-height:calc(100dvh - 32px); }
 
   /* ---- daily-panel в карточках: hero-оформление ---- */
   .daily-panel{
@@ -2378,7 +2379,7 @@
      ========================================================= */
   .rr-sheet{
     max-width:344px;
-    max-height:calc(100vh - 24px);
+    max-height:calc(100dvh - 32px);
     border-radius:var(--radius-lg);
     padding:0;
     background:rgba(17,31,42,.97);
@@ -3224,15 +3225,9 @@
    ПАНЕЛИ v6828004: все окна по центру, плитки профиля, прогресс заданий
    ========================================================= */
 
-/* ---- ВСЕ модалки по середине: scale-in ---- */
+/* ---- ВСЕ модалки по середине (inset:0 + margin:auto — в базе) ---- */
 .sheet{
-  top:50%;
-  bottom:auto;
-  transform:translate(-50%, -50%) scale(.94);
   border-radius:24px;
-}
-.sheet.open{
-  transform:translate(-50%, -50%) scale(1);
 }
 
 /* ---- Индивидуальные ширины ---- */
@@ -3536,13 +3531,8 @@
   z-index:40;
 }
 .sheet{
-  top:50% !important;
-  bottom:auto !important;
   z-index:50;
   padding-top:14px;
-}
-.sheet.open{
-  transform:translate(-50%, -50%) scale(1);
 }
 .stake-sheet, .admin-sheet{ z-index:80; }
 
@@ -3824,4 +3814,212 @@
 }
 .splash-name{
   letter-spacing:2.5px;
+}
+/* =========================================================
+   v6828008: полноценный UI-редизайн
+   - flex-центрирование окон (inset:0 + margin:auto)
+   - защита текста от выхода за границы
+   - полноценные карточки заданий + фильтры
+   - адаптив 320px / десктоп
+   ========================================================= */
+
+/* ---- Глобальная защита текста ---- */
+html, body{ overflow-x:hidden; }
+button, input, textarea, select{ font-family:var(--font-body); }
+button{ white-space:normal; }
+img, svg{ max-width:100%; }
+h1, h2, h3, .task-card, .tc-main, .tc-title, .tc-desc, .ap-note, .notif-title, .notif-text,
+.us-name, .us-sub, .ref-name, .it-name, .it-earned, .it-stake-meta, .tab-label,
+.badge, .chip, .mh-tile-title, .mh-tile-sub, .promo-title, .promo-text, .sheet-title,
+.sp-title, .st-title, .st-desc, .ap-title, .cd-text, .rr-title{
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+}
+.sheet, .sheet-head, .sheet-body, .task-card, .task-list, .tc-main, .tc-bottom, .tc-progress,
+.ap-row, .ap-input, .st-input, .us-item, .us-info, .ref-link-box, .ref-actions, .mh-user,
+.mh-tile, .tab-btn, .tf-btn, .cta-btn, .btn, .ap-btn, .task-claim-btn, .tc-claim-btn,
+.notif-item, .n-item, .row, .form-row, .withdraw-form{
+  min-width:0;
+}
+.task-title, .task-desc{ overflow-wrap:break-word; }
+
+/* ---- Задания: карточки ---- */
+.task-card{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:10px;
+  padding:14px;
+  border-radius:var(--radius-xl);
+  background:
+    radial-gradient(130% 120% at 100% -20%, var(--tcs, rgba(255,255,255,.04)) 0%, rgba(8,16,24,0) 55%),
+    linear-gradient(165deg, rgba(18,34,48,.82) 0%, rgba(11,22,33,.9) 100%);
+  border:1px solid var(--border);
+  border-top-color:rgba(255,255,255,.07);
+  box-shadow:var(--shadow-md);
+  position:relative;
+  transition:transform var(--transition-fast) var(--ease), border-color var(--transition-fast) var(--ease);
+}
+.task-card:active{ transform:scale(.985); }
+.task-card.st-ready{
+  border-color:rgba(79,209,139,.35);
+  box-shadow:var(--shadow-md), 0 0 26px -12px rgba(79,209,139,.45);
+}
+.task-card.st-done{ opacity:.72; }
+.tc-top{ display:contents; }
+.tc-ico{
+  position:absolute;
+  top:14px; left:14px;
+  width:42px; height:42px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:13px;
+  color:var(--tc);
+  background:var(--tcs, rgba(255,255,255,.05));
+  border:1px solid var(--tcb, rgba(103,183,243,.25));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  flex-shrink:0;
+}
+.tc-ico svg{ width:22px; height:22px; }
+.tc-main{
+  display:flex; flex-direction:column; gap:3px;
+  padding-left:52px;
+}
+.tc-title{
+  color:var(--text-100);
+  font-size:14px; font-weight:800;
+  line-height:1.3;
+}
+.tc-desc{
+  color:var(--text-60);
+  font-size:12px; font-weight:500;
+  line-height:1.45;
+}
+.tc-state{
+  position:absolute;
+  top:14px; right:14px;
+}
+.tc-chip{
+  display:inline-flex; align-items:center;
+  padding:4px 10px;
+  border-radius:999px;
+  font-size:10.5px; font-weight:800;
+  letter-spacing:.4px;
+  text-transform:uppercase;
+}
+.tc-chip.tc-done{
+  color:var(--success);
+  background:rgba(79,209,139,.12);
+  border:1px solid rgba(79,209,139,.3);
+}
+.tc-chip.tc-ready{
+  color:var(--blue-3);
+  background:rgba(103,183,243,.12);
+  border:1px solid rgba(103,183,243,.3);
+}
+.tc-chip.tc-prog{
+  color:var(--warning);
+  background:rgba(234,183,101,.1);
+  border:1px solid rgba(234,183,101,.28);
+}
+.tc-progress{
+  display:flex; align-items:center; gap:10px;
+  padding-top:2px;
+}
+.tc-prog-track{
+  flex:1; min-width:0;
+  height:6px;
+  border-radius:999px;
+  background:rgba(8,16,24,.55);
+  overflow:hidden;
+}
+.tc-prog-track i{
+  display:block; height:100%;
+  border-radius:999px;
+  background:var(--grad-accent);
+  transition:width .5s var(--ease);
+}
+.tc-prog-num{
+  color:var(--text-60);
+  font-size:11px; font-weight:800;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+.tc-bottom{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding-top:2px;
+}
+.tc-reward{
+  display:inline-flex; align-items:center; gap:6px;
+  color:var(--text-80);
+  font-size:12.5px; font-weight:800;
+}
+.tc-reward svg{ width:15px; height:15px; color:var(--warning); }
+.task-card.st-done .tc-reward{ color:var(--text-40); }
+.tc-claim-btn{
+  display:inline-flex; align-items:center; gap:6px;
+  padding:9px 18px;
+  border:none; border-radius:12px;
+  background:var(--grad-accent);
+  color:#fff;
+  font-size:13px; font-weight:800;
+  cursor:pointer;
+  box-shadow:0 8px 20px -8px rgba(59,130,196,.6);
+  transition:transform var(--transition-fast) var(--ease), box-shadow var(--transition-fast) var(--ease);
+}
+.tc-claim-btn:hover{ box-shadow:0 10px 26px -8px rgba(59,130,196,.75); }
+.tc-claim-btn:active{ transform:scale(.94); }
+.tc-ok{
+  width:36px; height:36px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:12px;
+  color:var(--success);
+  background:rgba(79,209,139,.1);
+  border:1px solid rgba(79,209,139,.3);
+}
+.tc-ok svg{ width:19px; height:19px; }
+
+.task-card{ padding-top:14px; }
+
+/* ---- Задания: фильтры ---- */
+.task-filters{
+  display:flex; gap:8px;
+  margin:14px 0 12px;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.task-filters::-webkit-scrollbar{ display:none; }
+.tf-btn{
+  flex-shrink:0;
+  padding:8px 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,.03);
+  color:var(--text-60);
+  font-size:12px; font-weight:800;
+  cursor:pointer;
+  transition:all var(--transition-fast) var(--ease);
+}
+.tf-btn.active{
+  color:var(--blue-3);
+  background:rgba(103,183,243,.12);
+  border-color:rgba(103,183,243,.35);
+}
+.task-list[data-filter="active"] .task-card.st-done{ display:none; }
+.task-list[data-filter="done"] .task-card:not(.st-done){ display:none; }
+
+/* ---- Небольшие окна: статичная шапка (админка/пользователи) ---- */
+.admin-panel-sheet .sheet-head, .users-sheet .sheet-head{ position:relative; }
+
+/* ---- Защита от прилипания окон к краям на очень узких экранах ---- */
+@media (max-width:340px){
+  .sheet{ width:calc(100% - 20px); padding:12px; }
+.sheet{ padding-top:12px; }
+  .tc-ico{ width:38px; height:38px; top:12px; left:12px; }
+  .tc-main{ padding-left:46px; }
+  .tc-state{ top:12px; right:12px; }
+  .tc-chip{ padding:3px 8px; font-size:9.5px; }
+  .tc-reward{ font-size:11.5px; }
+  .tc-claim-btn{ padding:8px 14px; font-size:12px; }
 }
