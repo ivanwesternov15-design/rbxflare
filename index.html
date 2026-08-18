@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="style.css?v=6828006">
+<link rel="stylesheet" href="style.css?v=6828007">
 </head>
 <body>
 
@@ -306,6 +306,53 @@
       <span>Пока пусто — выбей карточку на «Главном»</span>
     </div>
   </div>
+
+  <div class="cd-section">
+    <div class="section-head">
+      <div class="section-title">Шансы выпадения</div>
+      <svg class="sh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+    </div>
+    <div class="cd-chances" id="cdChances">
+      <div class="cd-chance"><span class="cc-dot cc-basic"></span><span class="cc-name">Basic</span><span class="cc-bar"><i></i></span><span class="cc-pct">42%</span></div>
+      <div class="cd-chance"><span class="cc-dot cc-silver"></span><span class="cc-name">Silver</span><span class="cc-bar"><i></i></span><span class="cc-pct">27%</span></div>
+      <div class="cd-chance"><span class="cc-dot cc-gold"></span><span class="cc-name">Gold</span><span class="cc-bar"><i></i></span><span class="cc-pct">17%</span></div>
+      <div class="cd-chance"><span class="cc-dot cc-diamond"></span><span class="cc-name">Diamond</span><span class="cc-bar"><i></i></span><span class="cc-pct">10%</span></div>
+      <div class="cd-chance"><span class="cc-dot cc-mythic"></span><span class="cc-name">Mythic</span><span class="cc-bar"><i></i></span><span class="cc-pct">4%</span></div>
+    </div>
+  </div>
+
+  <div class="cd-section">
+    <div class="section-head">
+      <div class="section-title">Как прокачать карточку</div>
+      <svg class="sh-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5z"/><path d="M4 7l8 4.5L20 7M12 11.5V21"/><path d="M8.5 9.5 12 5l3.5 4.5"/></svg>
+    </div>
+    <div class="cd-steps">
+      <div class="cd-step">
+        <span class="cd-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M7 9h4M7 13h7"/><path d="M16.5 9.5v4M14.5 11.5h4"/></svg>
+        </span>
+        <div class="cd-text">Каждый день забирай карточку с «Главного» — она попадёт в инвентарь</div>
+      </div>
+      <div class="cd-step">
+        <span class="cd-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5 20 7v10l-8 4.5L4 17V7l8-4.5z"/><path d="M4 7l8 4.5L20 7M12 11.5V21"/><path d="M8.5 9.5 12 5l3.5 4.5"/></svg>
+        </span>
+        <div class="cd-text">Нажми «Стейкинг» — карточка будет приносить проценты от её суммы</div>
+      </div>
+      <div class="cd-step">
+        <span class="cd-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>
+        </span>
+        <div class="cd-text">Чем дольше период (до 7 дней), тем выше процент награды</div>
+      </div>
+      <div class="cd-step">
+        <span class="cd-ico">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7H5a2 2 0 0 1 0-4h13v4"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-9a1 1 0 0 0-1-1H5"/><circle cx="16.5" cy="14" r="1.3" fill="currentColor" stroke="none"/></svg>
+        </span>
+        <div class="cd-text">Забери награду и выведи Robux в разделе «Вывод»</div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <main class="view hidden category-view" id="viewTasks">
@@ -518,6 +565,14 @@
         <input class="ap-input" id="dailyResetUserInput" type="number" inputmode="numeric" placeholder="ID игрока">
         <button class="ap-btn" id="dailyResetUserBtn">Сбросить</button>
       </div>
+    </div>
+    <div class="ap-section">
+      <div class="ap-title">Настройка карточек</div>
+      <div class="ap-note">Суммы выпадения, шансы и проценты стейкинга для всех редкостей</div>
+      <button class="ap-btn ap-btn-wide" id="adminConfigBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h10M18 8h2M4 16h2M10 16h10"/><circle cx="16" cy="8" r="2.2"/><circle cx="8" cy="16" r="2.2"/></svg>
+        Изменить цены, шансы и стейкинг
+      </button>
     </div>
   </div>
 </div>
@@ -801,7 +856,6 @@
       <span>Написать Тех. Поддержке</span>
       <svg class="sp-btn-go" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
     </a>
-    <div class="sp-note">Переход в Telegram — мини-апп не закроется</div>
   </div>
 </div>
 
@@ -832,6 +886,6 @@
   </div>
 </div>
 
-<script src="script.js?v=6828006"></script>
+<script src="script.js?v=6828007"></script>
 </body>
 </html>

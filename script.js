@@ -1958,11 +1958,19 @@ function resetUserDaily(){
 
 function openAdminPanel(){
   if(!isPriv()) return;
+  closeModal(settingsSheetEl, settingsBackdropEl);
   renderAdminList();
   openModal(adminPanelSheet, adminPanelBackdrop);
 }
 
 stAdminBtn.addEventListener('click', openAdminPanel);
+const adminConfigBtn = document.getElementById('adminConfigBtn');
+if(adminConfigBtn) adminConfigBtn.addEventListener('click', () => {
+  if(!isPriv()) return;
+  closeModal(adminPanelSheet, adminPanelBackdrop);
+  renderAdminTiers();
+  openModal(adminSheet, adminBackdrop);
+});
 adminAddBtn.addEventListener('click', addAdmin);
 dailyResetUserBtn.addEventListener('click', resetUserDaily);
 
@@ -2032,10 +2040,18 @@ async function renderUsersList(){
           <span class="us-bal-num">${bal}</span>
           <span class="us-bal-label">Robux</span>
         </div>
+        <button class="us-reset" data-rid="${u.id}" title="Сбросить карточки">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11A8 8 0 1 0 18.4 16.6"/><path d="M20 5v6h-6"/></svg>
+        </button>
       </div>`;
     }).join('');
     usersListEl.querySelectorAll('.us-item').forEach(row =>
       row.addEventListener('click', () => copyUserId(row.dataset.id)));
+    usersListEl.querySelectorAll('.us-reset').forEach(btn =>
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        resetUserCards(btn.dataset.rid);
+      }));
   }catch(e){
     usersListEl.innerHTML = '<div class="ap-note">Не удалось загрузить список</div>';
   }
@@ -2076,6 +2092,22 @@ function fallbackCopy(id, done){
   }catch(e){
     done(false);
   }
+}
+
+function resetUserCards(id){
+  const init = tgInitData();
+  if(!init){ showToast('Ошибка авторизации', false); return; }
+  fetch('/api/daily-reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ initData: init, userId: Number(id) })
+  })
+    .then(r => r.json())
+    .then(data => {
+      if(data.ok) showToast(`Карточки игрока ${id} сброшены`, true, 'refresh');
+      else showToast('Не удалось сбросить', false);
+    })
+    .catch(() => showToast('Ошибка сети', false));
 }
 
 function openUsersList(){
@@ -2522,11 +2554,21 @@ async function renderSettings(){
 const splashEl = document.getElementById('splash');
 const splashFill = document.getElementById('splashBarFill');
 const splashPctEl = document.getElementById('splashPct');
+const splashTextEl = document.querySelector('.splash-text');
 let splashPct = 0;
+let splashPhase = 0;
+const splashPhases = ['Загружаем аккаунт', 'Синхронизируем данные', 'Почти готово'];
 const splashTimer = setInterval(() => {
   splashPct = Math.min(88, splashPct + 6 + Math.random() * 4);
   if(splashFill) splashFill.style.width = splashPct + '%';
   if(splashPctEl) splashPctEl.textContent = Math.round(splashPct) + '%';
+  const ph = Math.min(splashPhases.length - 1, Math.floor(splashPct / 30));
+  if(ph !== splashPhase){
+    splashPhase = ph;
+    if(splashTextEl){
+      splashTextEl.childNodes[0].textContent = splashPhases[ph] + ' ';
+    }
+  }
 }, 110);
 function splashDone(){
   clearInterval(splashTimer);
